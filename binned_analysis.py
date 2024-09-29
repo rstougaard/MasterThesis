@@ -11,20 +11,6 @@ import os
 import argparse
 import numpy as np
 
-######################################################################
-'''
-def load_settings(json_file):
-    with open(json_file, 'r') as f:
-        return json.load(f)
-parser = argparse.ArgumentParser(description='Run AGN analysis with custom settings')
-parser.add_argument('--settings', required=True, help='Path to the JSON file containing AGN settings')
-args = parser.parse_args()
-
-# Load settings from JSON file
-settings = load_settings(args.settings)
- '''
-#######################################################################
-
 def check_paths(time_interval_name):
     # List of paths
     paths = [
@@ -42,12 +28,6 @@ def check_paths(time_interval_name):
         os.makedirs(path, exist_ok=True)  # This will create the directory if it doesn't exist
         print(f"Ensured existence of: {path}")
     pass
-
-#check paths for likelihood analysis
-#check_paths(settings['time_interval_name'])
-
-
-
 
 # Your existing generate_files, source_maps, and run_binned_likelihood functions here
 def generate_files(vars):
