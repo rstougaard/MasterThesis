@@ -1,1 +1,17 @@
 data/*
+energy_bins_gtbindef.txt
+energy_bins_gtbindef.fits
+NGC1275_settings.json
+make4FGLxml.py
+gtbin.par
+gtbindef.par
+gtmktime.par
+gtexpcube2.par
+gtselect.par
+gtltcube.par
+gtsrcmaps.par
+NGC1275.ipynb
+Light_Curve_month.png
+test.py
+test.png
+testing.py
