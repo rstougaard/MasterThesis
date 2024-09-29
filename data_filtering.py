@@ -22,7 +22,7 @@ if time_interval_name == "month":
     time_interval = 2592000  # 30 days in seconds
 elif time_interval_name == 'week':
     time_interval = 604800
-elif time_interval_name == "3 days"
+elif time_interval_name == "3 days":
     time_interval =  259200
 
 print("Starting analysis with the following parameters:")
