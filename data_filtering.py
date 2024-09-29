@@ -23,13 +23,24 @@ if time_interval_name == "month":
 elif time_interval_name == 'week':
     time_interval = 604800
 elif time_interval_name == "3 days"
-    time_interval =  259 200
+    time_interval =  259200
 
 print("Starting analysis with the following parameters:")
 print(f"Source Name: {source_name}")
 print(f"Time interval: {time_interval_name}")
 
 time.sleep(5)  # 5 seconds of "dead" time
+
+eventlist_command0 = [
+        'ls ./data/*PH*.fits > ./data/NGC1275_events.list'
+    ]
+eventlist_command1 = [
+        'cat ./data/NGC1275_events.list'
+    ]
+
+# Run the command using subprocess
+subprocess.run(eventlist_command0, shell=True, check=True)
+subprocess.run(eventlist_command1, shell=True, check=True)
 
 print("Filtering events...")
 my_apps.filter['evclass'] = 128
