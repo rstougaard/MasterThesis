@@ -140,7 +140,7 @@ def run_binned_likelihood(vars):
     return (i, log_likelihood, TS, convergence)
     
 def run_analysis(source_name, short_name, num_workers, num_time_intervals,
-                time_interval_name, start_month, end_month, minimal_energy, maximal_energy):
+                time_interval_name, start_month, minimal_energy, maximal_energy):
 
     # Your existing gtbindef_energy_command and subprocess call here
     gtbindef_energy_command = [
@@ -167,7 +167,7 @@ def run_analysis(source_name, short_name, num_workers, num_time_intervals,
 
     running_args = []
     running_args_likelihood = []
-    for i in range(start_month,end_month):
+    for i in range(start_month,num_time_intervals):
         running_args.append((i, time_interval_name, short_name))
         running_args_likelihood.append((i, source_name, short_name, time_interval_name, minimal_energy, maximal_energy))
 
