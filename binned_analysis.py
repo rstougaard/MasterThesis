@@ -1,6 +1,7 @@
 import subprocess
 import time
 from multiprocessing import Pool
+import pyLikelihood
 from tqdm import tqdm
 import json
 import gt_apps as my_apps
