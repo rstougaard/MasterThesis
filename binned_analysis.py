@@ -79,7 +79,7 @@ def generate_files(vars):
     ####### Make model #######
     ##### Run make4FGLxml Command #####
     make4FGLxml_command = [
-        'python', 'make4FGLxml.py', 
+        'make4FGLxml', 
         './data/gll_psc_v32.xml', 
         '--event_file', f'./data/LC_{time_interval_name}/{short_name}_{time_interval_name}_{i}.fits', 
         '--output_name', f'./data/LC_{time_interval_name}/models/{short_name}_input_model_{i}.xml', 
