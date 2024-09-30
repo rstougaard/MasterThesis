@@ -28,7 +28,7 @@ def check_paths(time_interval_name):
         os.makedirs(path, exist_ok=True)  # This will create the directory if it doesn't exist
         print(f"Ensured existence of: {path}")
     pass
-
+''''''
 # Your existing generate_files, source_maps, and run_binned_likelihood functions here
 def generate_files(vars):
     ####### Livetime Cube #######
@@ -78,7 +78,7 @@ def generate_files(vars):
 
     ####### Make model #######
     ##### Run make4FGLxml Command #####
-    make4FGLxml_command = [f'python make4FGLxml.py ./data/gll_psc_v32.xml --event_file ./data/LC_{time_interval_name}/{short_name}_{time_interval_name}_{i}.fits --outputxml ./data/LC_{time_interval_name}/models/{short_name}_input_model_{i}.xml --free_radius 5.0 --norms_free_only True --sigma_to_free 25 --variable_free True']
+    make4FGLxml_command = [f'make4FGLxml ./data/gll_psc_v32.xml --event_file ./data/LC_{time_interval_name}/{short_name}_{time_interval_name}_{i}.fits -o ./data/LC_{time_interval_name}/models/{short_name}_input_model_{i}.xml --free_radius 5.0 --norms_free_only True --sigma_to_free 25 --variable_free True']
     
     # Run the command using subprocess
     subprocess.run(make4FGLxml_command, shell=True, check=True)
