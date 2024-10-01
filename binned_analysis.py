@@ -118,21 +118,18 @@ def run_binned_likelihood(vars):
     
     flux = like.flux(source_name, emin=minimal_energy, emax=maximal_energy)
     flux_error = like.fluxError(source_name, emin=minimal_energy, emax=maximal_energy)
+    '''
     energy = like.energies
     energy_error = np.sqrt(like.nobs)
     nobs = like.nobs
     sum_model = np.zeros_like(like._srcCnts(like.sourceNames()[0]))
     for sourceName in like.sourceNames():
         sum_model = sum_model + like._srcCnts(sourceName)
-    
+    '''
     flux_data = {
         f'{time_interval_name}': i,
         'flux': flux,
-        'flux_error': flux_error,
-        'energy': energy,
-        'energy_error': energy_error,
-        'sum model': sum_model,
-        'nobs': nobs
+        'flux_error': flux_error
     }
     
     print(f"Saving flux data: {i}")
