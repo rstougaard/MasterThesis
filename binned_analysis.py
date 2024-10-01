@@ -121,6 +121,7 @@ def run_binned_likelihood(vars):
     energy = like.energies
     energy_error = np.sqrt(like.nobs)
     nobs = like.nobs
+    sum_model = np.zeros_like(like._srcCnts(like.sourceNames()[0]))
     for sourceName in like.sourceNames():
         sum_model = sum_model + like._srcCnts(sourceName)
     
