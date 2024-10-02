@@ -10,6 +10,7 @@ expCube2= GtApp('gtexpcube2','Likelihood')
 from BinnedAnalysis import *
 import os
 import argparse
+import xml.etree.ElementTree as ET
 import numpy as np
 
 def check_paths(time_interval_name):
@@ -21,7 +22,8 @@ def check_paths(time_interval_name):
         f'./data/LC_{time_interval_name}/expmap/',
         f'./data/LC_{time_interval_name}/models/',
         f'./data/LC_{time_interval_name}/srcmap/',
-        f'./data/LC_{time_interval_name}/likeresults/'
+        f'./data/LC_{time_interval_name}/likeresults/',
+        f'./data/LC_{time_interval_name}/fit_params/'
     ]
 
     # Check and create directories
@@ -33,7 +35,7 @@ def check_paths(time_interval_name):
 # Your existing generate_files, source_maps, and run_binned_likelihood functions here
 def generate_files(vars):
     ####### Livetime Cube #######
-    i, time_interval_name, short_name = vars
+    i, source_name, time_interval_name, short_name = vars
     my_apps.expCube['evfile'] = f'./data/LC_{time_interval_name}/{short_name}_{time_interval_name}_{i}.fits'
     my_apps.expCube['scfile'] = f'./data/{short_name}_SC.fits'
     my_apps.expCube['outfile'] = f'./data/LC_{time_interval_name}/ltcube/{short_name}_ltcube_{i}.fits'
@@ -83,10 +85,35 @@ def generate_files(vars):
     
     # Run the command using subprocess
     subprocess.run(make4FGLxml_command, shell=True, check=True, executable='/bin/bash')
+    # Load the specific XML file
+    tree = ET.parse(f'./data/LC_{time_interval_name}/models/{short_name}_input_model_{i}.xml')  # Replace with the actual path to your XML file
+    root = tree.getroot()
+
+    # Look for the specific source by name
+    source = root.find(f".//source[@name='{source_name}']")
+
+    if source is not None:
+        print(f"Modifying source: {source.get('name')}")
+
+        # Find the 'spectrum' tag within this source
+        spectrum = source.find('spectrum')
+        
+        if spectrum is not None:
+            # Loop through the parameters within the spectrum
+            for param in spectrum.findall('parameter'):
+                param_name = param.get('name')  # Get the parameter name
+                
+                # Only modify 'alpha' and 'beta' parameters
+                if param_name in ['alpha']:
+                    print(f"Changing 'free' attribute for {param_name}")
+                    param.set('free', '1')  # Set 'free' attribute to '1'
+        
+        # Save the modified XML back to the file
+        tree.write(f'./data/LC_{time_interval_name}/models/{short_name}_input_model_{i}.xml', encoding='utf-8', xml_declaration=True)
     pass
 
 def source_maps(vars):
-    i, time_interval_name, short_name = vars
+    i, source_name, time_interval_name, short_name = vars
     ####### Source Map #######
     my_apps.srcMaps['expcube'] = f'./data/LC_{time_interval_name}/ltcube/{short_name}_ltcube_{i}.fits'
     my_apps.srcMaps['cmap'] = f'./data/LC_{time_interval_name}/ccube/{short_name}_ccube_{i}.fits'
@@ -115,26 +142,52 @@ def run_binned_likelihood(vars):
     log_likelihood = like.logLike.value()
     TS = like.Ts(source_name)
     convergence = likeobj.getRetCode()
-    
-    flux = like.flux(source_name, emin=minimal_energy, emax=maximal_energy)
+
+    like.logLike.writeXml(f'.data/LC_{time_interval_name}/fit_params/{short_name}_fit_{i}.xml')
+    tree = ET.parse(f'.data/LC_{time_interval_name}/fit_params/{short_name}_fit_{i}.xml')
+    root = tree.getroot()
+
+    # Look for the specific source by name
+    source = root.find(f".//source[@name='{source_name}']")
+
+    if source is not None:
+        print(f"Source: {source.get('name')}")
+
+        # Initialize a dictionary to store parameter values and errors
+        param_data = {}
+
+        # Find the 'spectrum' tag within this source
+        spectrum = source.find('spectrum')
+        
+        if spectrum is not None:
+            # Loop through the parameters within the spectrum
+            for param in spectrum.findall('parameter'):
+                param_name = param.get('name')  # Get the parameter name
+                param_value = param.get('value')  # Get the parameter value
+                param_error = param.get('error')  # Get the parameter error (if available)
+                
+                if param_name in ['alpha']:  # Check if it's 'alpha' or 'beta'
+                    param_data[f'{param_name}_value'] = param_value  # Store value in the dictionary
+                    param_data[f'{param_name}_error'] = param_error  # Store error in the dictionary
+    else:
+        print("Source not found in the XML file.")
+
+    # Assuming 'like.flux' and 'like.fluxError' provide flux and flux error for the source
+    flux_value = like.flux(source_name, emin=minimal_energy, emax=maximal_energy)
     flux_error = like.fluxError(source_name, emin=minimal_energy, emax=maximal_energy)
-    '''
-    energy = like.energies
-    energy_error = np.sqrt(like.nobs)
-    nobs = like.nobs
-    sum_model = np.zeros_like(like._srcCnts(like.sourceNames()[0]))
-    for sourceName in like.sourceNames():
-        sum_model = sum_model + like._srcCnts(sourceName)
-    '''
-    flux_data = {
+
+    # Save the flux data along with alpha and beta
+    fit_data = {
         f'{time_interval_name}': i,
-        'flux': flux,
-        'flux_error': flux_error
+        'flux_value': flux_value,
+        'flux_error': flux_error,
+        'alpha_value': param_data.get('alpha_value', None),  # Include alpha value
+        'alpha_error': param_data.get('alpha_error', None)  # Include alpha error
     }
-    
+
     print(f"Saving flux data: {i}")
     with open(f'./data/LC_{time_interval_name}/likeresults/flux_{time_interval_name}_{i}.json', 'w') as f:
-        json.dump(flux_data, f)
+        json.dump(fit_data, f, indent=4) 
     
     return (i, log_likelihood, TS, convergence)
     
@@ -167,7 +220,7 @@ def run_analysis(source_name, short_name, num_workers, num_time_intervals,
     running_args = []
     running_args_likelihood = []
     for i in range(start_month,num_time_intervals):
-        running_args.append((i, time_interval_name, short_name))
+        running_args.append((i, source_name, time_interval_name, short_name))
         running_args_likelihood.append((i, source_name, short_name, time_interval_name, minimal_energy, maximal_energy))
 
     # Main analysis loop
