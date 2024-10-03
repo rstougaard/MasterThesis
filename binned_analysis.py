@@ -165,10 +165,12 @@ def run_binned_likelihood(vars):
                 param_name = param.get('name')  # Get the parameter name
                 param_value = param.get('value')  # Get the parameter value
                 param_error = param.get('error')  # Get the parameter error (if available)
+                param_scale = param.get('scale')
                 
-                if param_name in ['alpha']:  # Check if it's 'alpha' or 'beta'
+                if param_name in ['norm','alpha', 'beta', 'Eb']:  # Check if it's 'alpha' or 'beta'
                     param_data[f'{param_name}_value'] = param_value  # Store value in the dictionary
                     param_data[f'{param_name}_error'] = param_error  # Store error in the dictionary
+                    param_data[f'{param_name}_scale'] = param_scale
     else:
         print("Source not found in the XML file.")
 
@@ -183,8 +185,16 @@ def run_binned_likelihood(vars):
         f'{time_interval_name}': i,
         'flux_value': flux_value,
         'flux_error': flux_error,
-        'alpha_value': param_data.get('alpha_value', None),  # Include alpha value
-        'alpha_error': param_data.get('alpha_error', None),  # Include alpha error
+        'norm': param_data.get('norm_value', None),
+        'norm_error': param_data.get('norm_error', None),
+        'norm_scale':param_data.get('norm_scale', None),
+        'alpha_value': param_data.get('alpha_value', None),  
+        'alpha_error': param_data.get('alpha_error', None), 
+        'alpha_scale':param_data.get('alpha_scale', None),
+        'beta_value': param_data.get('beta_value', None),    
+        'beta_scale':param_data.get('beta_scale', None),
+        'Eb_value': param_data.get('Eb_value', None),    
+        'Eb_scale':param_data.get('Eb_scale', None),
         'convergence': convergence,
         'E': E,
         'nobs': nobs
