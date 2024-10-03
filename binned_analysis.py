@@ -104,7 +104,7 @@ def generate_files(vars):
                 param_name = param.get('name')  # Get the parameter name
                 
                 # Only modify 'alpha' and 'beta' parameters
-                if param_name in ['alpha', 'Eb']:
+                if param_name in ['alpha']:
                     print(f"Changing 'free' attribute for {param_name}")
                     param.set('free', '1')  # Set 'free' attribute to '1'
         
@@ -175,6 +175,8 @@ def run_binned_likelihood(vars):
     # Assuming 'like.flux' and 'like.fluxError' provide flux and flux error for the source
     flux_value = like.flux(source_name, emin=minimal_energy, emax=maximal_energy)
     flux_error = like.fluxError(source_name, emin=minimal_energy, emax=maximal_energy)
+    E = (like.energies[:-1] + like.energies[1:])/2.
+    nobs = like.nobs
 
     # Save the flux data along with alpha and beta
     fit_data = {
@@ -183,7 +185,9 @@ def run_binned_likelihood(vars):
         'flux_error': flux_error,
         'alpha_value': param_data.get('alpha_value', None),  # Include alpha value
         'alpha_error': param_data.get('alpha_error', None),  # Include alpha error
-        'convergence': convergence
+        'convergence': convergence,
+        'E': E,
+        'nobs': nobs
     }
 
     print(f"Saving flux data: {i}")
