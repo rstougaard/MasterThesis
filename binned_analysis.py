@@ -104,7 +104,7 @@ def generate_files(vars):
                 param_name = param.get('name')  # Get the parameter name
                 
                 # Only modify 'alpha' and 'beta' parameters
-                if param_name in ['alpha']:
+                if param_name in ['alpha', 'beta', 'Eb']:
                     print(f"Changing 'free' attribute for {param_name}")
                     param.set('free', '1')  # Set 'free' attribute to '1'
         
