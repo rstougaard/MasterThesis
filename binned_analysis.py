@@ -143,8 +143,8 @@ def run_binned_likelihood(vars):
     TS = like.Ts(source_name)
     convergence = likeobj.getRetCode()
 
-    like.logLike.writeXml(f'.data/LC_{time_interval_name}/fit_params/{short_name}_fit_{i}.xml')
-    tree = ET.parse(f'.data/LC_{time_interval_name}/fit_params/{short_name}_fit_{i}.xml')
+    like.logLike.writeXml(f'./data/LC_{time_interval_name}/fit_params/{short_name}_fit_{i}.xml')
+    tree = ET.parse(f'./data/LC_{time_interval_name}/fit_params/{short_name}_fit_{i}.xml')
     root = tree.getroot()
 
     # Look for the specific source by name
