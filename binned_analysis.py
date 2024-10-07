@@ -182,23 +182,24 @@ def run_binned_likelihood(vars):
 
     # Save the flux data along with alpha and beta
     fit_data = {
-        f'{time_interval_name}': i,
-        'flux_value': flux_value,
-        'flux_error': flux_error,
-        'norm': param_data.get('norm_value', None),
-        'norm_error': param_data.get('norm_error', None),
-        'norm_scale':param_data.get('norm_scale', None),
-        'alpha_value': param_data.get('alpha_value', None),  
-        'alpha_error': param_data.get('alpha_error', None), 
-        'alpha_scale':param_data.get('alpha_scale', None),
-        'beta_value': param_data.get('beta_value', None),    
-        'beta_scale':param_data.get('beta_scale', None),
-        'Eb_value': param_data.get('Eb_value', None),    
-        'Eb_scale':param_data.get('Eb_scale', None),
-        'convergence': convergence,
-        'E': E,
-        'nobs': nobs
-    }
+    f'{time_interval_name}': i,
+    'flux_value': float(flux_value),  # Ensure this is a float
+    'flux_error': float(flux_error),  # Ensure this is a float
+    'norm': param_data.get('norm_value', None),
+    'norm_error': param_data.get('norm_error', None),
+    'norm_scale': param_data.get('norm_scale', None),
+    'alpha_value': param_data.get('alpha_value', None),  
+    'alpha_error': param_data.get('alpha_error', None), 
+    'alpha_scale': param_data.get('alpha_scale', None),
+    'beta_value': param_data.get('beta_value', None),    
+    'beta_scale': param_data.get('beta_scale', None),
+    'Eb_value': param_data.get('Eb_value', None),    
+    'Eb_scale': param_data.get('Eb_scale', None),
+    'convergence': convergence,
+    'E': E.tolist(),  # Convert ndarray to list
+    'nobs': nobs.tolist()  # Convert ndarray to list
+}
+
 
     print(f"Saving flux data: {i}")
     with open(f'./data/LC_{time_interval_name}/likeresults/flux_{time_interval_name}_{i}.json', 'w') as f:
