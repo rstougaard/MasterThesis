@@ -196,9 +196,10 @@ def run_binned_likelihood(vars):
     'Eb_value': param_data.get('Eb_value', None),    
     'Eb_scale': param_data.get('Eb_scale', None),
     'convergence': convergence,
-    'E': E.tolist(),  # Convert ndarray to list
-    'nobs': nobs.tolist()  # Convert ndarray to list
+    'E': E.tolist() if isinstance(E, np.ndarray) else list(E),  # Handle ndarray or tuple
+    'nobs': list(nobs)  # Convert tuple to list
 }
+
 
 
     print(f"Saving flux data: {i}")
