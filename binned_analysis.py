@@ -181,7 +181,7 @@ def run_binned_likelihood(vars):
     flux_tot_error = like.fluxError(source_name, emin=minimal_energy, emax=maximal_energy)
     N0 = like.model[source_name].funcs['Spectrum'].getParam('norm').value()
     N0_err = like.model[source_name].funcs['Spectrum'].getParam('norm').error()
-    N0_scale = like.model[source_name].funcs['Spectrum'].getParam('norm').scale()
+    #N0_scale = like.model[source_name].funcs['Spectrum'].getParam('norm').scale()
     alpha = like.model[source_name].funcs['Spectrum'].getParam('alpha').value()
     alpha_err = like.model[source_name].funcs['Spectrum'].getParam('alpha').error()
 
@@ -211,7 +211,7 @@ def run_binned_likelihood(vars):
     'flux_tot_error': float(flux_tot_error),  
     'norm': float(N0),  
     'norm_error': float(N0_err),  
-    'norm_scale': float(N0_scale),  
+    'norm_scale': 'no scale',  
     'alpha_value': float(alpha),  
     'alpha_error': float(alpha_err),  
     'convergence': convergence,
