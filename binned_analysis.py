@@ -22,6 +22,7 @@ def check_paths(time_interval_name):
         f'./data/LC_{time_interval_name}/expmap/',
         f'./data/LC_{time_interval_name}/models/',
         f'./data/LC_{time_interval_name}/srcmap/',
+        f'./data/LC_{time_interval_name}/CountsSpectra/',
         f'./data/LC_{time_interval_name}/likeresults/',
         f'./data/LC_{time_interval_name}/fit_params/'
     ]
@@ -143,6 +144,7 @@ def run_binned_likelihood(vars):
     TS = like.Ts(source_name)
     convergence = likeobj.getRetCode()
 
+    like.writeCountsSpectra(f"./data/LC_{time_interval_name}/CountsSpectra/{short_name}_spectra_{i}.fits") 
     like.logLike.writeXml(f'./data/LC_{time_interval_name}/fit_params/{short_name}_fit_{i}.xml')
     tree = ET.parse(f'./data/LC_{time_interval_name}/fit_params/{short_name}_fit_{i}.xml')
     root = tree.getroot()
@@ -174,31 +176,61 @@ def run_binned_likelihood(vars):
     else:
         print("Source not found in the XML file.")
 
-    # Assuming 'like.flux' and 'like.fluxError' provide flux and flux error for the source
-    flux_value = like.flux(source_name, emin=minimal_energy, emax=maximal_energy)
-    flux_error = like.fluxError(source_name, emin=minimal_energy, emax=maximal_energy)
+    # Assuming 'like.flux' and 'like.fluxError' provide flux and flux error for the source per full time period:
+    flux_tot_value = like.flux(source_name, emin=minimal_energy, emax=maximal_energy)
+    flux_tot_error = like.fluxError(source_name, emin=minimal_energy, emax=maximal_energy)
+    N0 = like.model[source_name].funcs['Spectrum'].getParam('norm').value()
+    N0_err = like.model[source_name].funcs['Spectrum'].getParam('norm').error()
+    N0_scale = like.model[source_name].funcs['Spectrum'].getParam('norm').scale()
+    alpha = like.model[source_name].funcs['Spectrum'].getParam('alpha').value()
+    alpha_err = like.model[source_name].funcs['Spectrum'].getParam('alpha').error()
+
+    #Flux count per energy:
+    flux_per_bin = []
+    flux_error_per_bin = []
+    with open('energy_bins_gtbindef.txt', 'r') as file:
+        for line in file:
+            # Parse the minimum and maximum energy values from each line
+            emin, emax = map(float, line.split())
+
+            # Call the like.flux function with the source_name, emin, and emax
+            flux_value = float(like.flux(source_name, emin=emin, emax=emax))
+            flux_error_value = float(like.fluxError(source_name, emin=emin, emax=emax))
+
+            # Append the flux value to the flux_per_bin list
+            flux_per_bin.append(flux_value)
+            flux_error_per_bin.append(flux_error_value)
+ 
     E = (like.energies[:-1] + like.energies[1:])/2.
     nobs = like.nobs
 
     # Save the flux data along with alpha and beta
     fit_data = {
     f'{time_interval_name}': i,
-    'flux_value': float(flux_value),  # Ensure this is a float
-    'flux_error': float(flux_error),  # Ensure this is a float
-    'norm': param_data.get('norm_value', None),
+    'flux_tot_value': float(flux_tot_value),  # Ensure this is a float
+    'flux_tot_error': float(flux_tot_error),  
+    'norm': float(N0),  
+    'norm_error': float(N0_err),  
+    'norm_scale': float(N0_scale),  
+    'alpha_value': float(alpha),  
+    'alpha_error': float(alpha_err),  
+    'convergence': convergence,
+    'E_points': E.tolist() if isinstance(E, np.ndarray) else list(E),  # Handle ndarray or tuple
+    'flux_per_bin': flux_per_bin,
+    'flux_error_per_bin': flux_error_per_bin,
+    'nobs': list(nobs)  # Convert tuple to list
+}
+    ''''norm': param_data.get('norm_value', None),
     'norm_error': param_data.get('norm_error', None),
     'norm_scale': param_data.get('norm_scale', None),
     'alpha_value': param_data.get('alpha_value', None),  
     'alpha_error': param_data.get('alpha_error', None), 
     'alpha_scale': param_data.get('alpha_scale', None),
-    'beta_value': param_data.get('beta_value', None),    
+    'beta_value': param_data.get('beta_value', None),
+    #'beta_error': param_data.get('beta_error', None),     #are there any beta error?
     'beta_scale': param_data.get('beta_scale', None),
     'Eb_value': param_data.get('Eb_value', None),    
-    'Eb_scale': param_data.get('Eb_scale', None),
-    'convergence': convergence,
-    'E': E.tolist() if isinstance(E, np.ndarray) else list(E),  # Handle ndarray or tuple
-    'nobs': list(nobs)  # Convert tuple to list
-}
+    'Eb_scale': param_data.get('Eb_scale', None),'''
 
 
 
