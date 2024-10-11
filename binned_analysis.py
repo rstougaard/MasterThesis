@@ -211,7 +211,7 @@ def run_binned_likelihood(vars):
     'flux_tot_error': float(flux_tot_error),  
     'norm': float(N0),  
     'norm_error': float(N0_err),  
-    'norm_scale': 'no scale',  
+    'norm_scale': param_data.get('norm_scale', None),  
     'alpha_value': float(alpha),  
     'alpha_error': float(alpha_err),  
     'convergence': convergence,
