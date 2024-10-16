@@ -203,6 +203,9 @@ def run_binned_likelihood(vars):
  
     E = (like.energies[:-1] + like.energies[1:])/2.
     nobs = like.nobs
+    # Calculate the bin widths
+    E_bin_widths = like.energies[1:] - like.energies[:-1]
+    E_bin_errors = E_bin_widths / 2
 
     # Save the flux data along with alpha and beta
     fit_data = {
@@ -216,6 +219,7 @@ def run_binned_likelihood(vars):
     'alpha_error': float(alpha_err),  
     'convergence': convergence,
     'E_points': E.tolist() if isinstance(E, np.ndarray) else list(E),  # Handle ndarray or tuple
+    'E_bin_errors': E_bin_errors.tolist() if isinstance(E_bin_errors, np.ndarray) else list(E_bin_errors),
     'flux_per_bin': flux_per_bin,
     'flux_error_per_bin': flux_error_per_bin,
     'nobs': list(nobs)  # Convert tuple to list
