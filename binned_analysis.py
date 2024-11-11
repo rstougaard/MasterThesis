@@ -188,10 +188,14 @@ def run_binned_likelihood(vars):
     #Flux count per energy:
     flux_per_bin = []
     flux_error_per_bin = []
+    emin_edges = []
+    emax_edges = []
     with open('energy_bins_gtbindef.txt', 'r') as file:
         for line in file:
             # Parse the minimum and maximum energy values from each line
             emin, emax = map(float, line.split())
+            emin_edges.append(emin)
+            emax_edges.append(emax)
 
             # Call the like.flux function with the source_name, emin, and emax
             flux_value = float(like.flux(source_name, emin=emin, emax=emax))
@@ -218,24 +222,14 @@ def run_binned_likelihood(vars):
     'alpha_value': float(alpha),  
     'alpha_error': float(alpha_err),  
     'convergence': convergence,
+    'emin_egdes': emin_edges,
+    'emax_edges': emax_edges,
     'E_points': E.tolist() if isinstance(E, np.ndarray) else list(E),  # Handle ndarray or tuple
     'E_bin_errors': E_bin_errors.tolist() if isinstance(E_bin_errors, np.ndarray) else list(E_bin_errors),
     'flux_per_bin': flux_per_bin,
     'flux_error_per_bin': flux_error_per_bin,
     'nobs': list(nobs)  # Convert tuple to list
 }
-    ''''norm': param_data.get('norm_value', None),
-    'norm_error': param_data.get('norm_error', None),
-    'norm_scale': param_data.get('norm_scale', None),
-    'alpha_value': param_data.get('alpha_value', None),  
-    'alpha_error': param_data.get('alpha_error', None), 
-    'alpha_scale': param_data.get('alpha_scale', None),
-    'beta_value': param_data.get('beta_value', None),
-    #'beta_error': param_data.get('beta_error', None),     #are there any beta error?
-    'beta_scale': param_data.get('beta_scale', None),
-    'Eb_value': param_data.get('Eb_value', None),    
-    'Eb_scale': param_data.get('Eb_scale', None),'''
-
 
 
     print(f"Saving flux data: {i}")
