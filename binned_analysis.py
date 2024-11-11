@@ -192,6 +192,13 @@ def run_binned_likelihood(vars):
     emax_edges = []
     with open('energy_bins_gtbindef.txt', 'r') as file:
         for line in file:
+            # Strip leading/trailing whitespace
+            line = line.strip()
+            
+            # Skip empty lines or lines with fewer than two values
+            if not line or len(line.split()) != 2:
+                continue  # Skip this line and go to the next
+            
             # Parse the minimum and maximum energy values from each line
             emin, emax = map(float, line.split())
             emin_edges.append(emin)
