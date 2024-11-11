@@ -177,8 +177,8 @@ def run_binned_likelihood(vars):
         print("Source not found in the XML file.")
 
     # Assuming 'like.flux' and 'like.fluxError' provide flux and flux error for the source per full time period:
-    flux_tot_value = like.flux(source_name, emin=minimal_energy, emax=maximal_energy)
-    flux_tot_error = like.fluxError(source_name, emin=minimal_energy, emax=maximal_energy)
+    flux_tot_value = like.flux(source_name, emin=minimal_energy, emax=1000000.0) #before just maximal_energy
+    flux_tot_error = like.fluxError(source_name, emin=minimal_energy, emax=1000000.0)
     N0 = like.model[source_name].funcs['Spectrum'].getParam('norm').value()
     N0_err = like.model[source_name].funcs['Spectrum'].getParam('norm').error()
     #N0_scale = like.model[source_name].funcs['Spectrum'].getParam('norm').scale()
