@@ -245,7 +245,7 @@ def run_binned_likelihood(vars):
     'flux_error_per_bin': flux_error_per_bin,
     'nobs': list(nobs),  # Convert tuple to list
     'dFdE': differential_flux_per_bin,
-    'dF_dE_error': differential_flux_per_bin_error
+    'dFdE_error': differential_flux_per_bin_error
 }
 
 
