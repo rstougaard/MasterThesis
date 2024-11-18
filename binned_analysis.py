@@ -14,7 +14,7 @@ import xml.etree.ElementTree as ET
 import numpy as np
 
 def check_paths(source_name ,time_interval_name):
-    source_name_cleaned = source_name.replace(" ", "_")
+    source_name_cleaned = source_name.replace(" ", "").replace(".", "dot").replace("+", "plus").replace("-", "minus")
     # List of paths
     paths = [
         f'./data/{source_name_cleaned}/LC_{time_interval_name}/ltcube/',
@@ -38,7 +38,7 @@ def check_paths(source_name ,time_interval_name):
 def generate_files(vars):
     ####### Livetime Cube #######
     i, source_name, time_interval_name, short_name = vars
-    source_name_cleaned = source_name.replace(" ", "_")
+    source_name_cleaned = source_name.replace(" ", "").replace(".", "dot").replace("+", "plus").replace("-", "minus")
     my_apps.expCube['evfile'] = f'./data/{source_name_cleaned}/LC_{time_interval_name}/{time_interval_name}_{i}.fits'
     my_apps.expCube['scfile'] = f'./data/{source_name_cleaned}/SC.fits'
     my_apps.expCube['outfile'] = f'./data/{source_name_cleaned}/LC_{time_interval_name}/ltcube/ltcube_{i}.fits'
@@ -117,7 +117,7 @@ def generate_files(vars):
 
 def source_maps(vars):
     i, source_name, time_interval_name, short_name = vars
-    source_name_cleaned = source_name.replace(" ", "_")
+    source_name_cleaned = source_name.replace(" ", "").replace(".", "dot").replace("+", "plus").replace("-", "minus")
     ####### Source Map #######
     my_apps.srcMaps['expcube'] = f'./data/{source_name_cleaned}/LC_{time_interval_name}/ltcube/ltcube_{i}.fits'
     my_apps.srcMaps['cmap'] = f'./data/{source_name_cleaned}/LC_{time_interval_name}/ccube/ccube_{i}.fits'
@@ -131,7 +131,7 @@ def source_maps(vars):
 
 def run_binned_likelihood(vars):
     i, source_name, short_name, time_interval_name, minimal_energy, maximal_energy = vars
-    source_name_cleaned = source_name.replace(" ", "_")
+    source_name_cleaned = source_name.replace(" ", "").replace(".", "dot").replace("+", "plus").replace("-", "minus")
     ####### Binned Likelihood Analysis #######
     obs = BinnedObs(
         srcMaps=f'./data/{source_name_cleaned}/LC_{time_interval_name}/srcmap/srcmap_{i}.fits',
