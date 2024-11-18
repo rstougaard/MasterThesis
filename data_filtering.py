@@ -8,17 +8,9 @@ import numpy as np
 import concurrent.futures
 import subprocess
 
-# Name of the source in your XML model
-source_name = '4FGL J0319.8+4130'  # Example source name in the XML model
+#start_time = 239557417  (2008Aug05 at 00:00:00.000 UTC)MET start time
 
-# Define the initial and final time
-start_time = 239557417  # (	2008Aug05 at 00:00:00.000 UTC )MET start time
-end_time = 747645295    # MET end time
-
-# Define the duration of each time bin (e.g., one month in seconds)
-time_interval_name = 'month'
-
-def data_filtering(source_name, start_time, end_time, emin, emax, ra, dec, time_interval):
+def data_filtering(source_name, start_time, end_time, emin, emax, ra, dec, time_interval_name):
     source_name_cleaned = source_name.replace(" ", "").replace(".", "dot").replace("+", "plus").replace("-", "minus")
     if time_interval_name == "month":
         time_interval = 2592000  # 30 days in seconds
