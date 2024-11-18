@@ -16,11 +16,11 @@ def main():
     print(settings)
 
     #check paths for likelihood analysis
-    check_paths(settings['time_interval_name'])
+    check_paths(settings['source_name'], settings['time_interval_name'])
 
     # Run the analysis with the loaded settings
     run_analysis(settings['source_name'], settings['short_name'], settings['num_workers'], settings['num_time_intervals'], 
-                 settings['time_interval_name'], settings['start_month'], settings['minimal_energy'], settings['maximal_energy'])
+                 settings['time_interval_name'], settings['start_month'], settings['minimal_energy'], settings['maximal_energy'], settings['ra'], settings['dec'])
 
 if __name__ == "__main__":
     main()
