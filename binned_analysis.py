@@ -13,18 +13,19 @@ import argparse
 import xml.etree.ElementTree as ET
 import numpy as np
 
-def check_paths(time_interval_name):
+def check_paths(source_name ,time_interval_name):
+    source_name_cleaned = source_name.replace(" ", "_")
     # List of paths
     paths = [
-        f'./data/LC_{time_interval_name}/ltcube/',
-        f'./data/LC_{time_interval_name}/ccube/',
-        f'./data/LC_{time_interval_name}/expcube/',
-        f'./data/LC_{time_interval_name}/expmap/',
-        f'./data/LC_{time_interval_name}/models/',
-        f'./data/LC_{time_interval_name}/srcmap/',
-        f'./data/LC_{time_interval_name}/CountsSpectra/',
-        f'./data/LC_{time_interval_name}/likeresults/',
-        f'./data/LC_{time_interval_name}/fit_params/'
+        f'./data/{source_name_cleaned}/LC_{time_interval_name}/ltcube/',
+        f'./data/{source_name_cleaned}/LC_{time_interval_name}/ccube/',
+        f'./data/{source_name_cleaned}/LC_{time_interval_name}/expcube/',
+        f'./data/{source_name_cleaned}/LC_{time_interval_name}/expmap/',
+        f'./data/{source_name_cleaned}/LC_{time_interval_name}/models/',
+        f'./data/{source_name_cleaned}/LC_{time_interval_name}/srcmap/',
+        f'./data/{source_name_cleaned}/LC_{time_interval_name}/CountsSpectra/',
+        f'./data/{source_name_cleaned}/LC_{time_interval_name}/likeresults/',
+        f'./data/{source_name_cleaned}/LC_{time_interval_name}/fit_params/'
     ]
 
     # Check and create directories
@@ -37,17 +38,18 @@ def check_paths(time_interval_name):
 def generate_files(vars):
     ####### Livetime Cube #######
     i, source_name, time_interval_name, short_name = vars
-    my_apps.expCube['evfile'] = f'./data/LC_{time_interval_name}/{short_name}_{time_interval_name}_{i}.fits'
-    my_apps.expCube['scfile'] = f'./data/{short_name}_SC.fits'
-    my_apps.expCube['outfile'] = f'./data/LC_{time_interval_name}/ltcube/{short_name}_ltcube_{i}.fits'
+    source_name_cleaned = source_name.replace(" ", "_")
+    my_apps.expCube['evfile'] = f'./data/{source_name_cleaned}/LC_{time_interval_name}/{time_interval_name}_{i}.fits'
+    my_apps.expCube['scfile'] = f'./data/{source_name_cleaned}/SC.fits'
+    my_apps.expCube['outfile'] = f'./data/{source_name_cleaned}/LC_{time_interval_name}/ltcube/ltcube_{i}.fits'
     my_apps.expCube['zmax'] = 90
     my_apps.expCube['dcostheta'] = 0.025
     my_apps.expCube['binsz'] = 1
     my_apps.expCube.run()
 
     ####### Counts Cube #######
-    my_apps.evtbin['evfile'] = f'./data/LC_{time_interval_name}/{short_name}_{time_interval_name}_{i}.fits'
-    my_apps.evtbin['outfile'] = f'./data/LC_{time_interval_name}/ccube/{short_name}_ccube_{i}.fits'
+    my_apps.evtbin['evfile'] = f'./data/{source_name_cleaned}/LC_{time_interval_name}/{time_interval_name}_{i}.fits'
+    my_apps.evtbin['outfile'] = f'./data/{source_name_cleaned}/LC_{time_interval_name}/ccube/ccube_{i}.fits'
     my_apps.evtbin['scfile'] = 'NONE'
     my_apps.evtbin['algorithm'] = 'CCUBE'
     my_apps.evtbin['nxpix'] = 100
@@ -63,9 +65,9 @@ def generate_files(vars):
     my_apps.evtbin.run()
 
     ####### Exposure Map #######
-    expCube2['infile'] = f'./data/LC_{time_interval_name}/ltcube/{short_name}_ltcube_{i}.fits'
+    expCube2['infile'] = f'./data/{source_name_cleaned}/LC_{time_interval_name}/ltcube/ltcube_{i}.fits'
     expCube2['cmap'] = 'none'
-    expCube2['outfile'] = f'./data/LC_{time_interval_name}/expmap/{short_name}_BinnedExpMap_{i}.fits'
+    expCube2['outfile'] = f'./data/{source_name_cleaned}/LC_{time_interval_name}/expmap/BinnedExpMap_{i}.fits'
     expCube2['irfs'] = 'P8R3_SOURCE_V3'
     expCube2['evtype'] = '3'
     expCube2['nxpix'] = 1800
@@ -82,12 +84,12 @@ def generate_files(vars):
 
     ####### Make model #######
     ##### Run make4FGLxml Command #####
-    make4FGLxml_command = [f'make4FGLxml ./data/gll_psc_v32.xml --event_file ./data/LC_{time_interval_name}/{short_name}_{time_interval_name}_{i}.fits -o ./data/LC_{time_interval_name}/models/{short_name}_input_model_{i}.xml --free_radius 5.0 --norms_free_only True --sigma_to_free 25 --variable_free True']
+    make4FGLxml_command = [f'make4FGLxml ./data/gll_psc_v32.xml --event_file ./data/{source_name_cleaned}/LC_{time_interval_name}/{time_interval_name}_{i}.fits -o ./data/{source_name_cleaned}/LC_{time_interval_name}/models/input_model_{i}.xml --free_radius 5.0 --norms_free_only True --sigma_to_free 25 --variable_free True']
     
     # Run the command using subprocess
     subprocess.run(make4FGLxml_command, shell=True, check=True, executable='/bin/bash')
     # Load the specific XML file
-    tree = ET.parse(f'./data/LC_{time_interval_name}/models/{short_name}_input_model_{i}.xml')  # Replace with the actual path to your XML file
+    tree = ET.parse(f'./data/{source_name_cleaned}/LC_{time_interval_name}/models/input_model_{i}.xml')  # Replace with the actual path to your XML file
     root = tree.getroot()
 
     # Look for the specific source by name
@@ -107,20 +109,21 @@ def generate_files(vars):
                 # Only modify 'alpha' and 'beta' parameters
                 if param_name in ['alpha']:
                     print(f"Changing 'free' attribute for {param_name}")
-                    param.set('free', '0')  # Set 'free' attribute to '1' right now 0 is a test
+                    param.set('free', '1')  # Set 'free' attribute to '1' 
         
         # Save the modified XML back to the file
-        tree.write(f'./data/LC_{time_interval_name}/models/{short_name}_input_model_{i}.xml', encoding='utf-8', xml_declaration=True)
+        tree.write(f'./data/{source_name_cleaned}/LC_{time_interval_name}/models/input_model_{i}.xml', encoding='utf-8', xml_declaration=True)
     pass
 
 def source_maps(vars):
     i, source_name, time_interval_name, short_name = vars
+    source_name_cleaned = source_name.replace(" ", "_")
     ####### Source Map #######
-    my_apps.srcMaps['expcube'] = f'./data/LC_{time_interval_name}/ltcube/{short_name}_ltcube_{i}.fits'
-    my_apps.srcMaps['cmap'] = f'./data/LC_{time_interval_name}/ccube/{short_name}_ccube_{i}.fits'
-    my_apps.srcMaps['srcmdl'] = f'./data/LC_{time_interval_name}/models/{short_name}_input_model_{i}.xml'
-    my_apps.srcMaps['bexpmap'] = f'./data/LC_{time_interval_name}/expmap/{short_name}_BinnedExpMap_{i}.fits'
-    my_apps.srcMaps['outfile'] = f'./data/LC_{time_interval_name}/srcmap/{short_name}_srcmap_{i}.fits'
+    my_apps.srcMaps['expcube'] = f'./data/{source_name_cleaned}/LC_{time_interval_name}/ltcube/ltcube_{i}.fits'
+    my_apps.srcMaps['cmap'] = f'./data/{source_name_cleaned}/LC_{time_interval_name}/ccube/ccube_{i}.fits'
+    my_apps.srcMaps['srcmdl'] = f'./data/{source_name_cleaned}/LC_{time_interval_name}/models/input_model_{i}.xml'
+    my_apps.srcMaps['bexpmap'] = f'./data/{source_name_cleaned}/LC_{time_interval_name}/expmap/BinnedExpMap_{i}.fits'
+    my_apps.srcMaps['outfile'] = f'./data/{source_name_cleaned}/LC_{time_interval_name}/srcmap/srcmap_{i}.fits'
     my_apps.srcMaps['irfs'] = 'P8R3_SOURCE_V3'
     my_apps.srcMaps['evtype'] = '3'
     my_apps.srcMaps.run()
@@ -128,15 +131,16 @@ def source_maps(vars):
 
 def run_binned_likelihood(vars):
     i, source_name, short_name, time_interval_name, minimal_energy, maximal_energy = vars
+    source_name_cleaned = source_name.replace(" ", "_")
     ####### Binned Likelihood Analysis #######
     obs = BinnedObs(
-        srcMaps=f'./data/LC_{time_interval_name}/srcmap/{short_name}_srcmap_{i}.fits',
-        binnedExpMap=f'./data/LC_{time_interval_name}/expmap/{short_name}_BinnedExpMap_{i}.fits',
-        expCube=f'./data/LC_{time_interval_name}/ltcube/{short_name}_ltcube_{i}.fits',
+        srcMaps=f'./data/{source_name_cleaned}/LC_{time_interval_name}/srcmap/srcmap_{i}.fits',
+        binnedExpMap=f'./data/{source_name_cleaned}/LC_{time_interval_name}/expmap/BinnedExpMap_{i}.fits',
+        expCube=f'./data/{source_name_cleaned}/LC_{time_interval_name}/ltcube/ltcube_{i}.fits',
         irfs='CALDB'
     )
     
-    like = BinnedAnalysis(obs, f'./data/LC_{time_interval_name}/models/{short_name}_input_model_{i}.xml', optimizer='NewMinuit')
+    like = BinnedAnalysis(obs, f'./data/{source_name_cleaned}/LC_{time_interval_name}/models/input_model_{i}.xml', optimizer='NewMinuit')
     likeobj = pyLikelihood.NewMinuit(like.logLike)
     like.fit(verbosity=0, covar=True, optObject=likeobj)
     
@@ -144,9 +148,9 @@ def run_binned_likelihood(vars):
     TS = like.Ts(source_name)
     convergence = likeobj.getRetCode()
 
-    like.writeCountsSpectra(f"./data/LC_{time_interval_name}/CountsSpectra/{short_name}_spectra_{i}.fits") 
-    like.logLike.writeXml(f'./data/LC_{time_interval_name}/fit_params/{short_name}_fit_{i}.xml')
-    tree = ET.parse(f'./data/LC_{time_interval_name}/fit_params/{short_name}_fit_{i}.xml')
+    like.writeCountsSpectra(f"./data/{source_name_cleaned}/LC_{time_interval_name}/CountsSpectra/spectra_{i}.fits") 
+    like.logLike.writeXml(f'./data/{source_name_cleaned}/LC_{time_interval_name}/fit_params/fit_{i}.xml')
+    tree = ET.parse(f'./data/{source_name_cleaned}/LC_{time_interval_name}/fit_params/fit_{i}.xml')
     root = tree.getroot()
 
     # Look for the specific source by name
@@ -218,6 +222,10 @@ def run_binned_likelihood(vars):
     E_bin_widths = like.energies[1:] - like.energies[:-1]
     E_bin_errors = E_bin_widths / 2
 
+    #calculate the differential flux
+    differential_flux_per_bin = flux_per_bin/(emax_edges - emin_edges)
+    differential_flux_per_bin_error = flux_error_per_bin/(emax_edges - emin_edges)
+
     # Save the flux data along with alpha and beta
     fit_data = {
     f'{time_interval_name}': i,
@@ -235,12 +243,14 @@ def run_binned_likelihood(vars):
     'E_bin_errors': E_bin_errors.tolist() if isinstance(E_bin_errors, np.ndarray) else list(E_bin_errors),
     'flux_per_bin': flux_per_bin,
     'flux_error_per_bin': flux_error_per_bin,
-    'nobs': list(nobs)  # Convert tuple to list
+    'nobs': list(nobs),  # Convert tuple to list
+    'dFdE': differential_flux_per_bin,
+    'dF_dE_error': differential_flux_per_bin_error
 }
 
 
     print(f"Saving flux data: {i}")
-    with open(f'./data/LC_{time_interval_name}/likeresults/flux_{time_interval_name}_{i}.json', 'w') as f:
+    with open(f'./data/{source_name_cleaned}/LC_{time_interval_name}/likeresults/flux_{time_interval_name}_{i}.json', 'w') as f:
         json.dump(fit_data, f, indent=4) 
     
     return (i, log_likelihood, TS, convergence)
