@@ -78,3 +78,5 @@ def data_filtering(source_name, start_time, end_time, emin, emax, ra, dec, time_
         # Update the current time and index
         current_time = next_time
         index += 1
+
+        return
