@@ -13,7 +13,7 @@ import argparse
 import xml.etree.ElementTree as ET
 import numpy as np
 
-def check_paths(source_name ,time_interval_name):
+def check_paths(source_name, time_interval_name):
     source_name_cleaned = source_name.replace(" ", "").replace(".", "dot").replace("+", "plus").replace("-", "minus")
     # List of paths
     paths = [
@@ -37,7 +37,7 @@ def check_paths(source_name ,time_interval_name):
 # Your existing generate_files, source_maps, and run_binned_likelihood functions here
 def generate_files(vars):
     ####### Livetime Cube #######
-    i, source_name, time_interval_name, short_name = vars
+    i, source_name, time_interval_name, ra, dec, short_name = vars
     source_name_cleaned = source_name.replace(" ", "").replace(".", "dot").replace("+", "plus").replace("-", "minus")
     my_apps.expCube['evfile'] = f'./data/{source_name_cleaned}/LC_{time_interval_name}/{time_interval_name}_{i}.fits'
     my_apps.expCube['scfile'] = f'./data/{source_name_cleaned}/SC.fits'
@@ -56,8 +56,8 @@ def generate_files(vars):
     my_apps.evtbin['nypix'] = 100
     my_apps.evtbin['binsz'] = 0.2
     my_apps.evtbin['coordsys'] = 'CEL'
-    my_apps.evtbin['xref'] = 49.9507
-    my_apps.evtbin['yref'] = 41.5117
+    my_apps.evtbin['xref'] = ra
+    my_apps.evtbin['yref'] = dec
     my_apps.evtbin['axisrot'] = 0
     my_apps.evtbin['proj'] = 'AIT'
     my_apps.evtbin['ebinalg'] = 'FILE'
@@ -74,8 +74,8 @@ def generate_files(vars):
     expCube2['nypix'] = 900
     expCube2['binsz'] = 0.2
     expCube2['coordsys'] = 'CEL'
-    expCube2['xref'] = 49.9507
-    expCube2['yref'] = 41.5117
+    expCube2['xref'] = ra
+    expCube2['yref'] = dec
     expCube2['axisrot'] = 0
     expCube2['proj'] = 'AIT'
     expCube2['ebinalg'] = 'FILE'
@@ -116,7 +116,7 @@ def generate_files(vars):
     pass
 
 def source_maps(vars):
-    i, source_name, time_interval_name, short_name = vars
+    i, source_name, time_interval_name, ra, dec, short_name = vars
     source_name_cleaned = source_name.replace(" ", "").replace(".", "dot").replace("+", "plus").replace("-", "minus")
     ####### Source Map #######
     my_apps.srcMaps['expcube'] = f'./data/{source_name_cleaned}/LC_{time_interval_name}/ltcube/ltcube_{i}.fits'
@@ -256,7 +256,7 @@ def run_binned_likelihood(vars):
     return (i, log_likelihood, TS, convergence)
     
 def run_analysis(source_name, short_name, num_workers, num_time_intervals,
-                time_interval_name, start_month, minimal_energy, maximal_energy):
+                time_interval_name, start_month, minimal_energy, maximal_energy, ra, dec):
 
     # Your existing gtbindef_energy_command and subprocess call here
     gtbindef_energy_command = [
@@ -284,7 +284,7 @@ def run_analysis(source_name, short_name, num_workers, num_time_intervals,
     running_args = []
     running_args_likelihood = []
     for i in range(start_month,num_time_intervals):
-        running_args.append((i, source_name, time_interval_name, short_name))
+        running_args.append((i, source_name, time_interval_name, ra, dec, short_name))
         running_args_likelihood.append((i, source_name, short_name, time_interval_name, minimal_energy, maximal_energy))
 
     # Main analysis loop
