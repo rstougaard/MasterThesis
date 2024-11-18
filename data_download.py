@@ -20,3 +20,5 @@ def data_download(source_name):
     subprocess.run(move_datafiles, shell=True, check=True, executable='/bin/bash')
     subprocess.run(ls, shell=True, check=True, executable='/bin/bash')
     subprocess.run(cat, shell=True, check=True, executable='/bin/bash')
+
+    return
