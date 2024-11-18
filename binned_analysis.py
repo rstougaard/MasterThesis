@@ -107,7 +107,7 @@ def generate_files(vars):
                 # Only modify 'alpha' and 'beta' parameters
                 if param_name in ['alpha']:
                     print(f"Changing 'free' attribute for {param_name}")
-                    param.set('free', '1')  # Set 'free' attribute to '1'
+                    param.set('free', '0')  # Set 'free' attribute to '1' right now 0 is a test
         
         # Save the modified XML back to the file
         tree.write(f'./data/LC_{time_interval_name}/models/{short_name}_input_model_{i}.xml', encoding='utf-8', xml_declaration=True)
