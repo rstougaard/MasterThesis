@@ -26,7 +26,7 @@ def data_filtering(source_name, start_time, end_time, emin, emax, ra, dec, time_
     time.sleep(5)  # 5 seconds of "dead" time
 
     eventlist_command0 = [
-            f'ls ./data/*PH*.fits > ./data/{source_name_cleaned}/events.list'
+            f'ls ./data/{source_name_cleaned}/*PH*.fits > ./data/{source_name_cleaned}/events.list'
         ]
     eventlist_command1 = [
             f'cat ./data/{source_name_cleaned}/events.list'
