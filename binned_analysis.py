@@ -53,6 +53,7 @@ def generate_ltcube(vars):
     my_apps.expCube['dcostheta'] = 0.025
     my_apps.expCube['binsz'] = 1
     my_apps.expCube.run()
+    pass
 
 # Function to generate other necessary files (per energy bin)
 def generate_files(vars):
@@ -107,6 +108,7 @@ def generate_files(vars):
     expCube2['ebinalg'] = 'FILE'
     expCube2['ebinfile'] = f'energy_bin_{energy_bin_index}.fits'
     expCube2.run()
+    
 
     ####### Make model #######
     ##### Run make4FGLxml Command #####
@@ -153,6 +155,7 @@ def source_maps(vars):
     my_apps.srcMaps['irfs'] = 'P8R3_SOURCE_V3'
     my_apps.srcMaps['evtype'] = '3'
     my_apps.srcMaps.run()
+    pass
 
 # Function to run binned likelihood analysis
 def run_binned_likelihood(vars):
@@ -219,6 +222,7 @@ def run_binned_likelihood(vars):
     output_file = f'./data/{source_name_cleaned}/LC_{time_interval_name}/likeresults/flux_{i}_bin_{energy_bin_index}.json'
     with open(output_file, 'w') as f:
         json.dump(fit_data, f, indent=4)
+    pass
 
 def combine_flux_data(source_name_cleaned, time_interval_name, i, energy_bins):
     combined_data = {}
