@@ -61,7 +61,7 @@ def generate_files(vars):
     source_name_cleaned = source_name.replace(" ", "").replace(".", "dot").replace("+", "plus").replace("-", "minus")
 
     # Create energy bin definition file for this bin
-    energy_bin_txt = f'energy_bin_{energy_bin_index}.txt'
+    energy_bin_txt = f'energy_bin_{i}_{energy_bin_index}.txt'
     with open(energy_bin_txt, 'w') as f:
         f.write(f'{emin}   {emax}\n')
 
@@ -70,7 +70,7 @@ def generate_files(vars):
         'gtbindef',
         'E',
         energy_bin_txt,
-        f'energy_bin_{energy_bin_index}.fits',
+        f'energy_bin_{i}_{energy_bin_index}.fits',
         'MeV']
     subprocess.run(gtbindef_energy_command, check=True)
 
@@ -88,7 +88,7 @@ def generate_files(vars):
     my_apps.evtbin['axisrot'] = 0
     my_apps.evtbin['proj'] = 'AIT'
     my_apps.evtbin['ebinalg'] = 'FILE'
-    my_apps.evtbin['ebinfile'] = f'energy_bin_{energy_bin_index}.fits'
+    my_apps.evtbin['ebinfile'] = f'energy_bin_{i}_{energy_bin_index}.fits'
     my_apps.evtbin.run()
 
     ####### Exposure Map #######
@@ -106,7 +106,7 @@ def generate_files(vars):
     expCube2['axisrot'] = 0
     expCube2['proj'] = 'AIT'
     expCube2['ebinalg'] = 'FILE'
-    expCube2['ebinfile'] = f'energy_bin_{energy_bin_index}.fits'
+    expCube2['ebinfile'] = f'energy_bin_{i}_{energy_bin_index}.fits'
     expCube2.run()
     
 
