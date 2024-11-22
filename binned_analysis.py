@@ -114,13 +114,13 @@ def generate_files(vars):
     ##### Run make4FGLxml Command #####
     make4FGLxml_command = [
         f'make4FGLxml ./data/gll_psc_v32.xml --event_file ./data/{source_name_cleaned}/LC_{time_interval_name}/{time_interval_name}_{i}.fits '
-        f'-o ./data/{source_name_cleaned}/LC_{time_interval_name}/models/input_model_{i}.xml --free_radius 5.0 --norms_free_only True '
+        f'-o ./data/{source_name_cleaned}/LC_{time_interval_name}/models/input_model_{i}_bin_{energy_bin_index}.xml --free_radius 5.0 --norms_free_only True '
         f'--sigma_to_free 25 --variable_free True']
     
     subprocess.run(make4FGLxml_command, shell=True, check=True, executable='/bin/bash')
 
     # Modify the generated XML file
-    tree = ET.parse(f'./data/{source_name_cleaned}/LC_{time_interval_name}/models/input_model_{i}.xml')
+    tree = ET.parse(f'./data/{source_name_cleaned}/LC_{time_interval_name}/models/input_model_{i}_bin_{energy_bin_index}.xml')
     root = tree.getroot()
 
     # Look for the specific source by name
@@ -139,7 +139,7 @@ def generate_files(vars):
                     param.set('free', '1')
 
         # Save the modified XML back to the file
-        tree.write(f'./data/{source_name_cleaned}/LC_{time_interval_name}/models/input_model_{i}.xml', encoding='utf-8', xml_declaration=True)
+        tree.write(f'./data/{source_name_cleaned}/LC_{time_interval_name}/models/input_model_{i}_bin_{energy_bin_index}.xml', encoding='utf-8', xml_declaration=True)
     pass 
 
 # Function to generate source maps
@@ -149,7 +149,7 @@ def source_maps(vars):
     ####### Source Map #######
     my_apps.srcMaps['expcube'] = f'./data/{source_name_cleaned}/LC_{time_interval_name}/ltcube/ltcube_{i}.fits'
     my_apps.srcMaps['cmap'] = f'./data/{source_name_cleaned}/LC_{time_interval_name}/ccube/ccube_{i}_bin_{energy_bin_index}.fits'
-    my_apps.srcMaps['srcmdl'] = f'./data/{source_name_cleaned}/LC_{time_interval_name}/models/input_model_{i}.xml'
+    my_apps.srcMaps['srcmdl'] = f'./data/{source_name_cleaned}/LC_{time_interval_name}/models/input_model_{i}_bin_{energy_bin_index}.xml'
     my_apps.srcMaps['bexpmap'] = f'./data/{source_name_cleaned}/LC_{time_interval_name}/expmap/BinnedExpMap_{i}_bin_{energy_bin_index}.fits'
     my_apps.srcMaps['outfile'] = f'./data/{source_name_cleaned}/LC_{time_interval_name}/srcmap/srcmap_{i}_bin_{energy_bin_index}.fits'
     my_apps.srcMaps['irfs'] = 'P8R3_SOURCE_V3'
@@ -167,16 +167,16 @@ def run_binned_likelihood(vars):
         expCube=f'./data/{source_name_cleaned}/LC_{time_interval_name}/ltcube/ltcube_{i}.fits',
         irfs='CALDB'
     )
-    like = BinnedAnalysis(obs, f'./data/{source_name_cleaned}/LC_{time_interval_name}/models/input_model_{i}.xml', optimizer='NewMinuit')
+    like = BinnedAnalysis(obs, f'./data/{source_name_cleaned}/LC_{time_interval_name}/models/input_model_{i}_bin_{energy_bin_index}.xml', optimizer='NewMinuit')
     likeobj = pyLikelihood.NewMinuit(like.logLike)
     like.fit(verbosity=0, covar=True, optObject=likeobj)
 
     # Write Counts Spectra and XML files
-    like.writeCountsSpectra(f"./data/{source_name_cleaned}/LC_{time_interval_name}/CountsSpectra/spectra_{i}.fits")
-    like.logLike.writeXml(f'./data/{source_name_cleaned}/LC_{time_interval_name}/fit_params/fit_{i}.xml')
+    like.writeCountsSpectra(f"./data/{source_name_cleaned}/LC_{time_interval_name}/CountsSpectra/spectra_{i}_bin_{energy_bin_index}.fits")
+    like.logLike.writeXml(f'./data/{source_name_cleaned}/LC_{time_interval_name}/fit_params/fit_{i}_bin_{energy_bin_index}.xml')
 
     # Load the XML file to get alpha values
-    tree = ET.parse(f'./data/{source_name_cleaned}/LC_{time_interval_name}/fit_params/fit_{i}.xml')
+    tree = ET.parse(f'./data/{source_name_cleaned}/LC_{time_interval_name}/fit_params/fit_{i}_bin_{energy_bin_index}.xml')
     root = tree.getroot()
 
     # Look for the specific source by name
@@ -250,7 +250,7 @@ def combine_all_time_intervals(source_name_cleaned, time_interval_name, num_inte
                 all_data[f"{time_interval_name}_{i}"] = data
 
     # Save all combined data for all months
-    with open(f'./data/{source_name_cleaned}/LC_{time_interval_name}/likeresults/all_{time_interval_name}_combined_flux_{time_interval_name}.json', 'w') as f:
+    with open(f'./data/{source_name_cleaned}/LC_{time_interval_name}/likeresults/all_combined_flux_{time_interval_name}.json', 'w') as f:
         json.dump(all_data, f, indent=4)
     return
 
