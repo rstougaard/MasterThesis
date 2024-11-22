@@ -159,7 +159,7 @@ def source_maps(vars):
 
 # Function to run binned likelihood analysis
 def run_binned_likelihood(vars):
-    i, source_name, short_name, time_interval_name, emin, emax, energy_bin_index = vars
+    i, source_name, time_interval_name, ra, dec, short_name, emin, emax, energy_bin_index = vars
     source_name_cleaned = source_name.replace(" ", "").replace(".", "dot").replace("+", "plus").replace("-", "minus")
     obs = BinnedObs(
         srcMaps=f'./data/{source_name_cleaned}/LC_{time_interval_name}/srcmap/srcmap_{i}_bin_{energy_bin_index}.fits',
@@ -263,6 +263,7 @@ def run_analysis(source_name, short_name, num_workers, num_time_intervals, time_
     for i in range(start_month, num_time_intervals):
         for energy_bin_index, (emin, emax) in enumerate(energy_bins):
             running_args.append((i, source_name, time_interval_name, ra, dec, short_name, emin, emax, energy_bin_index))
+            
 
     with Pool(num_workers) as p:
         list(tqdm(p.map(generate_ltcube, running_args_ltcube), total=len(running_args_ltcube)))
