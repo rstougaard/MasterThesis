@@ -173,7 +173,7 @@ def run_binned_likelihood(vars):
 
     # Print parameter values before fitting to help debug bounds issues
     for param in like.model[source_name].funcs['Spectrum'].params:
-        print(f"Parameter {param.getName()}: value={param.value()}, min={param.getMin()}, max={param.getMax()}")
+        print(f"Parameter { param }
     
     try:
         like.fit(verbosity=0, covar=True, optObject=likeobj)
