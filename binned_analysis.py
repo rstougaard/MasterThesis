@@ -169,7 +169,19 @@ def run_binned_likelihood(vars):
     )
     like = BinnedAnalysis(obs, f'./data/{source_name_cleaned}/LC_{time_interval_name}/models/input_model_{i}_bin_{energy_bin_index}.xml', optimizer='NewMinuit')
     likeobj = pyLikelihood.NewMinuit(like.logLike)
-    like.fit(verbosity=0, covar=True, optObject=likeobj)
+    #like.fit(verbosity=0, covar=True, optObject=likeobj)
+
+    # Print parameter values before fitting to help debug bounds issues
+    for param in like.model[source_name].funcs['Spectrum'].params:
+        print(f"Parameter {param.getName()}: value={param.value()}, min={param.getMin()}, max={param.getMax()}")
+    
+    try:
+        like.fit(verbosity=0, covar=True, optObject=likeobj)
+    except RuntimeError as e:
+        if "Attempt to set the value outside of existing bounds" in str(e):
+            print(f"Error in time interval {i} bin {energy_bin_index} for source {source_name}: Parameter value out of bounds.")
+            # Optionally, handle the error here by adjusting parameters or bounds
+        raise
 
     # Write Counts Spectra and XML files
     like.writeCountsSpectra(f"./data/{source_name_cleaned}/LC_{time_interval_name}/CountsSpectra/spectra_{i}_bin_{energy_bin_index}.fits")
@@ -224,35 +236,108 @@ def run_binned_likelihood(vars):
         json.dump(fit_data, f, indent=4)
     pass
 
-def combine_flux_data(source_name_cleaned, time_interval_name, i, energy_bins):
-    combined_data = {}
-    for energy_bin_index, (emin, emax) in enumerate(energy_bins):
-        energy_range = f"{int(emin)}_{int(emax)}"
-        flux_file = f'./data/{source_name_cleaned}/LC_{time_interval_name}/likeresults/flux_{time_interval_name}_{energy_range}_{i}.json'
-        if os.path.exists(flux_file):
-            with open(flux_file, 'r') as f:
-                data = json.load(f)
-                combined_data[energy_range] = data
-            # Optionally, remove the individual file
-            os.remove(flux_file)
-    # Save combined data
-    with open(f'./data/{source_name_cleaned}/LC_{time_interval_name}/likeresults/combined_flux_{time_interval_name}_{i}.json', 'w') as f:
-        json.dump(combined_data, f, indent=4)
-    return
+def combine_flux_data_per_time_interval(source_name_cleaned, time_interval_name, num_intervals, num_bins):
+    all_intervals_combined_data = []
 
-def combine_all_time_intervals(source_name_cleaned, time_interval_name, num_intervals):
-    all_data = {}
+    # Iterate over all time intervals
     for i in range(num_intervals):
-        combined_flux_file = f'./data/{source_name_cleaned}/LC_{time_interval_name}/likeresults/combined_flux_{time_interval_name}_{i}.json'
-        if os.path.exists(combined_flux_file):
-            with open(combined_flux_file, 'r') as f:
-                data = json.load(f)
-                all_data[f"{time_interval_name}_{i}"] = data
+        combined_data_for_interval = []
 
-    # Save all combined data for all months
-    with open(f'./data/{source_name_cleaned}/LC_{time_interval_name}/likeresults/all_combined_flux_{time_interval_name}.json', 'w') as f:
-        json.dump(all_data, f, indent=4)
-    return
+        # Iterate over all bins for a given time interval to load data
+        for bin_num in range(num_bins):
+            flux_file = f'./data/{source_name_cleaned}/LC_{time_interval_name}/likeresults/flux_{i}_bin_{bin_num}.json'
+
+            if os.path.exists(flux_file):
+                with open(flux_file, 'r') as f:
+                    data = json.load(f)
+                    # Extract relevant fields from JSON and append to combined data for that interval
+                    combined_data_for_interval.append({
+                        "time_interval": data.get("time_interval"),
+                        "int_flux": data.get("int_flux"),
+                        "int_flux_error": data.get("int_flux_error"),
+                        "emin": data.get("emin"),
+                        "emax": data.get("emax"),
+                        "dFdE": data.get("dFdE"),
+                        "dFdE_error": data.get("dFdE_error"),
+                        "nobs": data.get("nobs", [None])[0],  # Extract the first element of nobs (assuming it has one value)
+                        "alpha_value": data.get("alpha_value"),
+                        "alpha_error": data.get("alpha_error")
+                    })
+
+        # Add the interval data if it has values
+        if combined_data_for_interval:
+            all_intervals_combined_data.append(combined_data_for_interval)
+
+    # Calculate the summed array per bin across all time intervals
+    summed_array_per_bin = []
+
+    if all_intervals_combined_data:
+        # Iterate over bins to calculate the sum
+        for bin_index in range(num_bins):
+            num_valid_intervals = 0
+            summed_bin_data = {
+                "time_interval": None,
+                "int_flux": 0.0,
+                "int_flux_error": 0.0,
+                "emin": None,
+                "emax": None,
+                "dFdE": 0.0,
+                "dFdE_error": 0.0,
+                "nobs": 0.0,
+                "alpha_value": 0.0,
+                "alpha_error": 0.0
+            }
+
+            # Iterate over each interval to sum the values for the current bin
+            for interval_data in all_intervals_combined_data:
+                if bin_index < len(interval_data):
+                    bin_data = interval_data[bin_index]
+                    num_valid_intervals += 1
+
+                    # Retain time_interval, emin, emax from the first valid interval
+                    if summed_bin_data["time_interval"] is None:
+                        summed_bin_data["time_interval"] = bin_data["time_interval"]
+                        summed_bin_data["emin"] = bin_data["emin"]
+                        summed_bin_data["emax"] = bin_data["emax"]
+
+                    # Sum the numerical values
+                    for key in ["int_flux", "int_flux_error", "dFdE", "dFdE_error", "nobs", "alpha_value", "alpha_error"]:
+                        if bin_data[key] is not None:
+                            summed_bin_data[key] += bin_data[key]
+
+            # Divide summed values by number of intervals to get the average
+            if num_valid_intervals > 0:
+                for key in ["int_flux", "int_flux_error", "dFdE", "dFdE_error", "alpha_value", "alpha_error"]:
+                    summed_bin_data[key] /= num_valid_intervals
+
+            # Append the summed data for this bin
+            summed_array_per_bin.append(summed_bin_data)
+
+    # Convert summed_array_per_bin to a structured array for easier access
+    dtype = [
+        ("time_interval", "O"),
+        ("int_flux", "f8"),
+        ("int_flux_error", "f8"),
+        ("emin", "f8"),
+        ("emax", "f8"),
+        ("dFdE", "f8"),
+        ("dFdE_error", "f8"),
+        ("nobs", "f8"),
+        ("alpha_value", "f8"),
+        ("alpha_error", "f8")
+    ]
+    summed_array_per_bin_np = np.array([tuple(d.values()) for d in summed_array_per_bin], dtype=dtype)
+
+    # Save arrays as .npy files
+    output_directory = f'./data/{source_name_cleaned}/LC_{time_interval_name}/npy_files/'
+    os.makedirs(output_directory, exist_ok=True)
+
+    # Save the combined data, combined array, and summed array as .npy files
+    np.save(os.path.join(output_directory, 'all_intervals_combined_data.npy'), all_intervals_combined_data)
+    np.save(os.path.join(output_directory, 'all_intervals_combined_array.npy'), all_intervals_combined_data, allow_pickle=True)
+    np.save(os.path.join(output_directory, 'summed_array_per_bin.npy'), summed_array_per_bin_np)
+
+    return all_intervals_combined_data, summed_array_per_bin_np
 
 # Main function to run the analysis
 def run_analysis(source_name, short_name, num_workers, num_time_intervals, time_interval_name, start_month, ra, dec):
@@ -272,9 +357,8 @@ def run_analysis(source_name, short_name, num_workers, num_time_intervals, time_
         list(tqdm(p.map(run_binned_likelihood, running_args), total=len(running_args)))
 
     # After the analysis is done
-    for i in range(start_month, num_time_intervals):
-        combine_flux_data(source_name_cleaned, time_interval_name, i, energy_bins)
+    combine_flux_data_per_time_interval(source_name_cleaned, time_interval_name, num_time_intervals, 8)
 
-    combine_all_time_intervals(source_name_cleaned, time_interval_name, num_time_intervals)
+    
 
 
