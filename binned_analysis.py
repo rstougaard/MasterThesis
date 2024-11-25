@@ -574,7 +574,7 @@ def run_analysis(source_name, short_name, num_workers, num_time_intervals, time_
     running_args = []
     running_args_per_bin = []
     for i in range(start_month, num_time_intervals):
-        running_args.append(i, source_name, time_interval_name, ra, dec, short_name)
+        running_args.append((i, source_name, time_interval_name, ra, dec, short_name))
         for energy_bin_index, (emin, emax) in enumerate(energy_bins):
             running_args_per_bin.append((i, source_name, time_interval_name, ra, dec, short_name, emin, emax, energy_bin_index))
             
