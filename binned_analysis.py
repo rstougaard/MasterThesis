@@ -612,7 +612,7 @@ def run_analysis(source_name, short_name, num_workers, num_time_intervals, time_
         for energy_bin_index, (emin, emax) in enumerate(energy_bins):
             running_args_per_bin.append((i, source_name, time_interval_name, ra, dec, short_name, emin, emax, energy_bin_index))
             
-
+    '''
     with Pool(num_workers) as p:
         list(tqdm(p.map(generate_ltcube, running_args_ltcube), total=len(running_args_ltcube)))
         list(tqdm(p.map(generate_files, running_args), total=len(running_args)))
@@ -622,6 +622,7 @@ def run_analysis(source_name, short_name, num_workers, num_time_intervals, time_
     save_flux_fit_data(source_name_cleaned, time_interval_name, num_time_intervals)
     print("Flux fit saved!")
     #fuction that deletes everything generated in generate_files and source_maps
+    '''
     delete_fits_and_xml_files(source_name_cleaned, time_interval_name)
     
     with Pool(num_workers) as p:
