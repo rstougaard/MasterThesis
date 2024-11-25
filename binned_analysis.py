@@ -25,7 +25,8 @@ def check_paths(source_name, time_interval_name):
         f'./data/{source_name_cleaned}/LC_{time_interval_name}/srcmap/',
         f'./data/{source_name_cleaned}/LC_{time_interval_name}/CountsSpectra/',
         f'./data/{source_name_cleaned}/LC_{time_interval_name}/likeresults/',
-        f'./data/{source_name_cleaned}/LC_{time_interval_name}/fit_params/'
+        f'./data/{source_name_cleaned}/LC_{time_interval_name}/fit_params/',
+        f'./energy_bins_def'
     ]
     for path in paths:
         os.makedirs(path, exist_ok=True)
