@@ -26,7 +26,7 @@ def check_paths(source_name, time_interval_name):
         f'./data/{source_name_cleaned}/LC_{time_interval_name}/CountsSpectra/',
         f'./data/{source_name_cleaned}/LC_{time_interval_name}/likeresults/',
         f'./data/{source_name_cleaned}/LC_{time_interval_name}/fit_params/',
-        f'./energy_bins_def'
+        f'./energy_bins_def/'
     ]
     for path in paths:
         os.makedirs(path, exist_ok=True)
@@ -59,7 +59,7 @@ def generate_ltcube(vars):
 # Function to generate files for full spectrum
 def generate_files(vars):
     ####### Livetime Cube #######
-    i, source_name, time_interval_name, ra, dec, short_name = vars
+    i, source_name, time_interval_name, ra, dec, minimal_energy, maximal_energy = vars
     source_name_cleaned = source_name.replace(" ", "").replace(".", "dot").replace("+", "plus").replace("-", "minus")
     my_apps.evtbin['evfile'] = f'./data/{source_name_cleaned}/LC_{time_interval_name}/{time_interval_name}_{i}.fits'
     my_apps.evtbin['outfile'] = f'./data/{source_name_cleaned}/LC_{time_interval_name}/ccube/ccube_{i}.fits'
@@ -129,7 +129,7 @@ def generate_files(vars):
     pass
 
 def source_maps(vars):
-    i, source_name, time_interval_name, ra, dec, short_name = vars
+    i, source_name, time_interval_name, ra, dec, minimal_energy, maximal_energy = vars
     source_name_cleaned = source_name.replace(" ", "").replace(".", "dot").replace("+", "plus").replace("-", "minus")
     ####### Source Map #######
     my_apps.srcMaps['expcube'] = f'./data/{source_name_cleaned}/LC_{time_interval_name}/ltcube/ltcube_{i}.fits'
@@ -143,7 +143,7 @@ def source_maps(vars):
     pass
 
 def run_binned_likelihood(vars):
-    i, source_name, short_name, time_interval_name, minimal_energy, maximal_energy = vars
+    i, source_name, time_interval_name, ra, dec, minimal_energy, maximal_energy = vars
     source_name_cleaned = source_name.replace(" ", "").replace(".", "dot").replace("+", "plus").replace("-", "minus")
     ####### Binned Likelihood Analysis #######
     obs = BinnedObs(
@@ -568,7 +568,7 @@ def delete_fits_and_xml_files(source_name_cleaned, time_interval_name):
                 print(f"Error deleting file {file}: {e}")
 
 # Main function to run the analysis
-def run_analysis(source_name, short_name, num_workers, num_time_intervals, time_interval_name, start_month, ra, dec):
+def run_analysis(source_name, short_name, num_workers, num_time_intervals, time_interval_name, start_month, ra, dec, minimal_energy, maximal_energy):
     # Your existing gtbindef_energy_command and subprocess call here
     gtbindef_energy_command = [
         'gtbindef', 
@@ -584,7 +584,8 @@ def run_analysis(source_name, short_name, num_workers, num_time_intervals, time_
     running_args = []
     running_args_per_bin = []
     for i in range(start_month, num_time_intervals):
-        running_args.append((i, source_name, time_interval_name, ra, dec, short_name))
+        running_args.append((i, source_name, time_interval_name, ra, dec, minimal_energy, maximal_energy))
+        
         for energy_bin_index, (emin, emax) in enumerate(energy_bins):
             running_args_per_bin.append((i, source_name, time_interval_name, ra, dec, short_name, emin, emax, energy_bin_index))
             
