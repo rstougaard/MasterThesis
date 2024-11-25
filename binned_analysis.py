@@ -467,33 +467,64 @@ def combine_flux_data_per_time_interval(source_name_cleaned, time_interval_name,
                 with open(flux_file, 'r') as f:
                     data = json.load(f)
 
-                    # Skip data if any crucial value is None
+                    # Check if data is missing or contains None values
                     if data.get("int_flux") is None or data.get("dFdE") is None:
-                        print(f"Skipping time interval {i} bin {bin_num} due to missing data.")
-                        continue
+                        print(f"Data missing for time interval {i}, bin {bin_num}. Filling with zeroes.")
+                        bin_data = {
+                            "time_interval": i,
+                            "int_flux": 0.0,
+                            "int_flux_error": 0.0,
+                            "emin": data.get("emin"),
+                            "emax": data.get("emax"),
+                            'E_av': (data.get("emin", 0.0) * data.get("emax", 0.0)) ** 0.5 if data.get("emin") and data.get("emax") else 0.0,
+                            'E_minus_error': 0.0,
+                            'E_plus_error': 0.0,
+                            "dFdE": 0.0,
+                            "dFdE_error": 0.0,
+                            "nobs": 0.0,
+                        }
+                    else:
+                        # Use actual data if it exists and is valid
+                        bin_data = {
+                            "time_interval": data.get("time_interval"),
+                            "int_flux": data.get("int_flux", 0.0),
+                            "int_flux_error": data.get("int_flux_error", 0.0),
+                            "emin": data.get("emin"),
+                            "emax": data.get("emax"),
+                            'E_av': data.get("E_av", 0.0),
+                            'E_minus_error': data.get("E_minus_error", 0.0),
+                            'E_plus_error': data.get("E_plus_error", 0.0),
+                            "dFdE": data.get("dFdE", 0.0),
+                            "dFdE_error": data.get("dFdE_error", 0.0),
+                            "nobs": data.get("nobs", [0])[0],  # Extract the first element of nobs or use 0 if None
+                        }
+            else:
+                # If the file doesn't exist, fill the data with zeros
+                print(f"File not found for time interval {i}, bin {bin_num}. Filling with zeroes.")
+                bin_data = {
+                    "time_interval": i,
+                    "int_flux": 0.0,
+                    "int_flux_error": 0.0,
+                    "emin": 0.0,
+                    "emax": 0.0,
+                    'E_av': 0.0,
+                    'E_minus_error': 0.0,
+                    'E_plus_error': 0.0,
+                    "dFdE": 0.0,
+                    "dFdE_error": 0.0,
+                    "nobs": 0.0,
+                }
 
-                    # Extract relevant fields from JSON and append to combined data for that interval
-                    combined_data_for_interval.append({
-                        "time_interval": data.get("time_interval"),
-                        "int_flux": data.get("int_flux"),
-                        "int_flux_error": data.get("int_flux_error"),
-                        "emin": data.get("emin"),
-                        "emax": data.get("emax"),
-                        'E_av': data.get("E_av"),
-                        'E_minus_error': data.get("E_minus_error"),
-                        'E_plus_error': data.get("E_plus_error"),
-                        "dFdE": data.get("dFdE"),
-                        "dFdE_error": data.get("dFdE_error"),
-                        "nobs": data.get("nobs", [0])[0]  # Extract the first element of nobs or use 0 if None
-                    })
+            # Append the data for the current bin to the combined data for this interval
+            combined_data_for_interval.append(bin_data)
 
-                # Delete the JSON file after reading
+            # Delete the JSON file after reading
+            if os.path.exists(flux_file):
                 os.remove(flux_file)
                 print(f"Deleted JSON file: {flux_file}")
 
         # Add the interval data if it has values
-        if combined_data_for_interval:
-            all_intervals_combined_data.append(combined_data_for_interval)
+        all_intervals_combined_data.append(combined_data_for_interval)
 
     # Calculate the summed array per bin across all time intervals
     summed_array_per_bin = []
@@ -565,8 +596,7 @@ def combine_flux_data_per_time_interval(source_name_cleaned, time_interval_name,
     os.makedirs(output_directory, exist_ok=True)
 
     # Save the combined data, combined array, and summed array as .npy files
-    np.save(os.path.join(output_directory, 'all_intervals_combined_data.npy'), all_intervals_combined_data)
-    np.save(os.path.join(output_directory, 'all_intervals_combined_array.npy'), all_intervals_combined_data, allow_pickle=True)
+    np.save(os.path.join(output_directory, 'all_intervals_combined_data.npy'), all_intervals_combined_data, allow_pickle=True)
     np.save(os.path.join(output_directory, 'summed_array_per_bin.npy'), summed_array_per_bin_np)
 
     return all_intervals_combined_data, summed_array_per_bin_np
