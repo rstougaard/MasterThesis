@@ -73,7 +73,7 @@ def generate_files(vars):
     my_apps.evtbin['axisrot'] = 0
     my_apps.evtbin['proj'] = 'AIT'
     my_apps.evtbin['ebinalg'] = 'FILE'
-    my_apps.evtbin['ebinfile'] = 'energy_bins_gtbindef.fits'
+    my_apps.evtbin['ebinfile'] = './energy_bins_def/energy_bins_gtbindef.fits'
     my_apps.evtbin.run()
 
     ####### Exposure Map #######
@@ -91,7 +91,7 @@ def generate_files(vars):
     expCube2['axisrot'] = 0
     expCube2['proj'] = 'AIT'
     expCube2['ebinalg'] = 'FILE'
-    expCube2['ebinfile'] = 'energy_bins_gtbindef.fits'
+    expCube2['ebinfile'] = './energy_bins_def/energy_bins_gtbindef.fits'
     expCube2.run()
 
     ####### Make model #######
@@ -272,7 +272,7 @@ def generate_files_per_bin(vars):
     source_name_cleaned = source_name.replace(" ", "").replace(".", "dot").replace("+", "plus").replace("-", "minus")
 
     # Create energy bin definition file for this bin
-    energy_bin_txt = f'energy_bin_{i}_{energy_bin_index}.txt'
+    energy_bin_txt = f'./energy_bins_def/energy_bin_{i}_{energy_bin_index}.txt'
     with open(energy_bin_txt, 'w') as f:
         f.write(f'{emin}   {emax}\n')
 
@@ -281,7 +281,7 @@ def generate_files_per_bin(vars):
         'gtbindef',
         'E',
         energy_bin_txt,
-        f'energy_bin_{i}_{energy_bin_index}.fits',
+        f'./energy_bins_def/energy_bin_{i}_{energy_bin_index}.fits',
         'MeV']
     subprocess.run(gtbindef_energy_command, check=True)
 
@@ -299,7 +299,7 @@ def generate_files_per_bin(vars):
     my_apps.evtbin['axisrot'] = 0
     my_apps.evtbin['proj'] = 'AIT'
     my_apps.evtbin['ebinalg'] = 'FILE'
-    my_apps.evtbin['ebinfile'] = f'energy_bin_{i}_{energy_bin_index}.fits'
+    my_apps.evtbin['ebinfile'] = f'./energy_bins_def/energy_bin_{i}_{energy_bin_index}.fits'
     my_apps.evtbin.run()
 
     ####### Exposure Map #######
@@ -317,7 +317,7 @@ def generate_files_per_bin(vars):
     expCube2['axisrot'] = 0
     expCube2['proj'] = 'AIT'
     expCube2['ebinalg'] = 'FILE'
-    expCube2['ebinfile'] = f'energy_bin_{i}_{energy_bin_index}.fits'
+    expCube2['ebinfile'] = f'./energy_bins_def/energy_bin_{i}_{energy_bin_index}.fits'
     expCube2.run()
     
 
@@ -568,6 +568,15 @@ def delete_fits_and_xml_files(source_name_cleaned, time_interval_name):
 
 # Main function to run the analysis
 def run_analysis(source_name, short_name, num_workers, num_time_intervals, time_interval_name, start_month, ra, dec):
+    # Your existing gtbindef_energy_command and subprocess call here
+    gtbindef_energy_command = [
+        'gtbindef', 
+        'E',
+        'energy_bins_gtbindef.txt',
+        './energy_bins_def/energy_bins_gtbindef.fits' ,
+        'MeV']
+
+    subprocess.run(gtbindef_energy_command, check=True)
     energy_bins = get_energy_bins()
     source_name_cleaned = source_name.replace(" ", "").replace(".", "dot").replace("+", "plus").replace("-", "minus")
     running_args_ltcube = [(i, source_name, time_interval_name, ra, dec, short_name) for i in range(start_month, num_time_intervals)]
