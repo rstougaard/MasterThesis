@@ -466,6 +466,12 @@ def combine_flux_data_per_time_interval(source_name_cleaned, time_interval_name,
             if os.path.exists(flux_file):
                 with open(flux_file, 'r') as f:
                     data = json.load(f)
+
+                    # Skip data if any crucial value is None
+                    if data.get("int_flux") is None or data.get("dFdE") is None:
+                        print(f"Skipping time interval {i} bin {bin_num} due to missing data.")
+                        continue
+
                     # Extract relevant fields from JSON and append to combined data for that interval
                     combined_data_for_interval.append({
                         "time_interval": data.get("time_interval"),
@@ -478,7 +484,7 @@ def combine_flux_data_per_time_interval(source_name_cleaned, time_interval_name,
                         'E_plus_error': data.get("E_plus_error"),
                         "dFdE": data.get("dFdE"),
                         "dFdE_error": data.get("dFdE_error"),
-                        "nobs": data.get("nobs", [None])[0]  # Extract the first element of nobs (assuming it has one value)
+                        "nobs": data.get("nobs", [0])[0]  # Extract the first element of nobs or use 0 if None
                     })
 
                 # Delete the JSON file after reading
