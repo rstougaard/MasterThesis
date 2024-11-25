@@ -373,28 +373,45 @@ def source_maps_per_bin(vars):
 def run_binned_likelihood_per_bin(vars):
     i, source_name, time_interval_name, ra, dec, short_name, emin, emax, energy_bin_index = vars
     source_name_cleaned = source_name.replace(" ", "").replace(".", "dot").replace("+", "plus").replace("-", "minus")
+    
     obs = BinnedObs(
         srcMaps=f'./data/{source_name_cleaned}/LC_{time_interval_name}/srcmap/srcmap_{i}_bin_{energy_bin_index}.fits',
         binnedExpMap=f'./data/{source_name_cleaned}/LC_{time_interval_name}/expmap/BinnedExpMap_{i}_bin_{energy_bin_index}.fits',
         expCube=f'./data/{source_name_cleaned}/LC_{time_interval_name}/ltcube/ltcube_{i}.fits',
         irfs='CALDB'
     )
+
     like = BinnedAnalysis(obs, f'./data/{source_name_cleaned}/LC_{time_interval_name}/models/input_model_{i}_bin_{energy_bin_index}.xml', optimizer='NewMinuit')
     likeobj = pyLikelihood.NewMinuit(like.logLike)
-    #like.fit(verbosity=0, covar=True, optObject=likeobj)
 
-    # Print parameter values before fitting to help debug bounds issues
-    for param in like.model[source_name].funcs['Spectrum'].params:
-        print(f"Parameter { param }" )
-    
+    # Try to perform the likelihood fitting, catch exceptions if they arise
     try:
         like.fit(verbosity=0, covar=True, optObject=likeobj)
     except RuntimeError as e:
         if "Attempt to set the value outside of existing bounds" in str(e):
-            print(f"Error in time interval {i} bin {energy_bin_index} for source {source_name}: Parameter value out of bounds.")
-            # Optionally, handle the error here by adjusting parameters or bounds
-        raise
+            print(f"Error in time interval {i} bin {energy_bin_index} for source {source_name}: Parameter value out of bounds. Skipping this bin.")
+            # Set default values for the failed fitting
+            fit_data = {
+                'time_interval': i,
+                'int_flux': None,
+                'int_flux_error': None,
+                'emin': emin,
+                'emax': emax,
+                'E_av': (emin * emax) ** 0.5,  # Estimate of average energy
+                'E_minus_error': None,
+                'E_plus_error': None,
+                'dFdE': None,
+                'dFdE_error': None,
+                'nobs': None,
+            }
 
+            # Save the default data to indicate a failed fit
+            output_file = f'./data/{source_name_cleaned}/LC_{time_interval_name}/likeresults/flux_{i}_bin_{energy_bin_index}.json'
+            with open(output_file, 'w') as f:
+                json.dump(fit_data, f, indent=4)
+            return
+
+    # Proceed if no errors occurred during fitting
     # Write Counts Spectra and XML files
     like.writeCountsSpectra(f"./data/{source_name_cleaned}/LC_{time_interval_name}/CountsSpectra/spectra_{i}_bin_{energy_bin_index}.fits")
     like.logLike.writeXml(f'./data/{source_name_cleaned}/LC_{time_interval_name}/fit_params/fit_{i}_bin_{energy_bin_index}.xml')
@@ -410,10 +427,10 @@ def run_binned_likelihood_per_bin(vars):
     E_bin_width = emax - emin
     dFdE = flux_value / E_bin_width
     dFdE_error = flux_error / E_bin_width
-    E_av = (emin*emax)**0.5
+    E_av = (emin * emax) ** 0.5
 
-    E_minus_error = E_av - emax
-    E_plus_error = emin - E_av
+    E_minus_error = E_av - emin
+    E_plus_error = emax - E_av
 
     # Save the extracted data
     fit_data = {
