@@ -478,8 +478,9 @@ def combine_flux_data_per_time_interval(source_name_cleaned, time_interval_name,
                         'E_plus_error': data.get("E_plus_error"),
                         "dFdE": data.get("dFdE"),
                         "dFdE_error": data.get("dFdE_error"),
-                        "nobs": data.get("nobs", [0])[0]  # Extract the first element of nobs or use 0 if None
-                    })
+                        "nobs": data.get("nobs") if isinstance(data.get("nobs"), (int, float)) else data.get("nobs", [0])[0]
+                        })
+
 
                 # Delete the JSON file after reading
                 os.remove(flux_file)
