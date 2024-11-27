@@ -12,6 +12,7 @@ import os
 import glob
 import xml.etree.ElementTree as ET
 import numpy as np
+import logging
 
 # Function to ensure paths exist
 def check_paths(source_name, time_interval_name):
@@ -373,84 +374,94 @@ def source_maps_per_bin(vars):
 def run_binned_likelihood_per_bin(vars):
     i, source_name, time_interval_name, ra, dec, short_name, emin, emax, energy_bin_index = vars
     source_name_cleaned = source_name.replace(" ", "").replace(".", "dot").replace("+", "plus").replace("-", "minus")
-    
-    obs = BinnedObs(
-        srcMaps=f'./data/{source_name_cleaned}/LC_{time_interval_name}/srcmap/srcmap_{i}_bin_{energy_bin_index}.fits',
-        binnedExpMap=f'./data/{source_name_cleaned}/LC_{time_interval_name}/expmap/BinnedExpMap_{i}_bin_{energy_bin_index}.fits',
-        expCube=f'./data/{source_name_cleaned}/LC_{time_interval_name}/ltcube/ltcube_{i}.fits',
-        irfs='CALDB'
-    )
 
-    like = BinnedAnalysis(obs, f'./data/{source_name_cleaned}/LC_{time_interval_name}/models/input_model_{i}_bin_{energy_bin_index}.xml', optimizer='NewMinuit')
-    likeobj = pyLikelihood.NewMinuit(like.logLike)
-
-    # Try to perform the likelihood fitting, catch exceptions if they arise
     try:
-        like.fit(verbosity=0, covar=True, optObject=likeobj)
-    except RuntimeError as e:
-        if "Attempt to set the value outside of existing bounds" in str(e):
-            print(f"Error in time interval {i} bin {energy_bin_index} for source {source_name}: Parameter value out of bounds. Skipping this bin.")
-            # Set default values for the failed fitting
-            fit_data = {
-                'time_interval': i,
-                'int_flux': None,
-                'int_flux_error': None,
-                'emin': emin,
-                'emax': emax,
-                'E_av': (emin * emax) ** 0.5,  # Estimate of average energy
-                'E_minus_error': None,
-                'E_plus_error': None,
-                'dFdE': None,
-                'dFdE_error': None,
-                'nobs': None,
-            }
+        logging.info(f"Starting time interval {i}, bin {energy_bin_index}")
 
-            # Save the default data to indicate a failed fit
-            output_file = f'./data/{source_name_cleaned}/LC_{time_interval_name}/likeresults/flux_{i}_bin_{energy_bin_index}.json'
-            with open(output_file, 'w') as f:
-                json.dump(fit_data, f, indent=4)
-            return
+        obs = BinnedObs(
+            srcMaps=f'./data/{source_name_cleaned}/LC_{time_interval_name}/srcmap/srcmap_{i}_bin_{energy_bin_index}.fits',
+            binnedExpMap=f'./data/{source_name_cleaned}/LC_{time_interval_name}/expmap/BinnedExpMap_{i}_bin_{energy_bin_index}.fits',
+            expCube=f'./data/{source_name_cleaned}/LC_{time_interval_name}/ltcube/ltcube_{i}.fits',
+            irfs='CALDB'
+        )
 
-    # Proceed if no errors occurred during fitting
-    # Write Counts Spectra and XML files
-    like.writeCountsSpectra(f"./data/{source_name_cleaned}/LC_{time_interval_name}/CountsSpectra/spectra_{i}_bin_{energy_bin_index}.fits")
-    like.logLike.writeXml(f'./data/{source_name_cleaned}/LC_{time_interval_name}/fit_params/fit_{i}_bin_{energy_bin_index}.xml')
+        like = BinnedAnalysis(obs, f'./data/{source_name_cleaned}/LC_{time_interval_name}/models/input_model_{i}_bin_{energy_bin_index}.xml', optimizer='NewMinuit')
+        likeobj = pyLikelihood.NewMinuit(like.logLike)
 
-    # Calculate differential flux per energy bin
-    flux_value = like.flux(source_name, emin=emin, emax=emax)
-    flux_error = like.fluxError(source_name, emin=emin, emax=emax)
+        # Try to perform the likelihood fitting, catch exceptions if they arise
+        try:
+            like.fit(verbosity=0, covar=True, optObject=likeobj)
+        except RuntimeError as e:
+            if "Attempt to set the value outside of existing bounds" in str(e):
+                logging.error(f"Error in time interval {i} bin {energy_bin_index} for source {source_name}: Parameter value out of bounds.")
+                # Set default values for the failed fitting
+                fit_data = {
+                    'time_interval': i,
+                    'int_flux': 0.0,
+                    'int_flux_error': 0.0,
+                    'emin': emin,
+                    'emax': emax,
+                    'E_av': (emin * emax) ** 0.5,
+                    'E_minus_error': 0.0,
+                    'E_plus_error': 0.0,
+                    'dFdE': 0.0,
+                    'dFdE_error': 0.0,
+                    'nobs': 0.0,
+                }
+                # Save the default data to indicate a failed fit
+                output_file = f'./data/{source_name_cleaned}/LC_{time_interval_name}/likeresults/flux_{i}_bin_{energy_bin_index}.json'
+                with open(output_file, 'w') as f:
+                    json.dump(fit_data, f, indent=4)
+                return
 
-    # Get nobs values
-    nobs = like.nobs
+        # Proceed if no errors occurred during fitting
+        # Write Counts Spectra and XML files
+        like.writeCountsSpectra(f"./data/{source_name_cleaned}/LC_{time_interval_name}/CountsSpectra/spectra_{i}_bin_{energy_bin_index}.fits")
+        like.logLike.writeXml(f'./data/{source_name_cleaned}/LC_{time_interval_name}/fit_params/fit_{i}_bin_{energy_bin_index}.xml')
 
-    # Calculate differential flux and errors
-    E_bin_width = emax - emin
-    dFdE = flux_value / E_bin_width
-    dFdE_error = flux_error / E_bin_width
-    E_av = (emin * emax) ** 0.5
+        # Calculate differential flux per energy bin
+        try:
+            flux_value = like.flux(source_name, emin=emin, emax=emax)
+            flux_error = like.fluxError(source_name, emin=emin, emax=emax)
+        except RuntimeError as e:
+            logging.error(f"Covariance matrix error in time interval {i}, bin {energy_bin_index} for source {source_name}. Skipping.")
+            # Handle missing covariance matrix by storing zero values
+            flux_value = 0.0
+            flux_error = 0.0
 
-    E_minus_error = E_av - emin
-    E_plus_error = emax - E_av
+        # Get nobs values
+        nobs = like.nobs
 
-    # Save the extracted data
-    fit_data = {
-        'time_interval': i,
-        'int_flux': flux_value,
-        'int_flux_error': flux_error,
-        'emin': emin,
-        'emax': emax,
-        'E_av': E_av,
-        'E_minus_error': E_minus_error,
-        'E_plus_error': E_plus_error,
-        'dFdE': dFdE,
-        'dFdE_error': dFdE_error,
-        'nobs': list(nobs),
-    }
+        # Calculate differential flux and errors
+        E_bin_width = emax - emin
+        dFdE = flux_value / E_bin_width
+        dFdE_error = flux_error / E_bin_width
+        E_av = (emin * emax) ** 0.5
 
-    output_file = f'./data/{source_name_cleaned}/LC_{time_interval_name}/likeresults/flux_{i}_bin_{energy_bin_index}.json'
-    with open(output_file, 'w') as f:
-        json.dump(fit_data, f, indent=4)
-    pass
+        E_minus_error = E_av - emin
+        E_plus_error = emax - E_av
+
+        # Save the extracted data
+        fit_data = {
+            'time_interval': i,
+            'int_flux': flux_value,
+            'int_flux_error': flux_error,
+            'emin': emin,
+            'emax': emax,
+            'E_av': E_av,
+            'E_minus_error': E_minus_error,
+            'E_plus_error': E_plus_error,
+            'dFdE': dFdE,
+            'dFdE_error': dFdE_error,
+            'nobs': list(nobs),
+        }
+
+        output_file = f'./data/{source_name_cleaned}/LC_{time_interval_name}/likeresults/flux_{i}_bin_{energy_bin_index}.json'
+        with open(output_file, 'w') as f:
+            json.dump(fit_data, f, indent=4)
+
+    except Exception as e:
+        logging.error(f"Unhandled exception in time interval {i}, bin {energy_bin_index}: {e}")
 
 def combine_flux_data_per_time_interval(source_name_cleaned, time_interval_name, num_intervals, num_bins):
     all_intervals_combined_data = []
@@ -602,6 +613,12 @@ def delete_fits_and_xml_files(source_name_cleaned, time_interval_name):
                 #print(f"Deleted: {file}")
             except OSError as e:
                 print(f"Error deleting file {file}: {e}")
+
+logging.basicConfig(
+    filename='error_log.txt',
+    level=logging.DEBUG,
+    format='%(asctime)s [%(levelname)s] %(message)s'
+)
 
 # Main function to run the analysis
 def run_analysis(source_name, short_name, num_workers, num_time_intervals, time_interval_name, start_month, ra, dec, minimal_energy, maximal_energy):
