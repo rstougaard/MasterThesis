@@ -376,8 +376,6 @@ def run_binned_likelihood_per_bin(vars):
     source_name_cleaned = source_name.replace(" ", "").replace(".", "dot").replace("+", "plus").replace("-", "minus")
 
     try:
-        logging.info(f"Starting time interval {i}, bin {energy_bin_index}")
-
         obs = BinnedObs(
             srcMaps=f'./data/{source_name_cleaned}/LC_{time_interval_name}/srcmap/srcmap_{i}_bin_{energy_bin_index}.fits',
             binnedExpMap=f'./data/{source_name_cleaned}/LC_{time_interval_name}/expmap/BinnedExpMap_{i}_bin_{energy_bin_index}.fits',
@@ -388,46 +386,16 @@ def run_binned_likelihood_per_bin(vars):
         like = BinnedAnalysis(obs, f'./data/{source_name_cleaned}/LC_{time_interval_name}/models/input_model_{i}_bin_{energy_bin_index}.xml', optimizer='NewMinuit')
         likeobj = pyLikelihood.NewMinuit(like.logLike)
 
-        # Try to perform the likelihood fitting, catch exceptions if they arise
-        try:
-            like.fit(verbosity=0, covar=True, optObject=likeobj)
-        except RuntimeError as e:
-            if "Attempt to set the value outside of existing bounds" in str(e):
-                logging.error(f"Error in time interval {i} bin {energy_bin_index} for source {source_name}: Parameter value out of bounds.")
-                # Set default values for the failed fitting
-                fit_data = {
-                    'time_interval': i,
-                    'int_flux': 0.0,
-                    'int_flux_error': 0.0,
-                    'emin': emin,
-                    'emax': emax,
-                    'E_av': (emin * emax) ** 0.5,
-                    'E_minus_error': 0.0,
-                    'E_plus_error': 0.0,
-                    'dFdE': 0.0,
-                    'dFdE_error': 0.0,
-                    'nobs': 0.0,
-                }
-                # Save the default data to indicate a failed fit
-                output_file = f'./data/{source_name_cleaned}/LC_{time_interval_name}/likeresults/flux_{i}_bin_{energy_bin_index}.json'
-                with open(output_file, 'w') as f:
-                    json.dump(fit_data, f, indent=4)
-                return
+        # Perform the likelihood fitting
+        like.fit(verbosity=0, covar=True, optObject=likeobj)
 
-        # Proceed if no errors occurred during fitting
         # Write Counts Spectra and XML files
         like.writeCountsSpectra(f"./data/{source_name_cleaned}/LC_{time_interval_name}/CountsSpectra/spectra_{i}_bin_{energy_bin_index}.fits")
         like.logLike.writeXml(f'./data/{source_name_cleaned}/LC_{time_interval_name}/fit_params/fit_{i}_bin_{energy_bin_index}.xml')
 
         # Calculate differential flux per energy bin
-        try:
-            flux_value = like.flux(source_name, emin=emin, emax=emax)
-            flux_error = like.fluxError(source_name, emin=emin, emax=emax)
-        except RuntimeError as e:
-            logging.error(f"Covariance matrix error in time interval {i}, bin {energy_bin_index} for source {source_name}. Skipping.")
-            # Handle missing covariance matrix by storing zero values
-            flux_value = 0.0
-            flux_error = 0.0
+        flux_value = like.flux(source_name, emin=emin, emax=emax)
+        flux_error = like.fluxError(source_name, emin=emin, emax=emax)
 
         # Get nobs values
         nobs = like.nobs
@@ -461,7 +429,10 @@ def run_binned_likelihood_per_bin(vars):
             json.dump(fit_data, f, indent=4)
 
     except Exception as e:
-        logging.error(f"Unhandled exception in time interval {i}, bin {energy_bin_index}: {e}")
+        # Catch any exception and print relevant information
+        print(f"Error in iteration: time_interval {i}, bin {energy_bin_index}")
+        print(f"Exception: {str(e)}")
+
 
 def combine_flux_data_per_time_interval(source_name_cleaned, time_interval_name, num_intervals, num_bins):
     all_intervals_combined_data = []
