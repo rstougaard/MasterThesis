@@ -467,10 +467,22 @@ def combine_flux_data_per_time_interval(source_name_cleaned, time_interval_name,
                 with open(flux_file, 'r') as f:
                     data = json.load(f)
 
-                    # Skip data if any crucial value is None
+                    # If any crucial value is None, replace it with zeroes
                     if data.get("int_flux") is None or data.get("dFdE") is None:
-                        print(f"Skipping time interval {i} bin {bin_num} due to missing data.")
-                        continue
+                        print(f"Missing data for time interval {i} bin {bin_num}. Filling with zeroes.")
+                        data = {
+                            "time_interval": i,
+                            "int_flux": 0.0,
+                            "int_flux_error": 0.0,
+                            "emin": data.get("emin", 0.0),
+                            "emax": data.get("emax", 0.0),
+                            'E_av': 0.0,
+                            'E_minus_error': 0.0,
+                            'E_plus_error': 0.0,
+                            "dFdE": 0.0,
+                            "dFdE_error": 0.0,
+                            "nobs": 0.0
+                        }
 
                     # Extract relevant fields from JSON and append to combined data for that interval
                     combined_data_for_interval.append({
@@ -570,6 +582,7 @@ def combine_flux_data_per_time_interval(source_name_cleaned, time_interval_name,
     np.save(os.path.join(output_directory, 'summed_array_per_bin.npy'), summed_array_per_bin_np)
 
     return all_intervals_combined_data, summed_array_per_bin_np
+
 #######################################################################################################################################
 def delete_fits_and_xml_files(source_name_cleaned, time_interval_name):
     # Define the folders and file types to delete
@@ -604,7 +617,7 @@ def run_analysis(source_name, short_name, num_workers, num_time_intervals, time_
     subprocess.run(gtbindef_energy_command, check=True)
     energy_bins = get_energy_bins()
     source_name_cleaned = source_name.replace(" ", "").replace(".", "dot").replace("+", "plus").replace("-", "minus")
-    '''
+    
     running_args_ltcube = [(i, source_name, time_interval_name, ra, dec, short_name) for i in range(start_month, num_time_intervals)]
     running_args = []
     running_args_per_bin = []
@@ -615,7 +628,7 @@ def run_analysis(source_name, short_name, num_workers, num_time_intervals, time_
         for energy_bin_index, (emin, emax) in enumerate(energy_bins):
             running_args_per_bin.append((i, source_name, time_interval_name, ra, dec, short_name, emin, emax, energy_bin_index))
             
-    
+    '''
     with Pool(num_workers) as p:
         list(tqdm(p.map(generate_ltcube, running_args_ltcube), total=len(running_args_ltcube)))
         list(tqdm(p.map(generate_files, running_args), total=len(running_args)))
@@ -627,12 +640,12 @@ def run_analysis(source_name, short_name, num_workers, num_time_intervals, time_
     #fuction that deletes everything generated in generate_files and source_maps
     
     delete_fits_and_xml_files(source_name_cleaned, time_interval_name)
-    
-    with Pool(num_workers) as p:
-        list(tqdm(p.map(generate_files_per_bin, running_args_per_bin), total=len(running_args_per_bin)))
-        list(tqdm(p.map(source_maps_per_bin, running_args_per_bin), total=len(running_args_per_bin)))
-        list(tqdm(p.map(run_binned_likelihood_per_bin, running_args_per_bin), total=len(running_args_per_bin)))
     '''
+    with Pool(num_workers) as p:
+        #list(tqdm(p.map(generate_files_per_bin, running_args_per_bin), total=len(running_args_per_bin)))
+        #list(tqdm(p.map(source_maps_per_bin, running_args_per_bin), total=len(running_args_per_bin)))
+        list(tqdm(p.map(run_binned_likelihood_per_bin, running_args_per_bin), total=len(running_args_per_bin)))
+    
     combine_flux_data_per_time_interval(source_name_cleaned, time_interval_name, num_time_intervals, 8)
     print("Spectral points per time interval saved!")
     delete_fits_and_xml_files(source_name_cleaned, time_interval_name)
