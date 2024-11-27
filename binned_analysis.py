@@ -593,6 +593,7 @@ def delete_fits_and_xml_files(source_name_cleaned, time_interval_name):
 # Main function to run the analysis
 def run_analysis(source_name, short_name, num_workers, num_time_intervals, time_interval_name, start_month, ra, dec, minimal_energy, maximal_energy):
     # Your existing gtbindef_energy_command and subprocess call here
+    
     gtbindef_energy_command = [
         'gtbindef', 
         'E',
@@ -603,9 +604,11 @@ def run_analysis(source_name, short_name, num_workers, num_time_intervals, time_
     subprocess.run(gtbindef_energy_command, check=True)
     energy_bins = get_energy_bins()
     source_name_cleaned = source_name.replace(" ", "").replace(".", "dot").replace("+", "plus").replace("-", "minus")
+    '''
     running_args_ltcube = [(i, source_name, time_interval_name, ra, dec, short_name) for i in range(start_month, num_time_intervals)]
     running_args = []
     running_args_per_bin = []
+    
     for i in range(start_month, num_time_intervals):
         running_args.append((i, source_name, time_interval_name, ra, dec, minimal_energy, maximal_energy))
         
@@ -629,7 +632,7 @@ def run_analysis(source_name, short_name, num_workers, num_time_intervals, time_
         list(tqdm(p.map(generate_files_per_bin, running_args_per_bin), total=len(running_args_per_bin)))
         list(tqdm(p.map(source_maps_per_bin, running_args_per_bin), total=len(running_args_per_bin)))
         list(tqdm(p.map(run_binned_likelihood_per_bin, running_args_per_bin), total=len(running_args_per_bin)))
-
+    '''
     combine_flux_data_per_time_interval(source_name_cleaned, time_interval_name, num_time_intervals, 8)
     print("Spectral points per time interval saved!")
     delete_fits_and_xml_files(source_name_cleaned, time_interval_name)
