@@ -10,7 +10,7 @@ import subprocess
 
 #start_time = 239557417  (2008Aug05 at 00:00:00.000 UTC)MET start time
 
-def data_filtering(source_name, start_time, end_time, emin, emax, ra, dec, time_interval_name):
+def data_filtering(source_name, start_time, end_time, num_intervals, emin, emax, ra, dec, time_interval_name):
     source_name_cleaned = source_name.replace(" ", "").replace(".", "dot").replace("+", "plus").replace("-", "minus")
     if time_interval_name == "month":
         time_interval = 2592000  # 30 days in seconds
@@ -63,10 +63,13 @@ def data_filtering(source_name, start_time, end_time, emin, emax, ra, dec, time_
     current_time = start_time
     index = 0
 
-    # Loop over each month until the end time
-    while current_time < end_time:
-        # Calculate the end time for the current month
-        next_time = min(current_time + time_interval, end_time)
+    # Calculate the time interval for each of the 168 intervals
+    time_interval = (end_time - start_time) / num_intervals
+
+    # Loop over the specified number of intervals
+    for _ in range(num_intervals):
+        # Calculate the end time for the current interval
+        next_time = current_time + time_interval
         
         # Define the filter settings with the current index
         my_apps.filter['tmin'] = current_time
