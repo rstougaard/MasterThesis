@@ -19,7 +19,7 @@ def data_filtering(source_name, start_time, end_time, emin, emax, ra, dec, time_
     elif time_interval_name == "3 days":
         time_interval =  259200
 
-    print("Starting analysis with the following parameters:")
+    print("Starting filtering with the following parameters:")
     print(f"Source Name: {source_name}")
     print(f"Time interval: {time_interval_name}")
 
