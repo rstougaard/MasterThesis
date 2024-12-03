@@ -20,9 +20,9 @@ def main():
     #check paths for likelihood analysis
     check_paths(settings['source_name'], settings['time_interval_name'])
 
-    data_download(settings['source_name'])
+    #data_download(settings['source_name'])
     
-    data_filtering(settings['source_name'], settings['start_time'], settings['end_time'], settings['minimal_energy'], settings['maximal_energy'], settings['ra'], settings['dec'], settings['time_interval_name'])
+    data_filtering(settings['source_name'], settings['start_time'], settings['end_time'],settings['num_time_intervals'], settings['minimal_energy'], settings['maximal_energy'], settings['ra'], settings['dec'], settings['time_interval_name'])
 
 if __name__ == "__main__":
     main()
