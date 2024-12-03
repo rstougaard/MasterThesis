@@ -1,7 +1,7 @@
 import subprocess
 import requests
-import regex as re
-import time
+#import regex as re
+#import time
 
 def data_download(source_name):
     # Commands to execute
