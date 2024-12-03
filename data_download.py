@@ -6,15 +6,26 @@ import requests
 def data_download(source_name):
     # Commands to execute
     source_name_cleaned = source_name.replace(" ", "").replace(".", "dot").replace("+", "plus").replace("-", "minus")
-    download_files = ['wget https://fermi.gsfc.nasa.gov/FTP/fermi/data/lat/queries/L2412030422357F1E437D89_SC00.fits',
-                        'wget https://fermi.gsfc.nasa.gov/FTP/fermi/data/lat/queries/L2412030422357F1E437D89_PH00.fits',
-                        'wget https://fermi.gsfc.nasa.gov/FTP/fermi/data/lat/queries/L2412030422357F1E437D89_PH01.fits',
-                        'wget https://fermi.gsfc.nasa.gov/FTP/fermi/data/lat/queries/L2412030422357F1E437D89_PH02.fits',
-                        'wget https://fermi.gsfc.nasa.gov/FTP/fermi/data/lat/queries/L2412030422357F1E437D89_PH03.fits',
-                        'wget https://fermi.gsfc.nasa.gov/FTP/fermi/data/lat/queries/L2412030422357F1E437D89_PH04.fits',
-                        'wget https://fermi.gsfc.nasa.gov/FTP/fermi/data/lat/queries/L2412030422357F1E437D89_PH06.fits',
-                        'wget https://fermi.gsfc.nasa.gov/FTP/fermi/data/lat/queries/L2412030422357F1E437D89_PH05.fits'
-    ]
+    download_files = ['wget https://fermi.gsfc.nasa.gov/FTP/fermi/data/lat/queries/L2412030857604B1E0A7D74_PH00.fits',
+                    'wget https://fermi.gsfc.nasa.gov/FTP/fermi/data/lat/queries/L2412030857604B1E0A7D74_PH02.fits',
+                    'wget https://fermi.gsfc.nasa.gov/FTP/fermi/data/lat/queries/L2412030857604B1E0A7D74_PH05.fits',
+                    'wget https://fermi.gsfc.nasa.gov/FTP/fermi/data/lat/queries/L2412030857604B1E0A7D74_PH03.fits',
+                    'wget https://fermi.gsfc.nasa.gov/FTP/fermi/data/lat/queries/L2412030857604B1E0A7D74_PH04.fits',
+                    'wget https://fermi.gsfc.nasa.gov/FTP/fermi/data/lat/queries/L2412030857604B1E0A7D74_PH06.fits',
+                    'wget https://fermi.gsfc.nasa.gov/FTP/fermi/data/lat/queries/L2412030857604B1E0A7D74_PH01.fits',
+                    'wget https://fermi.gsfc.nasa.gov/FTP/fermi/data/lat/queries/L2412030857604B1E0A7D74_SC00.fits'
+]
+    
+    '''       
+    'wget https://fermi.gsfc.nasa.gov/FTP/fermi/data/lat/queries/L2412030422357F1E437D89_SC00.fits',
+    'wget https://fermi.gsfc.nasa.gov/FTP/fermi/data/lat/queries/L2412030422357F1E437D89_PH00.fits',
+    'wget https://fermi.gsfc.nasa.gov/FTP/fermi/data/lat/queries/L2412030422357F1E437D89_PH01.fits',
+    'wget https://fermi.gsfc.nasa.gov/FTP/fermi/data/lat/queries/L2412030422357F1E437D89_PH02.fits',
+    'wget https://fermi.gsfc.nasa.gov/FTP/fermi/data/lat/queries/L2412030422357F1E437D89_PH03.fits',
+    'wget https://fermi.gsfc.nasa.gov/FTP/fermi/data/lat/queries/L2412030422357F1E437D89_PH04.fits',
+    'wget https://fermi.gsfc.nasa.gov/FTP/fermi/data/lat/queries/L2412030422357F1E437D89_PH06.fits',
+    'wget https://fermi.gsfc.nasa.gov/FTP/fermi/data/lat/queries/L2412030422357F1E437D89_PH05.fits'
+    '''
 
     move_SCfiles = 'mv *SC00.fits SC.fits'
     move_datafiles = f'mv *.fits ./data/{source_name_cleaned}'
