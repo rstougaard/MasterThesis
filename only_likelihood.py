@@ -236,7 +236,6 @@ def run_binned_likelihood(vars):
     
     print(f"Saved flux data for full spectrum {i}!")
     
-    return (i, log_likelihood, TS, convergence)
 
 def save_flux_fit_data(source_name_cleaned, time_interval_name, num_intervals):
     combined_fit_data = {}
