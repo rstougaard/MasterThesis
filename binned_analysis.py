@@ -147,87 +147,94 @@ def run_binned_likelihood(vars):
     i, source_name, time_interval_name, ra, dec, minimal_energy, maximal_energy = vars
     source_name_cleaned = source_name.replace(" ", "").replace(".", "dot").replace("+", "plus").replace("-", "minus")
     ####### Binned Likelihood Analysis #######
-    obs = BinnedObs(
-        srcMaps=f'./data/{source_name_cleaned}/LC_{time_interval_name}/srcmap/srcmap_{i}.fits',
-        binnedExpMap=f'./data/{source_name_cleaned}/LC_{time_interval_name}/expmap/BinnedExpMap_{i}.fits',
-        expCube=f'./data/{source_name_cleaned}/LC_{time_interval_name}/ltcube/ltcube_{i}.fits',
-        irfs='CALDB'
-    )
-    
-    like = BinnedAnalysis(obs, f'./data/{source_name_cleaned}/LC_{time_interval_name}/models/input_model_{i}.xml', optimizer='NewMinuit')
-    likeobj = pyLikelihood.NewMinuit(like.logLike)
-    like.fit(verbosity=0, covar=True, optObject=likeobj)
-    
-    log_likelihood = like.logLike.value()
-    TS = like.Ts(source_name)
-    convergence = likeobj.getRetCode()
-
-    like.writeCountsSpectra(f"./data/{source_name_cleaned}/LC_{time_interval_name}/CountsSpectra/spectra_{i}.fits") 
-    like.logLike.writeXml(f'./data/{source_name_cleaned}/LC_{time_interval_name}/fit_params/fit_{i}.xml')
-    tree = ET.parse(f'./data/{source_name_cleaned}/LC_{time_interval_name}/fit_params/fit_{i}.xml')
-    root = tree.getroot()
-
-    # Look for the specific source by name
-    source = root.find(f".//source[@name='{source_name}']")
-
-    if source is not None:
-        print(f"Source: {source.get('name')}")
-
-        # Initialize a dictionary to store parameter values and errors
-        param_data = {}
-
-        # Find the 'spectrum' tag within this source
-        spectrum = source.find('spectrum')
+    try:
+        obs = BinnedObs(
+            srcMaps=f'./data/{source_name_cleaned}/LC_{time_interval_name}/srcmap/srcmap_{i}.fits',
+            binnedExpMap=f'./data/{source_name_cleaned}/LC_{time_interval_name}/expmap/BinnedExpMap_{i}.fits',
+            expCube=f'./data/{source_name_cleaned}/LC_{time_interval_name}/ltcube/ltcube_{i}.fits',
+            irfs='CALDB'
+        )
         
-        if spectrum is not None:
-            # Loop through the parameters within the spectrum
-            for param in spectrum.findall('parameter'):
-                param_name = param.get('name')  # Get the parameter name
-                param_value = param.get('value')  # Get the parameter value
-                param_error = param.get('error')  # Get the parameter error (if available)
-                param_scale = param.get('scale')
-                
-                if param_name in ['alpha', 'beta', 'Eb']:  # Check if it's 'alpha' or 'beta'
-                    param_data[f'{param_name}_value'] = param_value  # Store value in the dictionary
-                    param_data[f'{param_name}_error'] = param_error  # Store error in the dictionary
-                    param_data[f'{param_name}_scale'] = param_scale
-    else:
-        print("Source not found in the XML file.")
+        like = BinnedAnalysis(obs, f'./data/{source_name_cleaned}/LC_{time_interval_name}/models/input_model_{i}.xml', optimizer='NewMinuit')
+        likeobj = pyLikelihood.NewMinuit(like.logLike)
+        like.fit(verbosity=0, covar=True, optObject=likeobj)
+        
+        log_likelihood = like.logLike.value()
+        TS = like.Ts(source_name)
+        convergence = likeobj.getRetCode()
 
-    # Assuming 'like.flux' and 'like.fluxError' provide flux and flux error for the source per full time period:
-    flux_tot_value = like.flux(source_name, emin=minimal_energy, emax=maximal_energy) #before just maximal_energy
-    flux_tot_error = like.fluxError(source_name, emin=minimal_energy, emax=maximal_energy)
-    alpha = like.model[source_name].funcs['Spectrum'].getParam('alpha').value()
-    alpha_err = like.model[source_name].funcs['Spectrum'].getParam('alpha').error()
-    beta = like.model[source_name].funcs['Spectrum'].getParam('beta').value()
-    beta_err = like.model[source_name].funcs['Spectrum'].getParam('beta').error()
-    Eb = like.model[source_name].funcs['Spectrum'].getParam('Eb').value()
-    Eb_err = like.model[source_name].funcs['Spectrum'].getParam('Eb').error()
+        like.writeCountsSpectra(f"./data/{source_name_cleaned}/LC_{time_interval_name}/CountsSpectra/spectra_{i}.fits") 
+        like.logLike.writeXml(f'./data/{source_name_cleaned}/LC_{time_interval_name}/fit_params/fit_{i}.xml')
+        tree = ET.parse(f'./data/{source_name_cleaned}/LC_{time_interval_name}/fit_params/fit_{i}.xml')
+        root = tree.getroot()
 
-    E = (like.energies[:-1] + like.energies[1:])/2.
-    nobs = like.nobs
-    # Calculate the bin widths
-    
-    # Save the flux data along with alpha and beta
-    fit_data = {
-    f'{time_interval_name}': i,
-    'flux_tot_value': float(flux_tot_value),  # Ensure this is a float
-    'flux_tot_error': float(flux_tot_error),   
-    'alpha_value': float(alpha),  
-    'alpha_error': float(alpha_err), 
-    'beta_value': float(beta),  
-    'beta_error': float(beta_err), 
-    'Eb_value': float(Eb),  
-    'Eb_error': float(Eb_err),  
-    'convergence': convergence,
-    'E_points': E.tolist() if isinstance(E, np.ndarray) else list(E),  # Handle ndarray or tuple
-    'nobs': list(nobs),  # Convert tuple to list
-}
+        # Look for the specific source by name
+        source = root.find(f".//source[@name='{source_name}']")
 
-    
-    with open(f'./data/{source_name_cleaned}/LC_{time_interval_name}/likeresults/flux_{time_interval_name}_{i}.json', 'w') as f:
-        json.dump(fit_data, f, indent=4) 
-    print(f"Saved flux data for full spectrum!")
+        if source is not None:
+            print(f"Source: {source.get('name')}")
+
+            # Initialize a dictionary to store parameter values and errors
+            param_data = {}
+
+            # Find the 'spectrum' tag within this source
+            spectrum = source.find('spectrum')
+            
+            if spectrum is not None:
+                # Loop through the parameters within the spectrum
+                for param in spectrum.findall('parameter'):
+                    param_name = param.get('name')  # Get the parameter name
+                    param_value = param.get('value')  # Get the parameter value
+                    param_error = param.get('error')  # Get the parameter error (if available)
+                    param_scale = param.get('scale')
+                    
+                    if param_name in ['alpha', 'beta', 'Eb']:  # Check if it's 'alpha' or 'beta'
+                        param_data[f'{param_name}_value'] = param_value  # Store value in the dictionary
+                        param_data[f'{param_name}_error'] = param_error  # Store error in the dictionary
+                        param_data[f'{param_name}_scale'] = param_scale
+        else:
+            print("Source not found in the XML file.")
+
+        # Assuming 'like.flux' and 'like.fluxError' provide flux and flux error for the source per full time period:
+        flux_tot_value = like.flux(source_name, emin=minimal_energy, emax=maximal_energy) #before just maximal_energy
+        flux_tot_error = like.fluxError(source_name, emin=minimal_energy, emax=maximal_energy)
+        alpha = like.model[source_name].funcs['Spectrum'].getParam('alpha').value()
+        alpha_err = like.model[source_name].funcs['Spectrum'].getParam('alpha').error()
+        beta = like.model[source_name].funcs['Spectrum'].getParam('beta').value()
+        beta_err = like.model[source_name].funcs['Spectrum'].getParam('beta').error()
+        Eb = like.model[source_name].funcs['Spectrum'].getParam('Eb').value()
+        Eb_err = like.model[source_name].funcs['Spectrum'].getParam('Eb').error()
+
+        E = (like.energies[:-1] + like.energies[1:])/2.
+        nobs = like.nobs
+        # Calculate the bin widths
+        
+        # Save the flux data along with alpha and beta
+        fit_data = {
+        f'{time_interval_name}': i,
+        'flux_tot_value': float(flux_tot_value),  # Ensure this is a float
+        'flux_tot_error': float(flux_tot_error),   
+        'alpha_value': float(alpha),  
+        'alpha_error': float(alpha_err), 
+        'beta_value': float(beta),  
+        'beta_error': float(beta_err), 
+        'Eb_value': float(Eb),  
+        'Eb_error': float(Eb_err),  
+        'convergence': convergence,
+        'E_points': E.tolist() if isinstance(E, np.ndarray) else list(E),  # Handle ndarray or tuple
+        'nobs': list(nobs),  # Convert tuple to list
+    }
+
+        
+        with open(f'./data/{source_name_cleaned}/LC_{time_interval_name}/likeresults/flux_{time_interval_name}_{i}.json', 'w') as f:
+            json.dump(fit_data, f, indent=4) 
+
+    except Exception as e:
+        # Catch any exception and print relevant information
+        print(f"Error in iteration: time_interval {i}.")
+        print(f"Exception: {str(e)}")
+
+    print(f"Saved flux data for full spectrum {i}!")
     
     return (i, log_likelihood, TS, convergence)
 
