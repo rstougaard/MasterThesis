@@ -354,7 +354,7 @@ def generate_files_per_bin(vars):
                 param_name = param.get('name')
                 # Only modify 'alpha' parameter
                 if param_name in ['alpha']:
-                    print(f"Changing 'free' attribute for {param_name}")
+                    #print(f"Changing 'free' attribute for {param_name}")
                     param.set('free', '0') #Has to be fixed for likelihood per bin, equal 0
 
         # Save the modified XML back to the file
@@ -484,13 +484,12 @@ def combine_flux_data_per_time_interval(source_name_cleaned, time_interval_name,
                         'E_plus_error': data.get("E_plus_error"),
                         "dFdE": data.get("dFdE"),
                         "dFdE_error": data.get("dFdE_error"),
-                        "nobs": data.get("nobs") if isinstance(data.get("nobs"), (int, float)) else data.get("nobs", [0])[0]
-                        })
-
+                        "nobs": data.get("nobs") if isinstance(data.get("nobs"), (int, float)) else 0.0
+                    })
 
                 # Delete the JSON file after reading
-                os.remove(flux_file)
-                print(f"Deleted JSON file: {flux_file}")
+                #os.remove(flux_file)
+                print(f"not Deleted JSON file: {flux_file}")
 
         # Add the interval data if it has values
         if combined_data_for_interval:
@@ -542,12 +541,17 @@ def combine_flux_data_per_time_interval(source_name_cleaned, time_interval_name,
                 for key in ["int_flux", "int_flux_error", "dFdE", "dFdE_error"]:
                     summed_bin_data[key] /= num_valid_intervals
 
+            # Replace None values with zero to ensure uniform structure
+            for key in summed_bin_data:
+                if summed_bin_data[key] is None:
+                    summed_bin_data[key] = 0.0
+
             # Append the summed data for this bin
             summed_array_per_bin.append(summed_bin_data)
 
     # Convert summed_array_per_bin to a structured array for easier access
     dtype = [
-        ("time_interval", "O"),
+        ("time_interval", "f8"),
         ("int_flux", "f8"),
         ("int_flux_error", "f8"),
         ("emin", "f8"),
@@ -566,11 +570,11 @@ def combine_flux_data_per_time_interval(source_name_cleaned, time_interval_name,
     os.makedirs(output_directory, exist_ok=True)
 
     # Save the combined data, combined array, and summed array as .npy files
-    np.save(os.path.join(output_directory, 'all_intervals_combined_data.npy'), all_intervals_combined_data)
-    np.save(os.path.join(output_directory, 'all_intervals_combined_array.npy'), all_intervals_combined_data, allow_pickle=True)
+    np.save(os.path.join(output_directory, 'all_intervals_combined_data.npy'), all_intervals_combined_data, allow_pickle=True)
     np.save(os.path.join(output_directory, 'summed_array_per_bin.npy'), summed_array_per_bin_np)
 
     return all_intervals_combined_data, summed_array_per_bin_np
+
 
 #######################################################################################################################################
 def delete_fits_and_xml_files(source_name_cleaned, time_interval_name):
@@ -599,7 +603,7 @@ logging.basicConfig(
 )
 
 # Main function to run the analysis
-def run_analysis(source_name, short_name, num_workers, num_time_intervals, time_interval_name, start_month, ra, dec, minimal_energy, maximal_energy):
+def run_analysis(source_name, short_name, num_workers, num_time_intervals, time_interval_name, start_month, ra, dec, minimal_energy, maximal_energy, number_of_bins):
     # Your existing gtbindef_energy_command and subprocess call here
     
     gtbindef_energy_command = [
@@ -624,24 +628,24 @@ def run_analysis(source_name, short_name, num_workers, num_time_intervals, time_
             running_args_per_bin.append((i, source_name, time_interval_name, ra, dec, short_name, emin, emax, energy_bin_index))
             
     
-    with Pool(num_workers) as p:
+    #with Pool(num_workers) as p:
         #list(tqdm(p.map(generate_ltcube, running_args_ltcube), total=len(running_args_ltcube)))
         #list(tqdm(p.map(generate_files, running_args), total=len(running_args)))
         #list(tqdm(p.map(source_maps, running_args), total=len(running_args)))
-        list(tqdm(p.map(run_binned_likelihood, running_args), total=len(running_args)))
+        #list(tqdm(p.map(run_binned_likelihood, running_args), total=len(running_args)))
 
-    save_flux_fit_data(source_name_cleaned, time_interval_name, num_time_intervals)
-    print("Flux fit saved!")
+    #save_flux_fit_data(source_name_cleaned, time_interval_name, num_time_intervals)
+    #print("Flux fit saved!")
     #fuction that deletes everything generated in generate_files and source_maps
     
-    delete_fits_and_xml_files(source_name_cleaned, time_interval_name)
+    #delete_fits_and_xml_files(source_name_cleaned, time_interval_name)
     
     with Pool(num_workers) as p:
-        list(tqdm(p.map(generate_files_per_bin, running_args_per_bin), total=len(running_args_per_bin)))
-        list(tqdm(p.map(source_maps_per_bin, running_args_per_bin), total=len(running_args_per_bin)))
+        #list(tqdm(p.map(generate_files_per_bin, running_args_per_bin), total=len(running_args_per_bin)))
+        #list(tqdm(p.map(source_maps_per_bin, running_args_per_bin), total=len(running_args_per_bin)))
         list(tqdm(p.map(run_binned_likelihood_per_bin, running_args_per_bin), total=len(running_args_per_bin)))
     
-    combine_flux_data_per_time_interval(source_name_cleaned, time_interval_name, num_time_intervals, 14)
+    combine_flux_data_per_time_interval(source_name_cleaned, time_interval_name, num_time_intervals, number_of_bins)
     print("Spectral points per time interval saved!")
     delete_fits_and_xml_files(source_name_cleaned, time_interval_name)
 
