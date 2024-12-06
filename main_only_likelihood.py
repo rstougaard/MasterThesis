@@ -16,7 +16,7 @@ def main():
     print(settings)
 
     #check paths for likelihood analysis
-    check_paths(settings['source_name'], settings['time_interval_name'])
+    check_paths(settings['source_name'], settings['time_interval_name'], settings['number_of_bins'])
     
     # Run the analysis with the loaded settings
     run_analysis(settings['source_name'], settings['short_name'], settings['num_workers'], settings['num_time_intervals'], 
