@@ -495,6 +495,27 @@ def combine_flux_data_per_time_interval(source_name_cleaned, time_interval_name,
         if combined_data_for_interval:
             all_intervals_combined_data.append(combined_data_for_interval)
 
+    # Flatten the list of lists and convert dictionaries to lists of values
+    flattened_data = []
+    for interval_data in all_intervals_combined_data:
+        for bin_data in interval_data:
+            flattened_data.append([
+                bin_data["time_interval"],
+                bin_data["int_flux"],
+                bin_data["int_flux_error"],
+                bin_data["emin"],
+                bin_data["emax"],
+                bin_data["E_av"],
+                bin_data["E_minus_error"],
+                bin_data["E_plus_error"],
+                bin_data["dFdE"],
+                bin_data["dFdE_error"],
+                bin_data["nobs"]
+            ])
+
+    # Convert flattened data to a NumPy array
+    all_intervals_combined_array = np.array(flattened_data)
+
     # Calculate the summed array per bin across all time intervals
     summed_array_per_bin = []
 
@@ -563,17 +584,18 @@ def combine_flux_data_per_time_interval(source_name_cleaned, time_interval_name,
         ("dFdE_error", "f8"),
         ("nobs", "f8"),
     ]
-    summed_array_per_bin_np = np.array([tuple(d.values()) for d in summed_array_per_bin], dtype=dtype)
+    #summed_array_per_bin_np = np.array([tuple(d.values()) for d in summed_array_per_bin], dtype=dtype)
 
     # Save arrays as .npy files
     output_directory = f'./data/{source_name_cleaned}/LC_{time_interval_name}/npy_files/'
     os.makedirs(output_directory, exist_ok=True)
 
     # Save the combined data, combined array, and summed array as .npy files
-    np.save(os.path.join(output_directory, 'all_intervals_combined_data.npy'), all_intervals_combined_data, allow_pickle=True)
-    np.save(os.path.join(output_directory, 'summed_array_per_bin.npy'), summed_array_per_bin_np)
+    np.save(os.path.join(output_directory, 'all_intervals_combined_array.npy'), all_intervals_combined_array)
+    #np.save(os.path.join(output_directory, 'summed_array_per_bin.npy'), summed_array_per_bin_np)
 
-    return all_intervals_combined_data, summed_array_per_bin_np
+    return all_intervals_combined_array
+
 
 
 #######################################################################################################################################
@@ -640,10 +662,10 @@ def run_analysis(source_name, short_name, num_workers, num_time_intervals, time_
     
     #delete_fits_and_xml_files(source_name_cleaned, time_interval_name)
     
-    with Pool(num_workers) as p:
+    #with Pool(num_workers) as p:
         #list(tqdm(p.map(generate_files_per_bin, running_args_per_bin), total=len(running_args_per_bin)))
         #list(tqdm(p.map(source_maps_per_bin, running_args_per_bin), total=len(running_args_per_bin)))
-        list(tqdm(p.map(run_binned_likelihood_per_bin, running_args_per_bin), total=len(running_args_per_bin)))
+        #list(tqdm(p.map(run_binned_likelihood_per_bin, running_args_per_bin), total=len(running_args_per_bin)))
     
     combine_flux_data_per_time_interval(source_name_cleaned, time_interval_name, num_time_intervals, number_of_bins)
     print("Spectral points per time interval saved!")
