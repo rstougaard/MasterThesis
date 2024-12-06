@@ -20,7 +20,7 @@ def main():
     
     # Run the analysis with the loaded settings
     run_analysis(settings['source_name'], settings['short_name'], settings['num_workers'], settings['num_time_intervals'], 
-                 settings['time_interval_name'], settings['start_month'], settings['ra'], settings['dec'], settings['minimal_energy'], settings['maximal_energy'],settings['number_of_bins'])
+                 settings['time_interval_name'], settings['start_month'], settings['ra'], settings['dec'], settings['minimal_energy'], settings['maximal_energy'],settings['number_of_bins'], settings['bins_def_filename'])
     
 if __name__ == "__main__":
     main()
