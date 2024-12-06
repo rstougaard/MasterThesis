@@ -440,6 +440,10 @@ def run_binned_likelihood_per_bin(vars):
         print(f"Exception: {str(e)}")
 
 
+import os
+import json
+import pickle
+
 def combine_flux_data_per_time_interval(source_name_cleaned, time_interval_name, num_intervals, num_bins):
     all_intervals_combined_data = []
 
@@ -495,106 +499,16 @@ def combine_flux_data_per_time_interval(source_name_cleaned, time_interval_name,
         if combined_data_for_interval:
             all_intervals_combined_data.append(combined_data_for_interval)
 
-    # Flatten the list of lists and convert dictionaries to lists of values
-    flattened_data = []
-    for interval_data in all_intervals_combined_data:
-        for bin_data in interval_data:
-            flattened_data.append([
-                bin_data["time_interval"],
-                bin_data["int_flux"],
-                bin_data["int_flux_error"],
-                bin_data["emin"],
-                bin_data["emax"],
-                bin_data["E_av"],
-                bin_data["E_minus_error"],
-                bin_data["E_plus_error"],
-                bin_data["dFdE"],
-                bin_data["dFdE_error"],
-                bin_data["nobs"]
-            ])
-
-    # Convert flattened data to a NumPy array
-    all_intervals_combined_array = np.array(flattened_data)
-
-    # Calculate the summed array per bin across all time intervals
-    summed_array_per_bin = []
-
-    if all_intervals_combined_data:
-        # Iterate over bins to calculate the sum
-        for bin_index in range(num_bins):
-            num_valid_intervals = 0
-            summed_bin_data = {
-                "time_interval": None,
-                "int_flux": 0.0,
-                "int_flux_error": 0.0,
-                "emin": None,
-                "emax": None,
-                'E_av': None,
-                'E_minus_error': None,
-                'E_plus_error': None,
-                "dFdE": 0.0,
-                "dFdE_error": 0.0,
-                "nobs": 0.0,
-            }
-
-            # Iterate over each interval to sum the values for the current bin
-            for interval_data in all_intervals_combined_data:
-                if bin_index < len(interval_data):
-                    bin_data = interval_data[bin_index]
-                    num_valid_intervals += 1
-
-                    # Retain time_interval, emin, emax from the first valid interval
-                    if summed_bin_data["time_interval"] is None:
-                        summed_bin_data["time_interval"] = bin_data["time_interval"]
-                        summed_bin_data["emin"] = bin_data["emin"]
-                        summed_bin_data["emax"] = bin_data["emax"]
-                        summed_bin_data["E_av"] = bin_data["E_av"]
-                        summed_bin_data["E_minus_error"] = bin_data["E_minus_error"]
-                        summed_bin_data["E_plus_error"] = bin_data["E_plus_error"]
-
-                    # Sum the numerical values
-                    for key in ["int_flux", "int_flux_error", "dFdE", "dFdE_error", "nobs"]:
-                        if bin_data[key] is not None:
-                            summed_bin_data[key] += bin_data[key]
-
-            # Divide summed values by number of intervals to get the average
-            if num_valid_intervals > 0:
-                for key in ["int_flux", "int_flux_error", "dFdE", "dFdE_error"]:
-                    summed_bin_data[key] /= num_valid_intervals
-
-            # Replace None values with zero to ensure uniform structure
-            for key in summed_bin_data:
-                if summed_bin_data[key] is None:
-                    summed_bin_data[key] = 0.0
-
-            # Append the summed data for this bin
-            summed_array_per_bin.append(summed_bin_data)
-
-    # Convert summed_array_per_bin to a structured array for easier access
-    dtype = [
-        ("time_interval", "f8"),
-        ("int_flux", "f8"),
-        ("int_flux_error", "f8"),
-        ("emin", "f8"),
-        ("emax", "f8"),
-        ("E_av", "f8"),
-        ("E_minus_error", "f8"),
-        ("E_plus_error", "f8"),
-        ("dFdE", "f8"),
-        ("dFdE_error", "f8"),
-        ("nobs", "f8"),
-    ]
-    #summed_array_per_bin_np = np.array([tuple(d.values()) for d in summed_array_per_bin], dtype=dtype)
-
-    # Save arrays as .npy files
+    # Save the data as a pickle file to preserve the original structure
     output_directory = f'./data/{source_name_cleaned}/LC_{time_interval_name}/npy_files/'
     os.makedirs(output_directory, exist_ok=True)
 
-    # Save the combined data, combined array, and summed array as .npy files
-    np.save(os.path.join(output_directory, 'all_intervals_combined_array.npy'), all_intervals_combined_array)
-    #np.save(os.path.join(output_directory, 'summed_array_per_bin.npy'), summed_array_per_bin_np)
+    output_file = os.path.join(output_directory, 'all_intervals_combined_data.pkl')
+    with open(output_file, 'wb') as f:
+        pickle.dump(all_intervals_combined_data, f)
 
-    return all_intervals_combined_array
+    return all_intervals_combined_data
+
 
 
 
