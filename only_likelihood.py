@@ -130,7 +130,7 @@ def generate_files(vars):
     pass
 
 def source_maps(vars):
-    i, source_name, time_interval_name, ra, dec, minimal_energy, maximal_energy = vars
+    i, source_name, time_interval_name, ra, dec, minimal_energy, maximal_energy, number_of_bins= vars
     source_name_cleaned = source_name.replace(" ", "").replace(".", "dot").replace("+", "plus").replace("-", "minus")
     ####### Source Map #######
     my_apps.srcMaps['expcube'] = f'./data/{source_name_cleaned}/LC_{time_interval_name}/ltcube/ltcube_{i}.fits'
@@ -144,7 +144,7 @@ def source_maps(vars):
     pass
 
 def run_binned_likelihood(vars):
-    i, source_name, time_interval_name, ra, dec, minimal_energy, maximal_energy = vars
+    i, source_name, time_interval_name, ra, dec, minimal_energy, maximal_energy, number_of_bins = vars
     source_name_cleaned = source_name.replace(" ", "").replace(".", "dot").replace("+", "plus").replace("-", "minus")
     ####### Binned Likelihood Analysis #######
     try:
@@ -377,7 +377,7 @@ def generate_files_per_bin(vars):
 
 # Function to generate source maps
 def source_maps_per_bin(vars):
-    i, source_name, time_interval_name, ra, dec, short_name, emin, emax, energy_bin_index = vars
+    i, source_name, time_interval_name, ra, dec, short_name, emin, emax, energy_bin_index, number_of_bins = vars
     source_name_cleaned = source_name.replace(" ", "").replace(".", "dot").replace("+", "plus").replace("-", "minus")
     ####### Source Map #######
     my_apps.srcMaps['expcube'] = f'./data/{source_name_cleaned}/LC_{time_interval_name}/ltcube/ltcube_{i}.fits'
@@ -392,7 +392,7 @@ def source_maps_per_bin(vars):
 
 # Function to run binned likelihood analysis
 def run_binned_likelihood_per_bin(vars):
-    i, source_name, time_interval_name, ra, dec, short_name, emin, emax, energy_bin_index = vars
+    i, source_name, time_interval_name, ra, dec, short_name, emin, emax, energy_bin_index, number_of_bins = vars
     source_name_cleaned = source_name.replace(" ", "").replace(".", "dot").replace("+", "plus").replace("-", "minus")
 
     try:
