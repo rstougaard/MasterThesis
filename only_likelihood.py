@@ -15,7 +15,7 @@ import numpy as np
 import logging
 
 # Function to ensure paths exist
-def check_paths(source_name, time_interval_name):
+def check_paths(source_name, time_interval_name, number_of_bins):
     source_name_cleaned = source_name.replace(" ", "").replace(".", "dot").replace("+", "plus").replace("-", "minus")
     paths = [
         f'./data/{source_name_cleaned}/LC_{time_interval_name}/ltcube/',
@@ -27,16 +27,16 @@ def check_paths(source_name, time_interval_name):
         f'./data/{source_name_cleaned}/LC_{time_interval_name}/CountsSpectra/',
         f'./data/{source_name_cleaned}/LC_{time_interval_name}/likeresults/',
         f'./data/{source_name_cleaned}/LC_{time_interval_name}/fit_params/',
-        f'./energy_bins_def/'
+        f'./energy_bins_def/{number_of_bins}'
     ]
     for path in paths:
         os.makedirs(path, exist_ok=True)
         print(f"Ensured existence of: {path}")
 
 # Function to read energy bins
-def get_energy_bins():
+def get_energy_bins(bins_def_filename):
     energy_bins = []
-    with open('energy_bins_gtbindef.txt', 'r') as file:
+    with open(f'{bins_def_filename}.txt', 'r') as file:
         for line in file:
             line = line.strip()
             if not line or len(line.split()) != 2:
@@ -60,7 +60,7 @@ def generate_ltcube(vars):
 # Function to generate files for full spectrum
 def generate_files(vars):
     ####### Livetime Cube #######
-    i, source_name, time_interval_name, ra, dec, minimal_energy, maximal_energy = vars
+    i, source_name, time_interval_name, ra, dec, minimal_energy, maximal_energy, number_of_bins = vars
     source_name_cleaned = source_name.replace(" ", "").replace(".", "dot").replace("+", "plus").replace("-", "minus")
     my_apps.evtbin['evfile'] = f'./data/{source_name_cleaned}/LC_{time_interval_name}/{time_interval_name}_{i}.fits'
     my_apps.evtbin['outfile'] = f'./data/{source_name_cleaned}/LC_{time_interval_name}/ccube/ccube_{i}.fits'
@@ -75,7 +75,7 @@ def generate_files(vars):
     my_apps.evtbin['axisrot'] = 0
     my_apps.evtbin['proj'] = 'AIT'
     my_apps.evtbin['ebinalg'] = 'FILE'
-    my_apps.evtbin['ebinfile'] = './energy_bins_def/energy_bins_gtbindef.fits'
+    my_apps.evtbin['ebinfile'] = f'./energy_bins_def/{number_of_bins}/energy_bins_gtbindef.fits'
     my_apps.evtbin.run()
 
     ####### Exposure Map #######
@@ -93,7 +93,7 @@ def generate_files(vars):
     expCube2['axisrot'] = 0
     expCube2['proj'] = 'AIT'
     expCube2['ebinalg'] = 'FILE'
-    expCube2['ebinfile'] = './energy_bins_def/energy_bins_gtbindef.fits'
+    expCube2['ebinfile'] = f'./energy_bins_def/{number_of_bins}/energy_bins_gtbindef.fits'
     expCube2.run()
 
     ####### Make model #######
@@ -223,16 +223,30 @@ def run_binned_likelihood(vars):
         'convergence': convergence,
         'E_points': E.tolist() if isinstance(E, np.ndarray) else list(E),  # Handle ndarray or tuple
         'nobs': list(nobs),  # Convert tuple to list
-    }
-
-        
-        with open(f'./data/{source_name_cleaned}/LC_{time_interval_name}/likeresults/flux_{time_interval_name}_{i}.json', 'w') as f:
-            json.dump(fit_data, f, indent=4) 
+        }
 
     except Exception as e:
         # Catch any exception and print relevant information
         print(f"Error in iteration: time_interval {i}.")
         print(f"Exception: {str(e)}")
+
+        fit_data = {
+        f'{time_interval_name}': i,
+        'flux_tot_value': None,  
+        'flux_tot_error': None,   
+        'alpha_value': None,  
+        'alpha_error': None, 
+        'beta_value': None,  
+        'beta_error': None, 
+        'Eb_value': None,  
+        'Eb_error': None,  
+        'convergence': None,
+        'E_points': None,  
+        'nobs': None,  
+        }
+
+    with open(f'./data/{source_name_cleaned}/LC_{time_interval_name}/likeresults/flux_{time_interval_name}_{i}.json', 'w') as f:
+        json.dump(fit_data, f, indent=4)
     
     print(f"Saved flux data for full spectrum {i}!")
     
@@ -276,11 +290,11 @@ def save_flux_fit_data(source_name_cleaned, time_interval_name, num_intervals):
 ###############################################################################################################################################################
 # Function to generate other necessary files (per energy bin)
 def generate_files_per_bin(vars):
-    i, source_name, time_interval_name, ra, dec, short_name, emin, emax, energy_bin_index = vars
+    i, source_name, time_interval_name, ra, dec, short_name, emin, emax, energy_bin_index, number_of_bins = vars
     source_name_cleaned = source_name.replace(" ", "").replace(".", "dot").replace("+", "plus").replace("-", "minus")
 
     # Create energy bin definition file for this bin
-    energy_bin_txt = f'./energy_bins_def/energy_bin_{i}_{energy_bin_index}.txt'
+    energy_bin_txt = f'./energy_bins_def/{number_of_bins}/energy_bin_{i}_{energy_bin_index}.txt'
     with open(energy_bin_txt, 'w') as f:
         f.write(f'{emin}   {emax}\n')
 
@@ -289,7 +303,7 @@ def generate_files_per_bin(vars):
         'gtbindef',
         'E',
         energy_bin_txt,
-        f'./energy_bins_def/energy_bin_{i}_{energy_bin_index}.fits',
+        f'./energy_bins_def/{number_of_bins}/energy_bin_{i}_{energy_bin_index}.fits',
         'MeV']
     subprocess.run(gtbindef_energy_command, check=True)
 
@@ -307,7 +321,7 @@ def generate_files_per_bin(vars):
     my_apps.evtbin['axisrot'] = 0
     my_apps.evtbin['proj'] = 'AIT'
     my_apps.evtbin['ebinalg'] = 'FILE'
-    my_apps.evtbin['ebinfile'] = f'./energy_bins_def/energy_bin_{i}_{energy_bin_index}.fits'
+    my_apps.evtbin['ebinfile'] = f'./energy_bins_def/{number_of_bins}/energy_bin_{i}_{energy_bin_index}.fits'
     my_apps.evtbin.run()
 
     ####### Exposure Map #######
@@ -325,7 +339,7 @@ def generate_files_per_bin(vars):
     expCube2['axisrot'] = 0
     expCube2['proj'] = 'AIT'
     expCube2['ebinalg'] = 'FILE'
-    expCube2['ebinfile'] = f'./energy_bins_def/energy_bin_{i}_{energy_bin_index}.fits'
+    expCube2['ebinfile'] = f'./energy_bins_def/{number_of_bins}/energy_bin_{i}_{energy_bin_index}.fits'
     expCube2.run()
     
 
@@ -430,14 +444,30 @@ def run_binned_likelihood_per_bin(vars):
             'nobs': list(nobs),
         }
 
-        output_file = f'./data/{source_name_cleaned}/LC_{time_interval_name}/likeresults/flux_{i}_bin_{energy_bin_index}.json'
-        with open(output_file, 'w') as f:
-            json.dump(fit_data, f, indent=4)
 
     except Exception as e:
         # Catch any exception and print relevant information
         print(f"Error in iteration: time_interval {i}, bin {energy_bin_index}")
         print(f"Exception: {str(e)}")
+
+        # Set fit_data with None values in case of an error
+        fit_data = {
+            'time_interval': i,
+            'int_flux': None,
+            'int_flux_error': None,
+            'emin': emin,
+            'emax': emax,
+            'E_av': None,
+            'E_minus_error': None,
+            'E_plus_error': None,
+            'dFdE': None,
+            'dFdE_error': None,
+            'nobs': None,
+        }
+
+    output_file = f'./data/{source_name_cleaned}/LC_{time_interval_name}/likeresults/flux_{i}_bin_{energy_bin_index}.json'
+    with open(output_file, 'w') as f:
+        json.dump(fit_data, f, indent=4)
 
 
 import os
@@ -539,14 +569,14 @@ logging.basicConfig(
 )
 
 # Main function to run the analysis
-def run_analysis(source_name, short_name, num_workers, num_time_intervals, time_interval_name, start_month, ra, dec, minimal_energy, maximal_energy, number_of_bins):
+def run_analysis(source_name, short_name, num_workers, num_time_intervals, time_interval_name, start_month, ra, dec, minimal_energy, maximal_energy, number_of_bins, bins_def_filename):
     # Your existing gtbindef_energy_command and subprocess call here
     
     gtbindef_energy_command = [
         'gtbindef', 
         'E',
-        'energy_bins_gtbindef.txt',
-        './energy_bins_def/energy_bins_gtbindef.fits' ,
+        f'{bins_def_filename}.txt',
+        f'./energy_bins_def/{number_of_bins}/energy_bins_gtbindef.fits' ,
         'MeV']
 
     subprocess.run(gtbindef_energy_command, check=True)
@@ -558,10 +588,10 @@ def run_analysis(source_name, short_name, num_workers, num_time_intervals, time_
     running_args_per_bin = []
     
     for i in range(start_month, num_time_intervals):
-        running_args.append((i, source_name, time_interval_name, ra, dec, minimal_energy, maximal_energy))
+        running_args.append((i, source_name, time_interval_name, ra, dec, minimal_energy, maximal_energy, number_of_bins))
         
         for energy_bin_index, (emin, emax) in enumerate(energy_bins):
-            running_args_per_bin.append((i, source_name, time_interval_name, ra, dec, short_name, emin, emax, energy_bin_index))
+            running_args_per_bin.append((i, source_name, time_interval_name, ra, dec, short_name, emin, emax, energy_bin_index, number_of_bins))
             
     
     #with Pool(num_workers) as p:
@@ -576,10 +606,10 @@ def run_analysis(source_name, short_name, num_workers, num_time_intervals, time_
     
     #delete_fits_and_xml_files(source_name_cleaned, time_interval_name)
     
-    #with Pool(num_workers) as p:
+    with Pool(num_workers) as p:
         #list(tqdm(p.map(generate_files_per_bin, running_args_per_bin), total=len(running_args_per_bin)))
         #list(tqdm(p.map(source_maps_per_bin, running_args_per_bin), total=len(running_args_per_bin)))
-        #list(tqdm(p.map(run_binned_likelihood_per_bin, running_args_per_bin), total=len(running_args_per_bin)))
+        list(tqdm(p.map(run_binned_likelihood_per_bin, running_args_per_bin), total=len(running_args_per_bin)))
     
     combine_flux_data_per_time_interval(source_name_cleaned, time_interval_name, num_time_intervals, number_of_bins)
     print("Spectral points per time interval saved!")
