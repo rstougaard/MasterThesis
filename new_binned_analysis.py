@@ -595,7 +595,7 @@ def run_analysis(source_name, short_name, num_workers, num_time_intervals, time_
             
     
     with Pool(num_workers) as p:
-        list(tqdm(p.map(generate_ltcube, running_args_ltcube), total=len(running_args_ltcube)))
+        #list(tqdm(p.map(generate_ltcube, running_args_ltcube), total=len(running_args_ltcube)))
         list(tqdm(p.map(generate_files, running_args), total=len(running_args)))
         list(tqdm(p.map(source_maps, running_args), total=len(running_args)))
         list(tqdm(p.map(run_binned_likelihood, running_args), total=len(running_args)))
