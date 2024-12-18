@@ -18,7 +18,7 @@ import logging
 def check_paths(source_name, time_interval_name, number_of_bins):
     source_name_cleaned = source_name.replace(" ", "").replace(".", "dot").replace("+", "plus").replace("-", "minus")
     paths = [
-        f'./data/{source_name_cleaned}/LC_{time_interval_name}/snr/',
+        f'./data/{source_name_cleaned}/snr/',
     ]
     for path in paths:
         os.makedirs(path, exist_ok=True)
@@ -57,8 +57,8 @@ def snr_filtering(vars):
     counts_with_area = total_num_photons_with_area / months_in_14_years
 
     ### SNR
-    my_apps.evtbin['evfile'] = f'./data/{source_name_cleaned}/LC_{time_interval_name}/filtered_gti.fits'
-    my_apps.evtbin['outfile'] = f'./data/{source_name_cleaned}/LC_{time_interval_name}/snr/snr.fits'
+    my_apps.evtbin['evfile'] = f'./data/{source_name_cleaned}/filtered_gti.fits'
+    my_apps.evtbin['outfile'] = f'./data/{source_name_cleaned}/snr/snr.fits'
     my_apps.evtbin['scfile'] = 'NONE'
     my_apps.evtbin['algorithm'] = 'LC'
     my_apps.evtbin['tbinalg'] = 'SNR'
