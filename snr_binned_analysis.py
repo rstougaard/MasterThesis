@@ -64,7 +64,7 @@ def snr_filtering(vars):
     my_apps.evtbin['tbinalg'] = 'SNR'
     my_apps.evtbin['tstart'] = 'INDEF'
     my_apps.evtbin['tstop'] = 'INDEF'
-    my_apps.evtbin['snratio'] = counts_with_area**0.5
+    my_apps.evtbin['snratio'] = float(counts_with_area**0.5)
     my_apps.evtbin['lcemin'] = 100
     my_apps.evtbin['lcemax'] = 1000000
     my_apps.evtbin.run()
