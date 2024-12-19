@@ -179,11 +179,11 @@ def source_maps_free_alpha(vars):
         print(f"An unexpected error occurred: {e}")
 
      ####### Source Map #######
-    my_apps.srcMaps['expcube'] = f'./data/{source_name_cleaned}/LC_{time_interval_name}/no_filter/ltcube/ltcube_{i}.fits'
-    my_apps.srcMaps['cmap'] = f'./data/{source_name_cleaned}/LC_{time_interval_name}/no_filter/ccube/ccube_{i}.fits'
-    my_apps.srcMaps['srcmdl'] = f'./data/{source_name_cleaned}/LC_{time_interval_name}/no_filter/models/input_model_{i}_free_alpha.xml'
-    my_apps.srcMaps['bexpmap'] = f'./data/{source_name_cleaned}/LC_{time_interval_name}/no_filter/expmap/BinnedExpMap_{i}.fits'
-    my_apps.srcMaps['outfile'] = f'./data/{source_name_cleaned}/LC_{time_interval_name}/no_filter/srcmap/srcmap_{i}_free_alpha.fits'
+    my_apps.srcMaps['expcube'] = f'./data/{source_name_cleaned}/LC_{time_interval_name}/ltcube/ltcube_{i}.fits'
+    my_apps.srcMaps['cmap'] = f'./data/{source_name_cleaned}/LC_{time_interval_name}/ccube/ccube_{i}.fits'
+    my_apps.srcMaps['srcmdl'] = f'./data/{source_name_cleaned}/LC_{time_interval_name}/models/input_model_{i}_free_alpha.xml'
+    my_apps.srcMaps['bexpmap'] = f'./data/{source_name_cleaned}/LC_{time_interval_name}/expmap/BinnedExpMap_{i}.fits'
+    my_apps.srcMaps['outfile'] = f'./data/{source_name_cleaned}/LC_{time_interval_name}/srcmap/srcmap_{i}_free_alpha.fits'
     my_apps.srcMaps['irfs'] = 'P8R3_SOURCE_V3'
     my_apps.srcMaps['evtype'] = '3'
     my_apps.srcMaps.run()
@@ -213,9 +213,9 @@ def source_maps_free_beta(vars):
     ####### Source Map #######
     my_apps.srcMaps['expcube'] = f'./data/{source_name_cleaned}/LC_{time_interval_name}/ltcube/ltcube_{i}.fits'
     my_apps.srcMaps['cmap'] = f'./data/{source_name_cleaned}/LC_{time_interval_name}/ccube/ccube_{i}.fits'
-    my_apps.srcMaps['srcmdl'] = f'./data/{source_name_cleaned}/LC_{time_interval_name}/models/input_model_{i}_free_alpha.xml'
+    my_apps.srcMaps['srcmdl'] = f'./data/{source_name_cleaned}/LC_{time_interval_name}/models/input_model_{i}_free_beta.xml'
     my_apps.srcMaps['bexpmap'] = f'./data/{source_name_cleaned}/LC_{time_interval_name}/expmap/BinnedExpMap_{i}.fits'
-    my_apps.srcMaps['outfile'] = f'./data/{source_name_cleaned}/LC_{time_interval_name}/srcmap/srcmap_{i}_free_alpha.fits'
+    my_apps.srcMaps['outfile'] = f'./data/{source_name_cleaned}/LC_{time_interval_name}/srcmap/srcmap_{i}_free_beta.fits'
     my_apps.srcMaps['irfs'] = 'P8R3_SOURCE_V3'
     my_apps.srcMaps['evtype'] = '3'
     my_apps.srcMaps.run()
