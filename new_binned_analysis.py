@@ -814,7 +814,6 @@ def run_analysis(source_name, short_name, num_workers, num_time_intervals, time_
 
         for energy_bin_index, (emin, emax) in enumerate(energy_bins):
             running_args_per_bin.append((i, source_name, time_interval_name, ra, dec, short_name, emin, emax, energy_bin_index, number_of_bins))
-            call_xml_modifier(vars)
     
     with Pool(num_workers) as p:
         #list(tqdm(p.map(generate_ltcube, running_args_ltcube), total=len(running_args_ltcube)))
