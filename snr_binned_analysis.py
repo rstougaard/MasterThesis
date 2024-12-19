@@ -1,18 +1,6 @@
-import subprocess
-import time
-from multiprocessing import Pool
-import pyLikelihood
-from tqdm import tqdm
-import json
 import gt_apps as my_apps
-from GtApp import GtApp
-expCube2 = GtApp('gtexpcube2', 'Likelihood')
-from BinnedAnalysis import *
-import os
-import glob
-import xml.etree.ElementTree as ET
-import numpy as np
-import logging
+from astropy.io import fits
+import numpy
 
 # Function to ensure paths exist
 def check_paths(source_name, time_interval_name, number_of_bins):
@@ -43,6 +31,19 @@ def snr_filtering(vars):
 
     # Recalculate the counts (per month) considering the effective area
     counts_with_area = total_num_photons_with_area / months_in_14_years
+
+    print('Sorting event file by time...')
+    with fits.open(f'./data/{source_name_cleaned}/filtered_gti.fits','update') as f:
+        data = f[1].data
+        order = numpy.argsort( data['TIME'] )
+
+        for kk in data.names:
+            data[kk] = data[kk][order]
+
+        f[1].data = data
+
+    print('done!')
+    print()
     print('Creating LC')
     ### SNR
     my_apps.evtbin['evfile'] = f'./data/{source_name_cleaned}/filtered_gti.fits'
