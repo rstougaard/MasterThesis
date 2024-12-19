@@ -55,20 +55,24 @@ def snr_filtering(vars):
 
     # Recalculate the counts (per month) considering the effective area
     counts_with_area = total_num_photons_with_area / months_in_14_years
-
+    print('Creating LC')
     ### SNR
     my_apps.evtbin['evfile'] = f'./data/{source_name_cleaned}/filtered_gti.fits'
-    my_apps.evtbin['outfile'] = f'./data/{source_name_cleaned}/snr/snr.fits'
-    my_apps.evtbin['scfile'] = 'NONE'
+    my_apps.evtbin['outfile'] = f'./data/{source_name_cleaned}/snr/lc.fits'
+    my_apps.evtbin['scfile'] = f'./data/{source_name_cleaned}/SC.fits'
     my_apps.evtbin['algorithm'] = 'LC'
     my_apps.evtbin['tbinalg'] = 'SNR'
     my_apps.evtbin['tstart'] = 'INDEF'
     my_apps.evtbin['tstop'] = 'INDEF'
+    my_apps.evtbin['emin'] = 100
+    my_apps.evtbin['emax'] = 1000000
     my_apps.evtbin['snratio'] = float(counts_with_area**0.5)
     my_apps.evtbin['lcemin'] = 100
     my_apps.evtbin['lcemax'] = 1000000
     my_apps.evtbin.run()
-    pass
+
+    
+   
 
 # Function to generate livetime cube
 def generate_ltcube(vars):
