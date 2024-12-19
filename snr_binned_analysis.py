@@ -1,6 +1,7 @@
 import gt_apps as my_apps
 from astropy.io import fits
 import numpy
+import os
 
 # Function to ensure paths exist
 def check_paths(source_name, time_interval_name, number_of_bins):
