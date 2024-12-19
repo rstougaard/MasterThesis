@@ -158,7 +158,7 @@ def source_maps(vars):
     pass
 
 def call_xml_modifier(vars):
-    i, source_name_cleaned, time_interval_name, parameter = vars
+    i, source_name, source_name_cleaned, time_interval_name, parameter = vars
     source_file_path = f'./data/{source_name_cleaned}/LC_{time_interval_name}/models/input_model_{i}.xml'
 
     if parameter == 'alpha':
@@ -168,7 +168,7 @@ def call_xml_modifier(vars):
             tree = ET.parse(source_file_path)
 
             # Create one file freeing 'alpha'
-            modify_and_save(tree, 'alpha', output_file_alpha)
+            modify_and_save(tree, 'alpha', output_file_alpha, source_name)
 
         except FileNotFoundError:
             print(f"File not found: {source_file_path}")
@@ -183,7 +183,7 @@ def call_xml_modifier(vars):
             tree = ET.parse(source_file_path)
 
             # Create one file freeing 'alpha'
-            modify_and_save(tree, 'beta', output_file_beta)
+            modify_and_save(tree, 'beta', output_file_beta, source_name)
 
         except FileNotFoundError:
             print(f"File not found: {source_file_path}")
@@ -809,8 +809,8 @@ def run_analysis(source_name, short_name, num_workers, num_time_intervals, time_
     
     for i in range(start_month, num_time_intervals):
         running_args.append((i, source_name, time_interval_name, ra, dec, minimal_energy, maximal_energy, number_of_bins))
-        running_args_xml_free_alpha.append((i, source_name_cleaned, time_interval_name, "alpha"))
-        running_args_xml_free_beta.append((i, source_name_cleaned, time_interval_name, "beta"))
+        running_args_xml_free_alpha.append((i, source_name, source_name_cleaned, time_interval_name, "alpha"))
+        running_args_xml_free_beta.append((i, source_name, source_name_cleaned, time_interval_name, "beta"))
 
         for energy_bin_index, (emin, emax) in enumerate(energy_bins):
             running_args_per_bin.append((i, source_name, time_interval_name, ra, dec, short_name, emin, emax, energy_bin_index, number_of_bins))
