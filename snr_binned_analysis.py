@@ -54,6 +54,8 @@ def snr_filtering(vars):
     my_apps.evtbin['tstop'] = 'INDEF'
     my_apps.evtbin['emin'] = 100
     my_apps.evtbin['emax'] = 1000000
+    my_apps.evtbin['ebinalg'] = "NONE"
+    my_apps.evtbin['ebinfile'] = "NONE"
     my_apps.evtbin['snratio'] = float(counts_with_area**0.5)
     my_apps.evtbin['lcemin'] = 100
     my_apps.evtbin['lcemax'] = 1000000
@@ -67,11 +69,3 @@ def run_analysis(source_name, short_name, num_workers, num_time_intervals, time_
     snr_arg = source_name, time_interval_name
     snr_filtering(snr_arg)
     print('SNR filtering done!')
-
-   
-
-
-
-    
-
-
