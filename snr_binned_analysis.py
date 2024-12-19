@@ -50,8 +50,8 @@ def snr_filtering(vars):
     my_apps.evtbin['scfile'] = f'./data/{source_name_cleaned}/SC.fits'
     my_apps.evtbin['algorithm'] = 'LC'
     my_apps.evtbin['tbinalg'] = 'SNR'
-    my_apps.evtbin['tstart'] = 'INDEF'
-    my_apps.evtbin['tstop'] = 'INDEF'
+    my_apps.evtbin['tstart'] = 239557417
+    my_apps.evtbin['tstop'] = 435456000
     my_apps.evtbin['emin'] = 100
     my_apps.evtbin['emax'] = 1000000
     my_apps.evtbin['ebinalg'] = "NONE"
