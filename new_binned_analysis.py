@@ -157,26 +157,45 @@ def source_maps(vars):
     my_apps.srcMaps.run()
     pass
 
+def call_xml_modifier(vars):
+    i, source_name_cleaned, time_interval_name, parameter = vars
+    source_file_path = f'./data/{source_name_cleaned}/LC_{time_interval_name}/models/input_model_{i}.xml'
+
+    if parameter == 'alpha':
+        output_file_alpha = f'./data/{source_name_cleaned}/LC_{time_interval_name}/models/input_model_{i}_free_alpha.xml'
+        try:
+            # Load the original XML file
+            tree = ET.parse(source_file_path)
+
+            # Create one file freeing 'alpha'
+            modify_and_save(tree, 'alpha', output_file_alpha)
+
+        except FileNotFoundError:
+            print(f"File not found: {source_file_path}")
+        except ET.ParseError:
+            print("Error parsing the XML file.")
+        except Exception as e:
+            print(f"An unexpected error occurred: {e}")
+    if parameter == 'beta':
+        output_file_beta = f'./data/{source_name_cleaned}/LC_{time_interval_name}/models/input_model_{i}_free_beta.xml'
+        try:
+            # Load the original XML file
+            tree = ET.parse(source_file_path)
+
+            # Create one file freeing 'alpha'
+            modify_and_save(tree, 'beta', output_file_beta)
+
+        except FileNotFoundError:
+            print(f"File not found: {source_file_path}")
+        except ET.ParseError:
+            print("Error parsing the XML file.")
+        except Exception as e:
+            print(f"An unexpected error occurred: {e}")
+
+
 def source_maps_free_alpha(vars):
     i, source_name, time_interval_name, ra, dec, minimal_energy, maximal_energy, number_of_bins= vars
     source_name_cleaned = source_name.replace(" ", "").replace(".", "dot").replace("+", "plus").replace("-", "minus")
-
-    source_file_path = f'./data/{source_name_cleaned}/LC_{time_interval_name}/models/input_model_{i}.xml'
-    output_file_alpha = f'./data/{source_name_cleaned}/LC_{time_interval_name}/models/input_model_{i}_free_alpha.xml'
-
-    try:
-        # Load the original XML file
-        tree = ET.parse(source_file_path)
-
-        # Create one file freeing 'alpha'
-        modify_and_save(tree, 'alpha', output_file_alpha)
-
-    except FileNotFoundError:
-        print(f"File not found: {source_file_path}")
-    except ET.ParseError:
-        print("Error parsing the XML file.")
-    except Exception as e:
-        print(f"An unexpected error occurred: {e}")
 
      ####### Source Map #######
     my_apps.srcMaps['expcube'] = f'./data/{source_name_cleaned}/LC_{time_interval_name}/ltcube/ltcube_{i}.fits'
@@ -192,23 +211,6 @@ def source_maps_free_alpha(vars):
 def source_maps_free_beta(vars):
     i, source_name, time_interval_name, ra, dec, minimal_energy, maximal_energy, number_of_bins= vars
     source_name_cleaned = source_name.replace(" ", "").replace(".", "dot").replace("+", "plus").replace("-", "minus")
-
-    source_file_path = f'./data/{source_name_cleaned}/LC_{time_interval_name}/models/input_model_{i}.xml'
-    output_file_beta = f'./data/{source_name_cleaned}/LC_{time_interval_name}/models/input_model_{i}_free_beta.xml'
-
-    try:
-        # Load the original XML file
-        tree = ET.parse(source_file_path)
-
-        # Create one file freeing 'alpha'
-        modify_and_save(tree, 'beta', output_file_beta)
-
-    except FileNotFoundError:
-        print(f"File not found: {source_file_path}")
-    except ET.ParseError:
-        print("Error parsing the XML file.")
-    except Exception as e:
-        print(f"An unexpected error occurred: {e}")
 
     ####### Source Map #######
     my_apps.srcMaps['expcube'] = f'./data/{source_name_cleaned}/LC_{time_interval_name}/ltcube/ltcube_{i}.fits'
@@ -801,19 +803,25 @@ def run_analysis(source_name, short_name, num_workers, num_time_intervals, time_
     
     running_args_ltcube = [(i, source_name, time_interval_name, ra, dec, short_name) for i in range(start_month, num_time_intervals)]
     running_args = []
+    running_args_xml_free_alpha = []
+    running_args_xml_free_beta = []
     running_args_per_bin = []
     
     for i in range(start_month, num_time_intervals):
         running_args.append((i, source_name, time_interval_name, ra, dec, minimal_energy, maximal_energy, number_of_bins))
-        
+        running_args_xml_free_alpha.append((i, source_name_cleaned, time_interval_name, "alpha"))
+        running_args_xml_free_beta.append((i, source_name_cleaned, time_interval_name, "beta"))
+
         for energy_bin_index, (emin, emax) in enumerate(energy_bins):
             running_args_per_bin.append((i, source_name, time_interval_name, ra, dec, short_name, emin, emax, energy_bin_index, number_of_bins))
-            
+            call_xml_modifier(vars)
     
     with Pool(num_workers) as p:
         #list(tqdm(p.map(generate_ltcube, running_args_ltcube), total=len(running_args_ltcube)))
         list(tqdm(p.map(generate_files, running_args), total=len(running_args)))
         #list(tqdm(p.map(source_maps, running_args), total=len(running_args)))
+        list(tqdm(p.map(call_xml_modifier, running_args_xml_free_alpha), total=len(running_args_xml_free_alpha)))
+        list(tqdm(p.map(call_xml_modifier, running_args_xml_free_beta), total=len(running_args_xml_free_beta)))
         list(tqdm(p.map(source_maps_free_alpha, running_args), total=len(running_args)))
         list(tqdm(p.map(source_maps_free_beta, running_args), total=len(running_args)))
         list(tqdm(p.map(run_binned_likelihood_free_alpha, running_args), total=len(running_args)))
