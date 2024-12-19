@@ -1,4 +1,5 @@
 import gt_apps as my_apps
+from GtApp import GtApp
 from astropy.io import fits
 import numpy
 import os
@@ -15,7 +16,7 @@ def check_paths(source_name, time_interval_name, number_of_bins):
 
 def snr_filtering(vars):
     ####### Livetime Cube #######
-    source_name, time_interval_name = vars
+    source_name, time_interval_name, ra, dec, minimal_energy, maximal_energy = vars
     source_name_cleaned = source_name.replace(" ", "").replace(".", "dot").replace("+", "plus").replace("-", "minus")
 
     effective_area = 7000  # in cm^2
@@ -33,8 +34,12 @@ def snr_filtering(vars):
     # Recalculate the counts (per month) considering the effective area
     counts_with_area = total_num_photons_with_area / months_in_14_years
 
+    gti = f'./data/{source_name_cleaned}/filtered_gti.fits'
+    lc = f'./data/{source_name_cleaned}/snr/lc.fits'
+    sc = f'./data/{source_name_cleaned}/SC.fits'
+
     print('Sorting event file by time...')
-    with fits.open(f'./data/{source_name_cleaned}/filtered_gti.fits','update') as f:
+    with fits.open(gti,'update') as f:
         data = f[1].data
         order = numpy.argsort( data['TIME'] )
 
@@ -46,10 +51,11 @@ def snr_filtering(vars):
     print('done!')
     print()
     print('Creating LC')
+    always_redo_exposure = True
     ### SNR
-    my_apps.evtbin['evfile'] = f'./data/{source_name_cleaned}/filtered_gti.fits'
-    my_apps.evtbin['outfile'] = f'./data/{source_name_cleaned}/snr/lc.fits'
-    my_apps.evtbin['scfile'] = f'./data/{source_name_cleaned}/SC.fits'
+    my_apps.evtbin['evfile'] = gti
+    my_apps.evtbin['outfile'] = lc
+    my_apps.evtbin['scfile'] = sc
     my_apps.evtbin['algorithm'] = 'LC'
     my_apps.evtbin['tbinalg'] = 'SNR'
     my_apps.evtbin['tstart'] = 239557417
@@ -63,11 +69,34 @@ def snr_filtering(vars):
     my_apps.evtbin['lcemax'] = 1000000
     my_apps.evtbin.run()
 
+    calc_exposure = True
+    with fits.open(lc) as f:
+        if('EXPOSURE' in f[1].data.names): calc_exposure=False
+
+    if(calc_exposure or always_redo_exposure):
+        print('Launching gtexposure for ',lc)
+        gtexposure = my_apps.GtApp('gtexposure')
+        gtexposure['infile'] = lc
+        gtexposure['scfile'] = sc
+        gtexposure['irfs'] = 'CALDB'
+        gtexposure['specin'] = -2.05
+        gtexposure['apcorr'] = 'yes' #change this, if you are sure
+        gtexposure['enumbins'] = 30
+        gtexposure['emin'] = minimal_energy
+        gtexposure['emax'] = maximal_energy
+        gtexposure['ra'] = ra
+        gtexposure['dec'] = dec
+        gtexposure['rad'] = 15
+        gtexposure.run()
+    else:
+        print('EXPOSURE column already exists!')
+        print('If you want to re-create it, launch with always_redo_exposure=True')
+
 # Main function to run the analysis
 def run_analysis(source_name, short_name, num_workers, num_time_intervals, time_interval_name, start_month, ra, dec, minimal_energy, maximal_energy, number_of_bins, bins_def_filename):
    
     source_name_cleaned = source_name.replace(" ", "").replace(".", "dot").replace("+", "plus").replace("-", "minus")
     
-    snr_arg = source_name, time_interval_name
+    snr_arg = source_name, time_interval_name, ra, dec, minimal_energy, maximal_energy
     snr_filtering(snr_arg)
     print('SNR filtering done!')
