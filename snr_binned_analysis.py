@@ -37,7 +37,7 @@ def snr_filtering(vars):
     gti = f'./data/{source_name_cleaned}/filtered_gti.fits'
     lc = f'./data/{source_name_cleaned}/snr/lc.fits'
     sc = f'./data/{source_name_cleaned}/SC.fits'
-
+    '''
     print('Sorting event file by time...')
     with fits.open(gti,'update') as f:
         data = f[1].data
@@ -91,6 +91,28 @@ def snr_filtering(vars):
     else:
         print('EXPOSURE column already exists!')
         print('If you want to re-create it, launch with always_redo_exposure=True')
+    '''
+    f = fits.open(lc)
+    data1 = f[1].data
+    data2 = f[2].data
+    current_time = data2['START'][0]
+    index = 0
+
+    for i in range(len(data1['TIMEDEL'])):
+        # Calculate the end time for the current interval
+        next_time = current_time + data1['TIMEDEL'][i]
+        
+        # Define the filter settings with the current index
+        my_apps.filter['tmin'] = current_time
+        my_apps.filter['tmax'] = next_time
+        my_apps.filter['infile'] = gti
+        my_apps.filter['outfile'] = f'./data/{source_name_cleaned}/snr/time_interval_{index}.fits'
+        my_apps.filter.run()
+        
+        # Update the current time and index
+        current_time = next_time
+        index += 1
+    
 
 # Main function to run the analysis
 def run_analysis(source_name, short_name, num_workers, num_time_intervals, time_interval_name, start_month, ra, dec, minimal_energy, maximal_energy, number_of_bins, bins_def_filename):
@@ -98,5 +120,5 @@ def run_analysis(source_name, short_name, num_workers, num_time_intervals, time_
     source_name_cleaned = source_name.replace(" ", "").replace(".", "dot").replace("+", "plus").replace("-", "minus")
     
     snr_arg = source_name, time_interval_name, ra, dec, minimal_energy, maximal_energy
-    snr_filtering(snr_arg)
+    #snr_filtering(snr_arg)
     print('SNR filtering done!')
