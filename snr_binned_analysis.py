@@ -910,7 +910,7 @@ def delete_fits_and_xml_files(source_name_cleaned, time_interval_name):
                 print(f"Error deleting file {file}: {e}")
 
 # Main function to run the analysis
-def run_analysis(source_name, short_name, num_workers, num_time_intervals, time_interval_name, start_month, ra, dec, minimal_energy, maximal_energy, number_of_bins, bins_def_filename):
+def run_analysis(source_name, short_name, num_workers, num_time_intervals=198, time_interval_name, start_month, ra, dec, minimal_energy, maximal_energy, number_of_bins, bins_def_filename):
    
     source_name_cleaned = source_name.replace(" ", "").replace(".", "dot").replace("+", "plus").replace("-", "minus")
     
