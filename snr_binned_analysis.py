@@ -10,6 +10,7 @@ import xml.etree.ElementTree as ET
 from multiprocessing import Pool
 import glob
 import pickle
+from tqdm import tqdm
 
 # Function to ensure paths exist
 def check_paths(source_name, time_interval_name, number_of_bins):
@@ -943,14 +944,14 @@ def run_analysis(source_name, short_name, num_workers, num_time_intervals, time_
             running_args_per_bin.append((i, source_name, time_interval_name, ra, dec, short_name, emin, emax, energy_bin_index, number_of_bins))
     
     with Pool(num_workers) as p:
-        list(p.map(generate_ltcube, running_args_ltcube), total=len(running_args_ltcube))
-        list(p.map(generate_files, running_args), total=len(running_args))
-        list(p.map(call_xml_modifier, running_args_xml_free_alpha), total=len(running_args_xml_free_alpha))
-        list(p.map(source_maps_free_alpha, running_args), total=len(running_args))
-        list(p.map(run_binned_likelihood_free_alpha, running_args), total=len(running_args))
-        list(p.map(call_xml_modifier, running_args_xml_free_beta), total=len(running_args_xml_free_beta))
-        list(p.map(source_maps_free_beta, running_args), total=len(running_args))
-        list(p.map(run_binned_likelihood_free_beta, running_args), total=len(running_args))
+        list(tqdm(p.map(generate_ltcube, running_args_ltcube), total=len(running_args_ltcube)))
+        list(tqdm(p.map(generate_files, running_args), total=len(running_args)))
+        list(tqdm(p.map(call_xml_modifier, running_args_xml_free_alpha), total=len(running_args_xml_free_alpha)))
+        list(tqdm(p.map(source_maps_free_alpha, running_args), total=len(running_args)))
+        list(tqdm(p.map(run_binned_likelihood_free_alpha, running_args), total=len(running_args)))
+        list(tqdm(p.map(call_xml_modifier, running_args_xml_free_beta), total=len(running_args_xml_free_beta)))
+        list(tqdm(p.map(source_maps_free_beta, running_args), total=len(running_args)))
+        list(tqdm(p.map(run_binned_likelihood_free_beta, running_args), total=len(running_args)))
 
     save_flux_fit_data(source_name_cleaned, time_interval_name, num_time_intervals)
     print("Flux fit saved!")
@@ -960,9 +961,9 @@ def run_analysis(source_name, short_name, num_workers, num_time_intervals, time_
 
     
     with Pool(num_workers) as p:
-        list(p.map(generate_files_per_bin, running_args_per_bin), total=len(running_args_per_bin))
-        list(p.map(source_maps_per_bin, running_args_per_bin), total=len(running_args_per_bin))
-        list(p.map(run_binned_likelihood_per_bin, running_args_per_bin), total=len(running_args_per_bin))
+        list(tqdm(p.map(generate_files_per_bin, running_args_per_bin), total=len(running_args_per_bin)))
+        list(tqdm(p.map(source_maps_per_bin, running_args_per_bin), total=len(running_args_per_bin)))
+        list(tqdm(p.map(run_binned_likelihood_per_bin, running_args_per_bin), total=len(running_args_per_bin)))
     
     combine_flux_data_per_time_interval(source_name_cleaned, time_interval_name, num_time_intervals, number_of_bins)
     print("Spectral points per time interval saved!")
