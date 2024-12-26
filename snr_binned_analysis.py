@@ -120,5 +120,5 @@ def run_analysis(source_name, short_name, num_workers, num_time_intervals, time_
     source_name_cleaned = source_name.replace(" ", "").replace(".", "dot").replace("+", "plus").replace("-", "minus")
     
     snr_arg = source_name, time_interval_name, ra, dec, minimal_energy, maximal_energy
-    #snr_filtering(snr_arg)
+    snr_filtering(snr_arg)
     print('SNR filtering done!')
