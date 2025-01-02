@@ -11,6 +11,7 @@ from multiprocessing import Pool
 import glob
 import pickle
 from tqdm import tqdm
+import matplotlib.pyplot as plt
 
 # Function to ensure paths exist
 def check_paths(source_name, time_interval_name, number_of_bins):
@@ -31,6 +32,88 @@ def check_paths(source_name, time_interval_name, number_of_bins):
     for path in paths:
         os.makedirs(path, exist_ok=True)
         print(f"Ensured existence of: {path}")
+
+def snr_filtering_per_bin(vars, energy_bins):
+    ####### Livetime Cube #######
+    source_name, time_interval_name, ra, dec = vars
+    source_name_cleaned = source_name.replace(" ", "").replace(".", "dot").replace("+", "plus").replace("-", "minus")
+
+    effective_area = 7000  # in cm^2
+    average_photon_flux = 3.3525944e-07  # photon flux in ph / cm^2 / s
+    time_years = 14
+    months_in_14_years = 68  # given
+    seconds_in_a_year = 365.25 * 24 * 3600  # accounting for leap years
+
+    # Calculate the total number of photons over 14 years
+    total_seconds = time_years * seconds_in_a_year
+    total_num_photons = average_photon_flux * total_seconds
+    # Recalculate the total number of photons considering the effective area
+    total_num_photons_with_area = total_num_photons * effective_area
+
+    # Recalculate the counts (per month) considering the effective area
+    counts_with_area = total_num_photons_with_area / months_in_14_years
+
+    gti = f'./data/{source_name_cleaned}/filtered_gti.fits'
+    lc = f'./data/{source_name_cleaned}/snr/lc.fits'
+    sc = f'./data/{source_name_cleaned}/SC.fits'
+
+    print('Sorting event file by time...')
+    with fits.open(gti, 'update') as f:
+        data = f[1].data
+        order = np.argsort(data['TIME'])
+
+        for kk in data.names:
+            data[kk] = data[kk][order]
+
+        f[1].data = data
+
+    print('done!')
+    print()
+
+    for energy_bin_index, (emin, emax) in enumerate(energy_bins):
+        print(f'Processing energy bin {energy_bin_index + 1}: {emin}-{emax} keV')
+        lc_bin = f'./data/{source_name_cleaned}/snr/lc_bin_{energy_bin_index + 1}.fits'
+
+        print('Creating LC for energy bin')
+        my_apps.evtbin['evfile'] = gti
+        my_apps.evtbin['outfile'] = lc_bin
+        my_apps.evtbin['scfile'] = sc
+        my_apps.evtbin['algorithm'] = 'LC'
+        my_apps.evtbin['tbinalg'] = 'SNR'
+        my_apps.evtbin['tstart'] = 239557417
+        my_apps.evtbin['tstop'] = 435456000
+        my_apps.evtbin['emin'] = emin
+        my_apps.evtbin['emax'] = emax
+        my_apps.evtbin['ebinalg'] = "NONE"
+        my_apps.evtbin['ebinfile'] = "NONE"
+        my_apps.evtbin['snratio'] = float(counts_with_area**0.5)
+        my_apps.evtbin['lcemin'] = emin
+        my_apps.evtbin['lcemax'] = emax
+        my_apps.evtbin.run()
+
+        calc_exposure = True
+        with fits.open(lc_bin) as f:
+            if 'EXPOSURE' in f[1].data.names:
+                calc_exposure = False
+
+        if calc_exposure:
+            print(f'Launching gtexposure for energy bin {energy_bin_index + 1}')
+            gtexposure = my_apps.GtApp('gtexposure')
+            gtexposure['infile'] = lc_bin
+            gtexposure['scfile'] = sc
+            gtexposure['irfs'] = 'CALDB'
+            gtexposure['specin'] = -2.05
+            gtexposure['apcorr'] = 'yes'
+            gtexposure['enumbins'] = 30
+            gtexposure['emin'] = emin
+            gtexposure['emax'] = emax
+            gtexposure['ra'] = ra
+            gtexposure['dec'] = dec
+            gtexposure['rad'] = 15
+            gtexposure.run()
+        else:
+            print(f'EXPOSURE column already exists for energy bin {energy_bin_index + 1}!')
+            print('If you want to re-create it, set always_redo_exposure=True')
 
 def snr_filtering(vars):
     ####### Livetime Cube #######
@@ -55,7 +138,7 @@ def snr_filtering(vars):
     gti = f'./data/{source_name_cleaned}/filtered_gti.fits'
     lc = f'./data/{source_name_cleaned}/snr/lc.fits'
     sc = f'./data/{source_name_cleaned}/SC.fits'
-    '''
+    
     print('Sorting event file by time...')
     with fits.open(gti,'update') as f:
         data = f[1].data
@@ -78,13 +161,13 @@ def snr_filtering(vars):
     my_apps.evtbin['tbinalg'] = 'SNR'
     my_apps.evtbin['tstart'] = 239557417
     my_apps.evtbin['tstop'] = 435456000
-    my_apps.evtbin['emin'] = 100
-    my_apps.evtbin['emax'] = 1000000
+    my_apps.evtbin['emin'] = minimal_energy
+    my_apps.evtbin['emax'] = maximal_energy
     my_apps.evtbin['ebinalg'] = "NONE"
     my_apps.evtbin['ebinfile'] = "NONE"
     my_apps.evtbin['snratio'] = float(counts_with_area**0.5)
-    my_apps.evtbin['lcemin'] = 100
-    my_apps.evtbin['lcemax'] = 1000000
+    my_apps.evtbin['lcemin'] = minimal_energy
+    my_apps.evtbin['lcemax'] = maximal_energy
     my_apps.evtbin.run()
 
     calc_exposure = True
@@ -110,26 +193,88 @@ def snr_filtering(vars):
         print('EXPOSURE column already exists!')
         print('If you want to re-create it, launch with always_redo_exposure=True')
     '''
-    f = fits.open(lc)
-    data1 = f[1].data
-    data2 = f[2].data
-    current_time = data2['START'][0]
-    index = 0
+    with fits.open(lc, mode='readonly') as hdul:
+        data=hdul[1].data
+    timedel0 = np.array(data['TIMEDEL'])
+    timedel = np.array(data['TIMEDEL'])  # Data for filtering
+    original_length = len(timedel)
 
-    for i in range(len(data1['TIMEDEL'])):
-        # Calculate the end time for the current interval
-        next_time = current_time + data1['TIMEDEL'][i]
-        
-        # Define the filter settings with the current index
-        my_apps.filter['tmin'] = current_time
-        my_apps.filter['tmax'] = next_time
-        my_apps.filter['infile'] = gti
-        my_apps.filter['outfile'] = f'./data/{source_name_cleaned}/snr/time_interval_{index}.fits'
-        my_apps.filter.run()
-        
-        # Update the current time and index
-        current_time = next_time
-        index += 1
+    original_indices = np.arange(len(timedel))  # Track original indices
+    outlier_indices_per_round = []  # List to save outlier indices per round
+
+    round_number = 0
+    while True:
+        mean_timedel = np.mean(timedel)
+        std_timedel = np.std(timedel)
+
+        # Threshold for filtering
+        threshold = mean_timedel - 2 * std_timedel
+        # Identify data points below the threshold
+        below_threshold = timedel < threshold
+        if not np.any(below_threshold):  # Stop if no points are below the threshold
+            break
+
+        # Save indices of current round's outliers
+        current_outlier_indices = original_indices[below_threshold]
+        outlier_indices_per_round.append(current_outlier_indices)
+
+        # Filter out points below the threshold
+        timedel = timedel[~below_threshold]
+        original_indices = original_indices[~below_threshold]  # Update to keep track of valid indices
+        round_number += 1
+        print(f"Round {round_number}: Filtered out indices {current_outlier_indices}. Remaining points: {len(timedel)}")
+
+    print(outlier_indices_per_round)
+
+    # Plotting
+    filtered_indices = np.setdiff1d(np.arange(original_length), np.concatenate(outlier_indices_per_round))
+
+    plt.figure(figsize=(10, 6))
+    plt.plot(np.arange(original_length), timedel0, '.', label='Original Data', color='orange')
+    plt.plot(filtered_indices, timedel, '.', label='Filtered Data', color='green')
+    plt.axhline(np.mean(timedel), color='red', linestyle='--', label=f'Mean after filtering: {np.mean(timedel):.2f}')
+    plt.legend()
+    plt.ylabel('timedel')
+    plt.xlabel('Time interval index')
+    plt.title(f"Filtered data after {round_number} rounds")
+    plt.savefig(f'./data/{source_name_cleaned}/snr/filtered_data.png', dpi=300)
+
+
+    # Initialize lists to hold concatenated data
+    data1_combined = []
+    data2_combined = []
+
+    # Automated loop to find and process segment files
+    i = 0
+    while True:
+        segment_file = f'segment_{i}.fits'
+        if not os.path.exists(segment_file):
+            break  # Exit loop if no more segment files are found
+
+        with fits.open(segment_file, mode='readonly') as hdul:
+            data1_combined.append(hdul[1].data)  # Assuming data1 is in the first table extension
+            data2_combined.append(hdul[2].data)  # Assuming data2 is in the second table extension
+
+        i += 1
+
+    # Check if any data was found
+    if not data1_combined or not data2_combined:
+        print("No segment files found. Exiting.")
+    else:
+        # Concatenate all data from segment files
+        data1_combined = np.hstack(data1_combined)
+        data2_combined = np.hstack(data2_combined)
+
+        # Save the concatenated data to a new FITS file
+        merged_filename = 'merged_no_outliers_file.fits'
+        hdu1 = fits.BinTableHDU(data1_combined)
+        hdu2 = fits.BinTableHDU(data2_combined)
+        hdul_new = fits.HDUList([fits.PrimaryHDU(), hdu1, hdu2])
+        hdul_new.writeto(merged_filename, overwrite=True)
+
+        print(f"Merged data saved to {merged_filename}")
+
+    '''   
 
 # Function to read energy bins
 def get_energy_bins(bins_def_filename):
@@ -927,6 +1072,10 @@ def run_analysis(source_name, short_name, num_workers, num_time_intervals, time_
 
     subprocess.run(gtbindef_energy_command, check=True)
     energy_bins = get_energy_bins(bins_def_filename)
+    snr_args = (source_name, time_interval_name, ra, dec)
+    snr_filtering_per_bin(snr_args, energy_bins)
+    print('SNR filtering per bin done!')
+    '''
     source_name_cleaned = source_name.replace(" ", "").replace(".", "dot").replace("+", "plus").replace("-", "minus")
     
     running_args_ltcube = [(i, source_name, time_interval_name, ra, dec, short_name) for i in range(start_month, num_time_intervals)]
@@ -968,4 +1117,4 @@ def run_analysis(source_name, short_name, num_workers, num_time_intervals, time_
     combine_flux_data_per_time_interval(source_name_cleaned, time_interval_name, num_time_intervals, number_of_bins)
     print("Spectral points per time interval saved!")
     delete_fits_and_xml_files(source_name_cleaned, time_interval_name)
-    
+    '''
