@@ -54,7 +54,6 @@ def snr_filtering_per_bin(vars, energy_bins):
     counts_with_area = total_num_photons_with_area / months_in_14_years
 
     gti = f'./data/{source_name_cleaned}/filtered_gti.fits'
-    lc = f'./data/{source_name_cleaned}/snr/lc.fits'
     sc = f'./data/{source_name_cleaned}/SC.fits'
 
     print('Sorting event file by time...')
@@ -71,11 +70,21 @@ def snr_filtering_per_bin(vars, energy_bins):
     print()
 
     for energy_bin_index, (emin, emax) in enumerate(energy_bins):
-        print(f'Processing energy bin {energy_bin_index + 1}: {emin}-{emax} keV')
+        print(f'GTselect energy bin {energy_bin_index + 1}: {emin}-{emax} MeV')
+        gti_bin = f'./data/{source_name_cleaned}/snr/tmp_gti_bin_{energy_bin_index + 1}.fits'
+        my_apps.filter['emin'] = emin
+        my_apps.filter['emax'] = emax
+        my_apps.filter['tmin'] = 239557417
+        my_apps.filter['tmax'] = 435456000
+        my_apps.filter['infile'] = gti
+        my_apps.filter['outfile'] = gti_bin
+        my_apps.filter.run() #run GTSELECT
+
+        print(f'Processing energy bin {energy_bin_index + 1}: {emin}-{emax} MeV')
         lc_bin = f'./data/{source_name_cleaned}/snr/lc_bin_{energy_bin_index + 1}.fits'
 
         print('Creating LC for energy bin')
-        my_apps.evtbin['evfile'] = gti
+        my_apps.evtbin['evfile'] = gti_bin
         my_apps.evtbin['outfile'] = lc_bin
         my_apps.evtbin['scfile'] = sc
         my_apps.evtbin['algorithm'] = 'LC'
