@@ -40,19 +40,13 @@ def snr_filtering_per_bin(vars, energy_bins):
 
     effective_area = 7000  # in cm^2
     average_photon_flux = 3.3525944e-07  # photon flux in ph / cm^2 / s
-    time_years = 14
-    months_in_14_years = 68  # given
     seconds_in_a_year = 365.25 * 24 * 3600  # accounting for leap years
-
-    # Calculate the total number of photons over 14 years
-    total_seconds = time_years * seconds_in_a_year
-    total_num_photons = average_photon_flux * total_seconds
-    # Recalculate the total number of photons considering the effective area
-    total_num_photons_with_area = total_num_photons * effective_area
+    seconds_in_a_month = 30.44 * 24 * 3600
 
     # Recalculate the counts (per month) considering the effective area
-    counts_with_area = total_num_photons_with_area / months_in_14_years
+    num_photons_across_bins = average_photon_flux* seconds_in_a_month * effective_area 
 
+    
     gti = f'./data/{source_name_cleaned}/filtered_gti.fits'
     sc = f'./data/{source_name_cleaned}/SC.fits'
 
@@ -83,6 +77,16 @@ def snr_filtering_per_bin(vars, energy_bins):
         print(f'Processing energy bin {energy_bin_index + 1}: {emin}-{emax} MeV')
         lc_bin = f'./data/{source_name_cleaned}/snr/lc_bin_{energy_bin_index + 1}.fits'
 
+        bin_size = emax-emin  # in MeV
+        # Photon counts per energy bin
+        num_photons_per_bin = average_photon_flux * bin_size * effective_area * seconds_in_a_month
+
+        # SNR per energy bin
+        snr_per_bin = num_photons_per_bin**0.5
+
+        print(f"Photon counts per bin: {num_photons_per_bin:.2e}")
+        print(f"SNR per bin: {snr_per_bin:.2f}")
+
         print('Creating LC for energy bin')
         my_apps.evtbin['evfile'] = gti_bin
         my_apps.evtbin['outfile'] = lc_bin
@@ -95,7 +99,7 @@ def snr_filtering_per_bin(vars, energy_bins):
         my_apps.evtbin['emax'] = emax
         my_apps.evtbin['ebinalg'] = "NONE"
         my_apps.evtbin['ebinfile'] = "NONE"
-        my_apps.evtbin['snratio'] = float(counts_with_area**0.5)
+        my_apps.evtbin['snratio'] = float(snr_per_bin)
         my_apps.evtbin['lcemin'] = emin
         my_apps.evtbin['lcemax'] = emax
         my_apps.evtbin.run()
