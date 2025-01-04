@@ -79,7 +79,7 @@ def snr_filtering_per_bin(vars, energy_bins):
 
         bin_size = emax-emin  # in MeV
         # Photon counts per energy bin
-        num_photons_per_bin = average_photon_flux * bin_size * effective_area * seconds_in_a_month
+        num_photons_per_bin = average_photon_flux  * effective_area * seconds_in_a_month / bin_size
 
         # SNR per energy bin
         snr_per_bin = num_photons_per_bin**0.5
