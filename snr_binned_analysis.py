@@ -134,7 +134,7 @@ def snr_filtering(vars):
     source_name_cleaned = source_name.replace(" ", "").replace(".", "dot").replace("+", "plus").replace("-", "minus")
     gt = my_apps
     evc = 128
-    convt = 3.
+    convt = 3
     roi = 1.
 
     tmp_evlist = f'@./data/{source_name_cleaned}/events.list'
