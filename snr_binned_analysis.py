@@ -132,6 +132,49 @@ def snr_filtering(vars):
     ####### Livetime Cube #######
     source_name, time_interval_name, ra, dec, minimal_energy, maximal_energy = vars
     source_name_cleaned = source_name.replace(" ", "").replace(".", "dot").replace("+", "plus").replace("-", "minus")
+    gt = my_apps
+    evc = 128
+    convt = 3.
+    roi = 1.
+
+    tmp_evlist = f'@./data/{source_name_cleaned}/events.list'
+    tmp_gti = f'./data/{source_name_cleaned}/temp_git.fits'
+    gtifilter = '(DATA_QUAL>0)&&(LAT_CONFIG==1)'
+    sc = f'./data/{source_name_cleaned}/SC.fits'
+    gti = f'./data/{source_name_cleaned}/gti.fits'
+
+    print('GTSELECT started!')
+    gt.filter['evclass'] = evc
+    gt.filter['evtype']=convt
+    gt.filter['ra'] = ra
+    gt.filter['dec'] = dec
+    gt.filter['rad'] = roi
+    gt.filter['emin'] = minimal_energy
+    gt.filter['emax'] = maximal_energy
+    gt.filter['zmax'] = 90
+    gt.filter['tmin'] = 239557417
+    gt.filter['tmax'] = 435456000
+    gt.filter['infile'] = tmp_evlist
+    gt.filter['outfile'] = tmp_gti
+    gt.filter.run() #run GTSELECT
+    print('GTSELECT finished!')
+    #Add our own GTIs:
+    #UpdateGTIs(tmp_gti,'h.dat',method='in')
+    #UpdateGTIs(tmp_gti,'flares.dat',method='out')
+    # done with our own gtis
+    print('GTMKTIME start')
+    gt.maketime['scfile'] = sc
+    gt.maketime['filter'] = gtifilter
+    gt.maketime['roicut'] = 'yes'
+    gt.maketime['evfile'] = tmp_gti
+    gt.maketime['outfile'] = gti
+    gt.maketime.run()
+    try:
+            os.remove(tmp_gti)
+    except:
+        pass
+    print('done!')
+
 
     effective_area = 7000  # in cm^2
     average_photon_flux = 3.3525944e-07  # photon flux in ph / cm^2 / s
@@ -148,10 +191,8 @@ def snr_filtering(vars):
     # Recalculate the counts (per month) considering the effective area
     counts_with_area = total_num_photons_with_area / months_in_14_years
 
-    gti = f'./data/{source_name_cleaned}/filtered_gti.fits'
     lc = f'./data/{source_name_cleaned}/snr/lc.fits'
-    sc = f'./data/{source_name_cleaned}/SC.fits'
-    
+
     print('Sorting event file by time...')
     with fits.open(gti,'update') as f:
         data = f[1].data
@@ -200,7 +241,7 @@ def snr_filtering(vars):
         gtexposure['emax'] = maximal_energy
         gtexposure['ra'] = ra
         gtexposure['dec'] = dec
-        gtexposure['rad'] = 15
+        gtexposure['rad'] = roi
         gtexposure.run()
     else:
         print('EXPOSURE column already exists!')
@@ -1073,8 +1114,8 @@ def run_analysis(source_name, short_name, num_workers, num_time_intervals, time_
     source_name_cleaned = source_name.replace(" ", "").replace(".", "dot").replace("+", "plus").replace("-", "minus")
     
     snr_arg = source_name, time_interval_name, ra, dec, minimal_energy, maximal_energy
-    #snr_filtering(snr_arg)
-    #print('SNR filtering done!')
+    snr_filtering(snr_arg)
+    print('SNR filtering done!')
     ('Begin Likelihood')
     gtbindef_energy_command = [
         'gtbindef', 
@@ -1086,8 +1127,8 @@ def run_analysis(source_name, short_name, num_workers, num_time_intervals, time_
     subprocess.run(gtbindef_energy_command, check=True)
     energy_bins = get_energy_bins(bins_def_filename)
     snr_args = (source_name, time_interval_name, ra, dec)
-    snr_filtering_per_bin(snr_args, energy_bins)
-    print('SNR filtering per bin done!')
+    #snr_filtering_per_bin(snr_args, energy_bins)
+    #print('SNR filtering per bin done!')
     '''
     source_name_cleaned = source_name.replace(" ", "").replace(".", "dot").replace("+", "plus").replace("-", "minus")
     
