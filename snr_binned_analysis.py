@@ -14,25 +14,170 @@ from tqdm import tqdm
 import matplotlib.pyplot as plt
 
 # Function to ensure paths exist
-def check_paths(source_name, time_interval_name, number_of_bins):
+def check_paths(source_name, method, number_of_bins):
     source_name_cleaned = source_name.replace(" ", "").replace(".", "dot").replace("+", "plus").replace("-", "minus")
     paths = [
-        f'./data/{source_name_cleaned}/snr/',
-        f'./data/{source_name_cleaned}/snr/ltcube/',
-        f'./data/{source_name_cleaned}/snr/ccube/',
-        f'./data/{source_name_cleaned}/snr/expcube/',
-        f'./data/{source_name_cleaned}/snr/expmap/',
-        f'./data/{source_name_cleaned}/snr/models/',
-        f'./data/{source_name_cleaned}/snr/srcmap/',
-        f'./data/{source_name_cleaned}/snr/CountsSpectra/',
-        f'./data/{source_name_cleaned}/snr/likeresults/',
-        f'./data/{source_name_cleaned}/snr/fit_params/',
+        f'./data/{source_name_cleaned}/{method}/',
+        f'./data/{source_name_cleaned}/{method}/ltcube/',
+        f'./data/{source_name_cleaned}/{method}/ccube/',
+        f'./data/{source_name_cleaned}/{method}/expcube/',
+        f'./data/{source_name_cleaned}/{method}/expmap/',
+        f'./data/{source_name_cleaned}/{method}/models/',
+        f'./data/{source_name_cleaned}/{method}/srcmap/',
+        f'./data/{source_name_cleaned}/{method}/CountsSpectra/',
+        f'./data/{source_name_cleaned}/{method}/likeresults/',
+        f'./data/{source_name_cleaned}/{method}/fit_params/',
         f'./energy_bins_def/{number_of_bins}'
     ]
     for path in paths:
         os.makedirs(path, exist_ok=True)
         print(f"Ensured existence of: {path}")
 
+def snr_filtering(vars):
+    ####### Livetime Cube #######
+    source_name, method, snrratio, time_interval_name, ra, dec, minimal_energy, maximal_energy = vars
+    source_name_cleaned = source_name.replace(" ", "").replace(".", "dot").replace("+", "plus").replace("-", "minus")
+    gt = my_apps
+    evc = 128
+    convt = 3
+    roi = 1.
+
+    tmp_evlist = f'@./data/{source_name_cleaned}/events.list'
+    tmp_gti = f'./data/{source_name_cleaned}/temp_git.fits'
+    gtifilter = '(DATA_QUAL>0)&&(LAT_CONFIG==1)'
+    sc = f'./data/{source_name_cleaned}/SC.fits'
+    gti = f'./data/{source_name_cleaned}/gti.fits'
+    #gtselect
+    if(not os.path.exists(gti)):
+        print('GTSELECT started!')
+        gt.filter['evclass'] = evc
+        gt.filter['evtype']=convt
+        gt.filter['ra'] = ra
+        gt.filter['dec'] = dec
+        gt.filter['rad'] = roi
+        gt.filter['emin'] = minimal_energy
+        gt.filter['emax'] = maximal_energy
+        gt.filter['zmax'] = 90
+        gt.filter['tmin'] = 239557417
+        gt.filter['tmax'] = 435456000
+        gt.filter['infile'] = tmp_evlist
+        gt.filter['outfile'] = tmp_gti
+        gt.filter.run() #run GTSELECT
+        print('GTSELECT finished!')
+        #Add our own GTIs:
+        #UpdateGTIs(tmp_gti,'h.dat',method='in')
+        #UpdateGTIs(tmp_gti,'flares.dat',method='out')
+        # done with our own gtis
+        print('GTMKTIME start')
+        gt.maketime['scfile'] = sc
+        gt.maketime['filter'] = gtifilter
+        gt.maketime['roicut'] = 'yes'
+        gt.maketime['evfile'] = tmp_gti
+        gt.maketime['outfile'] = gti
+        gt.maketime.run()
+        try:
+                os.remove(tmp_gti)
+        except:
+            pass
+        print('done!')
+    else:
+        print(gti+' file exist!')
+
+    '''
+    effective_area = 7000  # in cm^2
+    average_photon_flux = 3.3525944e-07  # photon flux in ph / cm^2 / s
+    time_years = 14
+    months_in_14_years = 68  # given
+    seconds_in_a_year = 365.25 * 24 * 3600  # accounting for leap years
+
+    # Calculate the total number of photons over 14 years
+    total_seconds = time_years * seconds_in_a_year
+    total_num_photons = average_photon_flux * total_seconds
+    # Recalculate the total number of photons considering the effective area
+    total_num_photons_with_area = total_num_photons * effective_area
+
+    # Recalculate the counts (per month) considering the effective area
+    counts_with_area = total_num_photons_with_area / months_in_14_years
+    '''
+    
+    #filter selecting events by time, just in case
+    if(method=='SNR'):
+        lc = f'./data/{source_name_cleaned}/{method}/lc_snr{snrratio}.fits'
+        print('Sorting event file by time...')
+        with fits.open(gti,'update') as f:
+            data = f[1].data
+            order = np.argsort( data['TIME'] )
+
+            for kk in data.names:
+                data[kk] = data[kk][order]
+
+            f[1].data = data
+    elif(method == 'LIN' ):
+        lc = f'./data/{source_name_cleaned}/{method}/lc_{time_interval_name}.fits'
+        print('done!')
+    
+    
+    print()
+    print('Creating LC')
+    always_redo_exposure = True
+    ### SNR
+    my_apps.evtbin['evfile'] = gti
+    my_apps.evtbin['outfile'] = lc
+    my_apps.evtbin['scfile'] = sc
+    my_apps.evtbin['algorithm'] = 'LC'
+    my_apps.evtbin['tbinalg'] = method
+    my_apps.evtbin['tstart'] = 239557417
+    my_apps.evtbin['tstop'] = 435456000
+    my_apps.evtbin['emin'] = minimal_energy
+    my_apps.evtbin['emax'] = maximal_energy
+    my_apps.evtbin['ebinalg'] = "NONE"
+    my_apps.evtbin['ebinfile'] = "NONE"
+
+    if( method == 'LIN' ):
+        if(time_interval_name == "month"):
+            tbin = 86400 * 30
+        elif(time_interval_name == "week"):
+            tbin = 86400 * 7
+        gt.evtbin['dtime'] = tbin
+        gt.evtbin.run()
+    elif(method == 'SNR' ):
+        gt.evtbin['snratio'] = snrratio
+        gt.evtbin['lcemin'] = minimal_energy
+        gt.evtbin['lcemax'] = maximal_energy
+        gt.evtbin.run()
+    
+    print('done!')
+
+    calc_exposure = True
+    with fits.open(lc) as f:
+        if('EXPOSURE' in f[1].data.names): calc_exposure=False
+
+    if(calc_exposure or always_redo_exposure):
+        print('Launching gtexposure for ',lc)
+        gtexposure = my_apps.GtApp('gtexposure')
+        gtexposure['infile'] = lc
+        gtexposure['scfile'] = sc
+        gtexposure['irfs'] = 'CALDB'
+        gtexposure['specin'] = -2.05
+        gtexposure['apcorr'] = 'yes' #change this, if you are sure
+        gtexposure['enumbins'] = 30
+        gtexposure['emin'] = minimal_energy
+        gtexposure['emax'] = maximal_energy
+        gtexposure['ra'] = ra
+        gtexposure['dec'] = dec
+        gtexposure['rad'] = roi
+        gtexposure.run()
+    else:
+        print('EXPOSURE column already exists!')
+        print('If you want to re-create it, launch with always_redo_exposure=True')
+
+def run_analysis(source_name, num_workers, method, snrratio, time_interval_name, ra, dec, minimal_energy, maximal_energy, number_of_bins, bins_def_filename):
+    
+    snr_arg = source_name, method, snrratio, time_interval_name, ra, dec, minimal_energy, maximal_energy
+    snr_filtering(snr_arg)
+    print('SNR filtering done!')
+    
+'''
 def snr_filtering_per_bin(vars, energy_bins):
     ####### Livetime Cube #######
     source_name, time_interval_name, ra, dec = vars
@@ -159,126 +304,6 @@ def snr_filtering_per_bin(vars, energy_bins):
         else:
             print(f'EXPOSURE column already exists for energy bin {energy_bin_index + 1}!')
             print('If you want to re-create it, set always_redo_exposure=True')
-
-def snr_filtering(vars):
-    ####### Livetime Cube #######
-    source_name, time_interval_name, ra, dec, minimal_energy, maximal_energy = vars
-    source_name_cleaned = source_name.replace(" ", "").replace(".", "dot").replace("+", "plus").replace("-", "minus")
-    gt = my_apps
-    evc = 128
-    convt = 3
-    roi = 1.
-
-    tmp_evlist = f'@./data/{source_name_cleaned}/events.list'
-    tmp_gti = f'./data/{source_name_cleaned}/temp_git.fits'
-    gtifilter = '(DATA_QUAL>0)&&(LAT_CONFIG==1)'
-    sc = f'./data/{source_name_cleaned}/SC.fits'
-    gti = f'./data/{source_name_cleaned}/gti.fits'
-
-    print('GTSELECT started!')
-    gt.filter['evclass'] = evc
-    gt.filter['evtype']=convt
-    gt.filter['ra'] = ra
-    gt.filter['dec'] = dec
-    gt.filter['rad'] = roi
-    gt.filter['emin'] = minimal_energy
-    gt.filter['emax'] = maximal_energy
-    gt.filter['zmax'] = 90
-    gt.filter['tmin'] = 239557417
-    gt.filter['tmax'] = 435456000
-    gt.filter['infile'] = tmp_evlist
-    gt.filter['outfile'] = tmp_gti
-    gt.filter.run() #run GTSELECT
-    print('GTSELECT finished!')
-    #Add our own GTIs:
-    #UpdateGTIs(tmp_gti,'h.dat',method='in')
-    #UpdateGTIs(tmp_gti,'flares.dat',method='out')
-    # done with our own gtis
-    print('GTMKTIME start')
-    gt.maketime['scfile'] = sc
-    gt.maketime['filter'] = gtifilter
-    gt.maketime['roicut'] = 'yes'
-    gt.maketime['evfile'] = tmp_gti
-    gt.maketime['outfile'] = gti
-    gt.maketime.run()
-    try:
-            os.remove(tmp_gti)
-    except:
-        pass
-    print('done!')
-
-
-    effective_area = 7000  # in cm^2
-    average_photon_flux = 3.3525944e-07  # photon flux in ph / cm^2 / s
-    time_years = 14
-    months_in_14_years = 68  # given
-    seconds_in_a_year = 365.25 * 24 * 3600  # accounting for leap years
-
-    # Calculate the total number of photons over 14 years
-    total_seconds = time_years * seconds_in_a_year
-    total_num_photons = average_photon_flux * total_seconds
-    # Recalculate the total number of photons considering the effective area
-    total_num_photons_with_area = total_num_photons * effective_area
-
-    # Recalculate the counts (per month) considering the effective area
-    counts_with_area = total_num_photons_with_area / months_in_14_years
-
-    lc = f'./data/{source_name_cleaned}/snr/lc.fits'
-
-    print('Sorting event file by time...')
-    with fits.open(gti,'update') as f:
-        data = f[1].data
-        order = np.argsort( data['TIME'] )
-
-        for kk in data.names:
-            data[kk] = data[kk][order]
-
-        f[1].data = data
-
-    print('done!')
-    print()
-    print('Creating LC')
-    always_redo_exposure = True
-    ### SNR
-    my_apps.evtbin['evfile'] = gti
-    my_apps.evtbin['outfile'] = lc
-    my_apps.evtbin['scfile'] = sc
-    my_apps.evtbin['algorithm'] = 'LC'
-    my_apps.evtbin['tbinalg'] = 'SNR'
-    my_apps.evtbin['tstart'] = 239557417
-    my_apps.evtbin['tstop'] = 435456000
-    my_apps.evtbin['emin'] = minimal_energy
-    my_apps.evtbin['emax'] = maximal_energy
-    my_apps.evtbin['ebinalg'] = "NONE"
-    my_apps.evtbin['ebinfile'] = "NONE"
-    my_apps.evtbin['snratio'] = 3
-    my_apps.evtbin['lcemin'] = minimal_energy
-    my_apps.evtbin['lcemax'] = maximal_energy
-    my_apps.evtbin.run()
-
-    calc_exposure = True
-    with fits.open(lc) as f:
-        if('EXPOSURE' in f[1].data.names): calc_exposure=False
-
-    if(calc_exposure or always_redo_exposure):
-        print('Launching gtexposure for ',lc)
-        gtexposure = my_apps.GtApp('gtexposure')
-        gtexposure['infile'] = lc
-        gtexposure['scfile'] = sc
-        gtexposure['irfs'] = 'CALDB'
-        gtexposure['specin'] = -2.05
-        gtexposure['apcorr'] = 'yes' #change this, if you are sure
-        gtexposure['enumbins'] = 30
-        gtexposure['emin'] = minimal_energy
-        gtexposure['emax'] = maximal_energy
-        gtexposure['ra'] = ra
-        gtexposure['dec'] = dec
-        gtexposure['rad'] = roi
-        gtexposure.run()
-    else:
-        print('EXPOSURE column already exists!')
-        print('If you want to re-create it, launch with always_redo_exposure=True')
-    
 
 # Function to read energy bins
 def get_energy_bins(bins_def_filename):
@@ -1066,6 +1091,7 @@ def run_analysis(source_name, short_name, num_workers, num_time_intervals, time_
     snr_arg = source_name, time_interval_name, ra, dec, minimal_energy, maximal_energy
     snr_filtering(snr_arg)
     print('SNR filtering done!')
+
     ('Begin Likelihood')
     gtbindef_energy_command = [
         'gtbindef', 
@@ -1073,13 +1099,13 @@ def run_analysis(source_name, short_name, num_workers, num_time_intervals, time_
         f'{bins_def_filename}.txt',
         f'./energy_bins_def/{number_of_bins}/energy_bins_gtbindef.fits' ,
         'MeV']
-
+    
     subprocess.run(gtbindef_energy_command, check=True)
     energy_bins = get_energy_bins(bins_def_filename)
     snr_args = (source_name, time_interval_name, ra, dec)
     snr_filtering_per_bin(snr_args, energy_bins)
     print('SNR filtering per bin done!')
-    '''
+     
     source_name_cleaned = source_name.replace(" ", "").replace(".", "dot").replace("+", "plus").replace("-", "minus")
     
     running_args_ltcube = [(i, source_name, time_interval_name, ra, dec, short_name) for i in range(start_month, num_time_intervals)]
