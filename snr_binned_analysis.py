@@ -12,6 +12,7 @@ import glob
 import pickle
 from tqdm import tqdm
 import matplotlib.pyplot as plt
+from operate_gtis import *
 
 # Function to ensure paths exist
 def check_paths(source_name, method, number_of_bins):
@@ -33,9 +34,9 @@ def check_paths(source_name, method, number_of_bins):
         os.makedirs(path, exist_ok=True)
         print(f"Ensured existence of: {path}")
 
-def snr_filtering(vars):
-    ####### Livetime Cube #######
-    source_name, method, snrratio, time_interval_name, ra, dec, minimal_energy, maximal_energy = vars
+def filtering(vars, snrratios=None, time_intervals=None):
+    # Extract variables
+    source_name, method, _, _, ra, dec, minimal_energy, maximal_energy = vars
     source_name_cleaned = source_name.replace(" ", "").replace(".", "dot").replace("+", "plus").replace("-", "minus")
     gt = my_apps
     evc = 128
@@ -47,137 +48,310 @@ def snr_filtering(vars):
     gtifilter = '(DATA_QUAL>0)&&(LAT_CONFIG==1)'
     sc = f'./data/{source_name_cleaned}/SC.fits'
     gti = f'./data/{source_name_cleaned}/gti.fits'
-    #gtselect
-    if(not os.path.exists(gti)):
-        print('GTSELECT started!')
-        gt.filter['evclass'] = evc
-        gt.filter['evtype']=convt
-        gt.filter['ra'] = ra
-        gt.filter['dec'] = dec
-        gt.filter['rad'] = roi
-        gt.filter['emin'] = minimal_energy
-        gt.filter['emax'] = maximal_energy
-        gt.filter['zmax'] = 90
-        gt.filter['tmin'] = 239557417
-        gt.filter['tmax'] = 435456000
-        gt.filter['infile'] = tmp_evlist
-        gt.filter['outfile'] = tmp_gti
-        gt.filter.run() #run GTSELECT
-        print('GTSELECT finished!')
-        #Add our own GTIs:
-        #UpdateGTIs(tmp_gti,'h.dat',method='in')
-        #UpdateGTIs(tmp_gti,'flares.dat',method='out')
-        # done with our own gtis
-        print('GTMKTIME start')
-        gt.maketime['scfile'] = sc
-        gt.maketime['filter'] = gtifilter
-        gt.maketime['roicut'] = 'yes'
-        gt.maketime['evfile'] = tmp_gti
-        gt.maketime['outfile'] = gti
-        gt.maketime.run()
-        try:
+
+    # Ensure either snrratios or time_intervals is provided based on method
+    if method == "SNR" and not snrratios:
+        raise ValueError("snrratios must be provided when method is 'SNR'")
+    if method == "LIN" and not time_intervals:
+        raise ValueError("time_intervals must be provided when method is 'LIN'")
+
+    # Determine the loop items based on the method
+    loop_items = snrratios if method == "SNR" else time_intervals
+
+    for loop_item in loop_items:
+        print(f"Processing {method}: {loop_item}")
+
+        # Set the lc filename based on the method
+        if method == 'SNR':
+            lc = f'./data/{source_name_cleaned}/{method}/lc_snr{loop_item}.fits'
+        elif method == 'LIN':
+            lc = f'./data/{source_name_cleaned}/{method}/lc_{loop_item}.fits'
+
+        # Filter selecting events by time
+        if not os.path.exists(gti):
+            print('GTSELECT started!')
+            gt.filter['evclass'] = evc
+            gt.filter['evtype'] = convt
+            gt.filter['ra'] = ra
+            gt.filter['dec'] = dec
+            gt.filter['rad'] = roi
+            gt.filter['emin'] = minimal_energy
+            gt.filter['emax'] = maximal_energy
+            gt.filter['zmax'] = 90
+            gt.filter['tmin'] = 239557417
+            gt.filter['tmax'] = 435456000
+            gt.filter['infile'] = tmp_evlist
+            gt.filter['outfile'] = tmp_gti
+            gt.filter.run()  # Run GTSELECT
+            print('GTSELECT finished!')
+
+            print('GTMKTIME start')
+            gt.maketime['scfile'] = sc
+            gt.maketime['filter'] = gtifilter
+            gt.maketime['roicut'] = 'yes'
+            gt.maketime['evfile'] = tmp_gti
+            gt.maketime['outfile'] = gti
+            gt.maketime.run()
+            try:
                 os.remove(tmp_gti)
-        except:
-            pass
-        print('done!')
-    else:
-        print(gti+' file exist!')
+            except Exception as e:
+                print(f"Error removing tmp_gti: {e}")
+            print('done!')
+        else:
+            print(f'{gti} file exists!')
 
-    '''
-    effective_area = 7000  # in cm^2
-    average_photon_flux = 3.3525944e-07  # photon flux in ph / cm^2 / s
-    time_years = 14
-    months_in_14_years = 68  # given
-    seconds_in_a_year = 365.25 * 24 * 3600  # accounting for leap years
+        if(not os.path.exists( lc )):
+            # Sorting events for SNR method
+            if method == 'SNR':
+                print('Sorting event file by time...')
+                with fits.open(gti, 'update') as f:
+                    data = f[1].data
+                    order = np.argsort(data['TIME'])
+                    for kk in data.names:
+                        data[kk] = data[kk][order]
+                    f[1].data = data
 
-    # Calculate the total number of photons over 14 years
-    total_seconds = time_years * seconds_in_a_year
-    total_num_photons = average_photon_flux * total_seconds
-    # Recalculate the total number of photons considering the effective area
-    total_num_photons_with_area = total_num_photons * effective_area
+            
+            # Create light curve
+            print('Creating LC')
+            always_redo_exposure = True
+            gt.evtbin['evfile'] = gti
+            gt.evtbin['outfile'] = lc
+            gt.evtbin['scfile'] = sc
+            gt.evtbin['algorithm'] = 'LC'
+            gt.evtbin['tbinalg'] = method
+            gt.evtbin['tstart'] = 239557417
+            gt.evtbin['tstop'] = 435456000
+            gt.evtbin['emin'] = minimal_energy
+            gt.evtbin['emax'] = maximal_energy
+            gt.evtbin['ebinalg'] = "NONE"
+            gt.evtbin['ebinfile'] = "NONE"
 
-    # Recalculate the counts (per month) considering the effective area
-    counts_with_area = total_num_photons_with_area / months_in_14_years
-    '''
-    
-    #filter selecting events by time, just in case
-    if(method=='SNR'):
-        lc = f'./data/{source_name_cleaned}/{method}/lc_snr{snrratio}.fits'
-        print('Sorting event file by time...')
-        with fits.open(gti,'update') as f:
-            data = f[1].data
-            order = np.argsort( data['TIME'] )
+            if method == 'LIN':
+                if loop_item == "month":
+                    tbin = 86400 * 30
+                elif loop_item == "week":
+                    tbin = 86400 * 7
+                gt.evtbin['dtime'] = tbin
+                gt.evtbin.run()
+            elif method == 'SNR':
+                gt.evtbin['snratio'] = loop_item
+                gt.evtbin['lcemin'] = minimal_energy
+                gt.evtbin['lcemax'] = maximal_energy
+                gt.evtbin.run()
 
-            for kk in data.names:
-                data[kk] = data[kk][order]
+            print(f'LC created for {method}: {loop_item}')
 
-            f[1].data = data
-    elif(method == 'LIN' ):
-        lc = f'./data/{source_name_cleaned}/{method}/lc_{time_interval_name}.fits'
-        print('done!')
-    
-    
-    print()
-    print('Creating LC')
-    always_redo_exposure = True
-    ### SNR
-    my_apps.evtbin['evfile'] = gti
-    my_apps.evtbin['outfile'] = lc
-    my_apps.evtbin['scfile'] = sc
-    my_apps.evtbin['algorithm'] = 'LC'
-    my_apps.evtbin['tbinalg'] = method
-    my_apps.evtbin['tstart'] = 239557417
-    my_apps.evtbin['tstop'] = 435456000
-    my_apps.evtbin['emin'] = minimal_energy
-    my_apps.evtbin['emax'] = maximal_energy
-    my_apps.evtbin['ebinalg'] = "NONE"
-    my_apps.evtbin['ebinfile'] = "NONE"
+            calc_exposure = True
+            with fits.open(lc) as f:
+                if('EXPOSURE' in f[1].data.names): calc_exposure=False
 
-    if( method == 'LIN' ):
-        if(time_interval_name == "month"):
-            tbin = 86400 * 30
-        elif(time_interval_name == "week"):
-            tbin = 86400 * 7
-        gt.evtbin['dtime'] = tbin
-        gt.evtbin.run()
-    elif(method == 'SNR' ):
-        gt.evtbin['snratio'] = snrratio
-        gt.evtbin['lcemin'] = minimal_energy
-        gt.evtbin['lcemax'] = maximal_energy
-        gt.evtbin.run()
-    
-    print('done!')
+            if(calc_exposure or always_redo_exposure):
+                print('Launching gtexposure for ',lc)
+                gtexposure = my_apps.GtApp('gtexposure')
+                gtexposure['infile'] = lc
+                gtexposure['scfile'] = sc
+                gtexposure['irfs'] = 'CALDB'
+                gtexposure['specin'] = -2.05
+                gtexposure['apcorr'] = 'yes' #change this, if you are sure
+                gtexposure['enumbins'] = 30
+                gtexposure['emin'] = minimal_energy
+                gtexposure['emax'] = maximal_energy
+                gtexposure['ra'] = ra
+                gtexposure['dec'] = dec
+                gtexposure['rad'] = roi
+                gtexposure.run()
+            else:
+                print('EXPOSURE column already exists!')
+                print('If you want to re-create it, launch with always_redo_exposure=True')
+        else:
+            print(f'{lc} file exists!')
 
-    calc_exposure = True
-    with fits.open(lc) as f:
-        if('EXPOSURE' in f[1].data.names): calc_exposure=False
+    colors = ['blue', 'orange', 'green', 'purple', 'brown']
+    initial_means = []
+    final_means = []
+    final_thresholds = []
+    valid_intervals_list = []
+    invalid_intervals_list = []
 
-    if(calc_exposure or always_redo_exposure):
-        print('Launching gtexposure for ',lc)
-        gtexposure = my_apps.GtApp('gtexposure')
-        gtexposure['infile'] = lc
-        gtexposure['scfile'] = sc
-        gtexposure['irfs'] = 'CALDB'
-        gtexposure['specin'] = -2.05
-        gtexposure['apcorr'] = 'yes' #change this, if you are sure
-        gtexposure['enumbins'] = 30
-        gtexposure['emin'] = minimal_energy
-        gtexposure['emax'] = maximal_energy
-        gtexposure['ra'] = ra
-        gtexposure['dec'] = dec
-        gtexposure['rad'] = roi
-        gtexposure.run()
-    else:
-        print('EXPOSURE column already exists!')
-        print('If you want to re-create it, launch with always_redo_exposure=True')
+    for loop_item, color in zip(loop_items, colors):
+        
+        print(f"Finding flares for: {method}: {loop_item}")
 
-def run_analysis(source_name, num_workers, method, snrratio, time_interval_name, ra, dec, minimal_energy, maximal_energy, number_of_bins, bins_def_filename):
-    
-    snr_arg = source_name, method, snrratio, time_interval_name, ra, dec, minimal_energy, maximal_energy
-    snr_filtering(snr_arg)
-    print('SNR filtering done!')
+        # Set the lc filename based on the method
+        if method == 'SNR':
+            lc = f'./data/{source_name_cleaned}/{method}/lc_snr{loop_item}.fits'
+            output_file_flares = f'./data/{source_name_cleaned}/{method}/flare_intervals_snr{loop_item}.txt'
+            plot_file = f'./data/{source_name_cleaned}/{method}/lc_snr{loop_item}.png'
+            tmp_gti_noflares = f'./data/{source_name_cleaned}/{method}/temp_git_snr{loop_item}.fits'
+            gti_noflares = f'./data/{source_name_cleaned}/{method}/gti_noflares_snr{loop_item}.fits'
+        elif method == 'LIN':
+            lc = f'./data/{source_name_cleaned}/{method}/lc_{loop_item}.fits'
+            output_file_flares = f'./data/{source_name_cleaned}/{method}/flare_intervals_{loop_item}.txt'
+            plot_file = f'./data/{source_name_cleaned}/{method}/lc_{loop_item}.png'
+            tmp_gti_noflares = f'./data/{source_name_cleaned}/{method}/temp_git_{loop_item}.fits'
+            gti_noflares = f'./data/{source_name_cleaned}/{method}/gti_noflares_{loop_item}.fits'                
+
+        if not os.path.exists(gti_noflares):
+            ###### Here the BAD TIME intervals (flares) have to be found ######
+            f_bin = fits.open(lc)
+            bin_data = f_bin[1].data
+
+            # Extract data
+            X_bin = bin_data['TIME']
+            Y_bin = bin_data['COUNTS'] / bin_data['EXPOSURE']  # Flux in photons/cm²/s
+            time_intervals = bin_data['TIMEDEL']  # Duration of each time interval
+            x_error_bin = bin_data['TIMEDEL'] / 2
+            y_error_bin = bin_data['ERROR'] / bin_data['EXPOSURE']
+
+            # Initialize filtering
+            filtered_Y = Y_bin.copy()
+            filtered_mask = np.full(Y_bin.shape, True)
+            thresholds = []
+            round_means = []
+            removed_points = []
+
+            while True:
+                mean = np.mean(filtered_Y[filtered_mask])
+                threshold = mean + 2 * np.std(filtered_Y[filtered_mask])
+                thresholds.append(threshold)
+                round_means.append(mean)
+
+                round_removed_mask = filtered_Y > threshold
+                new_filtered_mask = filtered_mask & ~round_removed_mask
+                removed_points.append((X_bin[round_removed_mask], filtered_Y[round_removed_mask]))
+
+                if np.array_equal(new_filtered_mask, filtered_mask):
+                    break
+
+                filtered_mask = new_filtered_mask
+
+            # Save final results for this file
+            initial_means.append(round_means[0])
+            final_means.append(round_means[-1])
+            final_thresholds.append(thresholds[-1])
+            valid_intervals_list.append(np.sum(filtered_mask))
+            invalid_intervals_list.append(len(filtered_mask) - np.sum(filtered_mask))
+
+            # Save flare intervals to a text file
+            flare_intervals_start = X_bin[~filtered_mask] - x_error_bin[~filtered_mask]
+            flare_intervals_stop = X_bin[~filtered_mask] + x_error_bin[~filtered_mask]
+            flare_intervals = np.column_stack((flare_intervals_start, flare_intervals_stop))
+
+            
+            np.savetxt(output_file_flares, flare_intervals, fmt='%d', delimiter='\t')
+            print(f"File saved as: {output_file_flares}")
+
+                # Create a new figure for this file
+            plt.figure(figsize=(10, 6))
+
+            # Plot original data
+            plt.errorbar(X_bin, Y_bin, xerr=x_error_bin, yerr=y_error_bin, fmt='o', capsize=5, color=color, alpha=0.3, label=f'Unfiltered {lc}')
+
+            # Highlight removed points
+            for i, (removed_x, removed_y) in enumerate(removed_points):
+                plt.scatter(removed_x, removed_y, color='black', edgecolors='black')
+
+            # Plot means and thresholds for each round
+            plt.axhline(round_means[0], color='grey', linestyle='--', linewidth=3, alpha=1, label=f'Mean unfiltered')
+            plt.axhline(thresholds[0], color='grey', linestyle='-', linewidth=3, alpha=1, label=f'Threshold unfiltered')
+            plt.axhline(round_means[-1], color='black', linestyle='--', linewidth=3, alpha=1, label=f'Mean round {len(round_means)}')
+            plt.axhline(thresholds[-1], color='black', linestyle='-', linewidth=3, alpha=1, label=f'Threshold round {len(round_means)}')
+
+            # Customize plot
+            plt.ylabel('photons/cm²/s')
+            plt.xlabel('Time')
+            plt.title(f'Lightcurve SNR for {lc}')
+            plt.xscale('log')
+            plt.yscale('log')
+            plt.grid(True, which="both", linestyle="--", linewidth=0.5)
+
+            # Move the legend outside the plot
+            plt.legend(
+                ncol=1,  # Number of columns in the legend
+                loc='upper left',  # Position the legend to the left center of the bounding box
+                frameon=True,  # Add a box around the legend
+            )
+
+            # Save the plot or display it
+            
+            plt.tight_layout()  # Adjust layout to prevent clipping
+            plt.savefig(plot_file, bbox_inches='tight', dpi=300)  # Save with adjusted bounding box
+            print(f"Plot saved as: {plot_file}")
+
+
+            ###### Here the BAD TIME intervals (flares) have to be removed from the original raw events ######
+            
+            print( 'GTSELECT started!' )
+            gt.filter['evclass'] = evc
+            gt.filter['evtype']=convt
+            gt.filter['ra'] = ra
+            gt.filter['dec'] = dec
+            gt.filter['rad'] = roi
+            gt.filter['emin'] = minimal_energy
+            gt.filter['emax'] = maximal_energy
+            gt.filter['zmax'] = 90
+            gt.filter['tmin'] = 239557417
+            gt.filter['tmax'] = 435456000
+            gt.filter['infile'] = tmp_evlist
+            gt.filter['outfile'] = tmp_gti_noflares
+            gt.filter.run() #run GTSELECT
+            print( 'GTSELCT finished!' )
+            ############################## modify GTIs ##############################
+            # here apoastra was a text file with 2 columns -- start stop times. Only those intervals will be used to extract spectrum
+            # you could use method='out' to exclude some intervals, i.e. extract spectrum from everything *except* these intervals
+            # times in the file can be either in MJDs or in Fermi seconds (use times_in_mjds=False)
+        
+
+            UpdateGTIs(tmp_gti_noflares, output_file_flares, method='out', times_in_mjd=False) #defined in operate_gtis.py, pls see also there
+
+            ############### actual filtering according to updated GTIs ###############
+            # just incase -- modified GTIs include old "standard GTIs" as well, so no need to do this twice
+            
+            print( 'GTMKTIME start' )
+            gt.maketime['scfile'] = sc
+            gt.maketime['filter'] = gtifilter
+            gt.maketime['roicut'] = 'no'
+            gt.maketime['evfile'] = tmp_gti_noflares
+            gt.maketime['outfile'] = gti_noflares
+            gt.maketime.run()
+            try:
+                os.remove(tmp_gti_noflares)
+            except Exception as e:
+                print(f"Error removing tmp_gti: {e}")
+            print('done!')
+        else:
+            print(f'{gti_noflares} file exists!')
+
+    # Print results for all light curves
+    for item, initial_mean, final_mean, final_threshold, valid_intervals, invalid_intervals in zip(
+        loop_items, initial_means, final_means, final_thresholds, valid_intervals_list, invalid_intervals_list
+    ):
+        print(f"{lc}: Initial Mean {initial_mean:.2e} |Final Mean {final_mean:.2e} | Final Threshold {final_threshold:.2e} | "
+            f"Valid intervals: {valid_intervals} | Invalid intervals: {invalid_intervals}")
+##################################################################################
+##################################################################################
+
+
+check_paths("4FGL J0319.8+4130", 'SNR', 7)
+check_paths("4FGL J0319.8+4130", 'LIN', 7)
+
+vars_snr = ("4FGL J0319.8+4130", "SNR", None, None, 49.9507, 41.5117, 100, 1000000)
+snrratios = [3, 5, 10]
+filtering(vars_snr, snrratios=snrratios)
+
+vars_lin = ("4FGL J0319.8+4130", "LIN", None, None, 49.9507, 41.5117, 100, 1000000)
+time_intervals = ["week", "month"]
+filtering(vars_lin, time_intervals=time_intervals)
+print('Filtering done!')
     
 '''
+def run_analysis(source_name, num_workers, method, snrratio, time_interval_name, ra, dec, minimal_energy, maximal_energy, number_of_bins, bins_def_filename):
+    
+    #snr_arg = source_name, method, snrratio, time_interval_name, ra, dec, minimal_energy, maximal_energy
+    #filtering(snr_arg)
+    
+
 def snr_filtering_per_bin(vars, energy_bins):
     ####### Livetime Cube #######
     source_name, time_interval_name, ra, dec = vars
