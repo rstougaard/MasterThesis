@@ -239,7 +239,7 @@ def filtering(vars, snrratios=None, time_intervals=None):
             flare_intervals = np.column_stack((flare_intervals_start, flare_intervals_stop))
 
             
-            np.savetxt(output_file_flares, flare_intervals, fmt='%d', delimiter='\t')
+            np.savetxt(output_file_flares, flare_intervals, delimiter=' ')
             print(f"File saved as: {output_file_flares}")
 
                 # Create a new figure for this file
