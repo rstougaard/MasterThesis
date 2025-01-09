@@ -583,14 +583,14 @@ def source_maps(vars, snrratios=None, time_intervals=None):
     else:
         loop_items = "NONE"  # No looping for the "NONE" method
     
-    input_model = general_path + f'{method}/expmap/input_model.xml'
+    input_model = general_path + f'{method}/models/input_model.xml'
     
     # If there is nothing to loop over, handle the "NONE" method directly
     if method == "NONE":
         ltcube = general_path + f'{method}/ltcube/ltcube.fits'
         ccube = general_path + f'{method}/ccube/ccube.fits'
         binexpmap = general_path + f'{method}/expmap/BinnedExpMap.fits'
-        srcmap = general_path + f'{method}/expmap/srcmap.fits'
+        srcmap = general_path + f'{method}/srcmap/srcmap.fits'
         #input_model = general_path + f'{method}/expmap/input_model.xml'
         print(f"Processing method {method} without looping.")
         
@@ -613,13 +613,13 @@ def source_maps(vars, snrratios=None, time_intervals=None):
                 ltcube = general_path + f'{method}/ltcube/ltcube_snr{loop_item}.fits'
                 ccube = general_path + f'{method}/ccube/ccube_snr{loop_item}.fits'
                 binexpmap = general_path + f'{method}/expmap/BinnedExpMap_snr{loop_item}.fits'
-                srcmap = general_path + f'{method}/expmap/srcmap_snr{loop_item}.fits'
+                srcmap = general_path + f'{method}/srcmap/srcmap_snr{loop_item}.fits'
                 #input_model = general_path + f'{method}/expmap/input_model_snr{loop_item}.xml'
             elif method == "LIN":
                 ltcube = general_path + f'{method}/ltcube/ltcube_{loop_item}.fits'
                 ccube = general_path + f'{method}/ccube/ccube_{loop_item}.fits'
                 binexpmap = general_path + f'{method}/expmap/BinnedExpMap_{loop_item}.fits'
-                srcmap = general_path + f'{method}/expmap/srcmap_{loop_item}.fits'
+                srcmap = general_path + f'{method}/srcmap/srcmap_{loop_item}.fits'
                 #input_model = general_path + f'{method}/expmap/input_model_{loop_item}.xml'
 
             if not os.path.exists(srcmap):
