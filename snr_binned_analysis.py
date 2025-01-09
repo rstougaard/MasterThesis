@@ -425,7 +425,7 @@ def generate_files(vars, snrratios=None, time_intervals=None, number_of_bins=Non
         print(f"Processing method {method} without looping.")
         
         if not os.path.exists(ltcube):
-            print(f"Creating ltcube for {method}: {loop_item}")
+            print(f"Creating ltcube for {method}")
             my_apps.expCube['evfile'] = gti_noflares
             my_apps.expCube['scfile'] = sc
             my_apps.expCube['outfile'] = ltcube
@@ -437,7 +437,7 @@ def generate_files(vars, snrratios=None, time_intervals=None, number_of_bins=Non
             print(f'{ltcube} file exists!')
 
         if not os.path.exists(ccube):
-            print(f"Creating ccube for {method}: {loop_item}")
+            print(f"Creating ccube for {method}")
             ####### Counts Cube #######
             my_apps.evtbin['evfile'] = gti_noflares
             my_apps.evtbin['outfile'] = ccube
@@ -458,7 +458,7 @@ def generate_files(vars, snrratios=None, time_intervals=None, number_of_bins=Non
             print(f'{ccube} file exists!')
 
         if not os.path.exists(binexpmap):
-            print(f"Creating exposuremap for {method}: {loop_item}")
+            print(f"Creating exposuremap for {method}")
             ####### Exposure Map #######
             expCube2['infile'] = ltcube
             expCube2['cmap'] = 'none'
@@ -486,7 +486,7 @@ def generate_files(vars, snrratios=None, time_intervals=None, number_of_bins=Non
         # Run the command using subprocess
         subprocess.run(make4FGLxml_command, shell=True, check=True, executable='/bin/bash')
         tree = ET.parse(f'{model}')
-        modify_and_save(tree, source_name, method, loop_item)
+        modify_and_save(tree, source_name, method, None)
     else:
         for loop_item in loop_items:
             
