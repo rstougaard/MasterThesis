@@ -36,7 +36,7 @@ def check_paths(source_name, method, number_of_bins):
 
 def filtering(vars, snrratios=None, time_intervals=None):
     # Extract variables
-    source_name, method, _, _, ra, dec, minimal_energy, maximal_energy = vars
+    source_name, ra, dec, method, specin, _, _, minimal_energy, maximal_energy = vars
     source_name_cleaned = source_name.replace(" ", "").replace(".", "dot").replace("+", "plus").replace("-", "minus")
     gt = my_apps
     evc = 128
@@ -64,8 +64,10 @@ def filtering(vars, snrratios=None, time_intervals=None):
         # Set the lc filename based on the method
         if method == 'SNR':
             lc = f'./data/{source_name_cleaned}/{method}/lc_snr{loop_item}.fits'
+            colors = ['blue', 'orange', 'green']
         elif method == 'LIN':
             lc = f'./data/{source_name_cleaned}/{method}/lc_{loop_item}.fits'
+            colors = ['purple', 'brown']
 
         # Filter selecting events by time
         if not os.path.exists(gti):
@@ -152,7 +154,7 @@ def filtering(vars, snrratios=None, time_intervals=None):
                 gtexposure['infile'] = lc
                 gtexposure['scfile'] = sc
                 gtexposure['irfs'] = 'CALDB'
-                gtexposure['specin'] = -2.05
+                gtexposure['specin'] = -specin
                 gtexposure['apcorr'] = 'yes' #change this, if you are sure
                 gtexposure['enumbins'] = 30
                 gtexposure['emin'] = minimal_energy
@@ -167,7 +169,6 @@ def filtering(vars, snrratios=None, time_intervals=None):
         else:
             print(f'{lc} file exists!')
 
-    colors = ['blue', 'orange', 'green', 'purple', 'brown']
     initial_means = []
     final_means = []
     final_thresholds = []
@@ -327,23 +328,281 @@ def filtering(vars, snrratios=None, time_intervals=None):
     for item, initial_mean, final_mean, final_threshold, valid_intervals, invalid_intervals in zip(
         loop_items, initial_means, final_means, final_thresholds, valid_intervals_list, invalid_intervals_list
     ):
-        print(f"{lc}: Initial Mean {initial_mean:.2e} |Final Mean {final_mean:.2e} | Final Threshold {final_threshold:.2e} | "
+        print(f"{item}: Initial Mean {initial_mean:.2e} |Final Mean {final_mean:.2e} | Final Threshold {final_threshold:.2e} | "
             f"Valid intervals: {valid_intervals} | Invalid intervals: {invalid_intervals}")
 ##################################################################################
 ##################################################################################
+def modify_and_save(tree, source_name, method, loop_item):
+    source_name_cleaned = source_name.replace(" ", "").replace(".", "dot").replace("+", "plus").replace("-", "minus")
+    if method == "NONE":
+        output_dir = f'./data/{source_name_cleaned}/{method}/models/'
+    elif method == "SNR":
+        output_dir = f'./data/{source_name_cleaned}/{method}/models/'
+    elif method == "LIN":
+        output_dir = f'./data/{source_name_cleaned}/{method}/models/'
+
+    """
+    Modifies the XML tree to create three versions of the file: free_alpha, free_beta, free_alpha_beta.
+
+    Args:
+        tree (ElementTree): The XML tree object.
+        output_dir (str): The directory path to save the modified XML files.
+        source_name (str): The name of the source to modify.
+    """
+    root = tree.getroot()
+
+    # Look for the specific source by name
+    source = root.find(f".//source[@name='{source_name}']")
+
+    if source is not None:
+        print(f"Found source: {source.get('name')}")
+
+        # Find the 'spectrum' tag within this source
+        spectrum = source.find('spectrum')
+
+        if spectrum is not None:
+            # Define file suffixes and corresponding parameters to modify
+            modifications = {
+                "free_alpha": ["alpha"],
+                "free_beta": ["beta"],
+                "free_alpha_beta": ["alpha", "beta"]
+            }
 
 
+
+            # Create a modified XML file for each case
+            for suffix, params in modifications.items():
+                # Create a copy of the tree for modification
+                modified_tree = ET.ElementTree(root)
+                
+                # Modify the copied tree
+                for param in spectrum.findall('parameter'):
+                    if param.get('name') in params:
+                        print(f"Setting 'free' attribute for {param.get('name')} in {suffix}")
+                        param.set('free', '1')  # Set 'free' attribute to '1'
+
+                # Save the modified tree to a new file
+                if method == "NONE":
+                    output_path = os.path.join(output_dir, f"input_model_{suffix}.xml")
+                elif method == "SNR":
+                    output_path = os.path.join(output_dir, f"input_model_snr{loop_item}_{suffix}.xml")
+                elif method == "LIN":
+                   output_path = os.path.join(output_dir, f"input_model_{loop_item}_{suffix}.xml")
+
+                modified_tree.write(output_path, encoding='utf-8', xml_declaration=True)
+                print(f"Modified file saved to: {output_path}")
+
+        else:
+            print("No 'spectrum' tag found in the source.")
+    else:
+        print(f"Source with name '{source_name}' not found.")
+##################################################################################
+##################################################################################
+def generate_files(vars, snrratios=None, time_intervals=None, number_of_bins=None):
+    # Extract variables
+    source_name, ra, dec, method, specin, _, _, minimal_energy, maximal_energy = vars
+    source_name_cleaned = source_name.replace(" ", "").replace(".", "dot").replace("+", "plus").replace("-", "minus")
+
+    general_path = f'./data/{source_name_cleaned}/'
+    sc = general_path+'SC.fits'
+    ebinfile = f'./energy_bins_def/{number_of_bins}/energy_bins_gtbindef.fits'
+
+    # Determine the loop items based on the method
+    if method == "SNR":
+        loop_items = snrratios
+    elif method == "LIN":
+        loop_items = time_intervals
+    else:
+        loop_items = "NONE"  # No looping for the "NONE" method
+
+    # If there is nothing to loop over, handle the "NONE" method directly
+    if method == "NONE":
+        gti_noflares = general_path + 'gti.fits'
+        ltcube = general_path + f'{method}/ltcube/ltcube.fits'
+        ccube = general_path + f'{method}/ccube/ccube.fits'
+        binexpmap = general_path + f'{method}/expmap/BinnedExpMap.fits'
+        model = f'./data/{source_name_cleaned}/{method}/models/input_model.xml'
+        print(f"Processing method {method} without looping.")
+        # Add your logic for the "NONE" case here
+    else:
+        for loop_item in loop_items:
+            
+            if method == "SNR":
+                gti_noflares = general_path + f'{method}/gti_noflares_snr{loop_item}.fits'
+                ltcube = general_path + f'{method}/ltcube/ltcube_snr{loop_item}.fits'
+                ccube = general_path + f'{method}/ccube/ccube_snr{loop_item}.fits'
+                binexpmap = general_path + f'{method}/expmap/BinnedExpMap_snr{loop_item}.fits'
+                model = f'./data/{source_name_cleaned}/{method}/models/input_model_snr{loop_item}.xml'
+            elif method == "LIN":
+                gti_noflares = general_path + f'{method}/gti_noflares_{loop_item}.fits'
+                ltcube = general_path + f'{method}/ltcube/ltcube_{loop_item}.fits'
+                ccube = general_path + f'{method}/ccube/ccube_{loop_item}.fits'
+                binexpmap = general_path + f'{method}/expmap/BinnedExpMap_{loop_item}.fits'
+                model = f'./data/{source_name_cleaned}/{method}/models/input_model_{loop_item}.xml'
+
+        if not os.path.exists(ltcube):
+            print(f"Creating ltcube for {method}: {loop_item}")
+            my_apps.expCube['evfile'] = gti_noflares
+            my_apps.expCube['scfile'] = sc
+            my_apps.expCube['outfile'] = ltcube
+            my_apps.expCube['zmax'] = 90
+            my_apps.expCube['dcostheta'] = 0.025
+            my_apps.expCube['binsz'] = 1
+            my_apps.expCube.run()
+        else:
+            print(f'{ltcube} file exists!')
+
+        if not os.path.exists(ccube):
+            print(f"Creating ccube for {method}: {loop_item}")
+            ####### Counts Cube #######
+            my_apps.evtbin['evfile'] = gti_noflares
+            my_apps.evtbin['outfile'] = ccube
+            my_apps.evtbin['scfile'] = 'NONE'
+            my_apps.evtbin['algorithm'] = 'CCUBE'
+            my_apps.evtbin['nxpix'] = 100
+            my_apps.evtbin['nypix'] = 100
+            my_apps.evtbin['binsz'] = 0.2
+            my_apps.evtbin['coordsys'] = 'CEL'
+            my_apps.evtbin['xref'] = ra
+            my_apps.evtbin['yref'] = dec
+            my_apps.evtbin['axisrot'] = 0
+            my_apps.evtbin['proj'] = 'AIT'
+            my_apps.evtbin['ebinalg'] = 'FILE'
+            my_apps.evtbin['ebinfile'] = ebinfile
+            my_apps.evtbin.run()
+        else:
+            print(f'{ccube} file exists!')
+
+        if not os.path.exists(binexpmap):
+            print(f"Creating exposuremap for {method}: {loop_item}")
+            ####### Exposure Map #######
+            expCube2['infile'] = ltcube
+            expCube2['cmap'] = 'none'
+            expCube2['outfile'] = binexpmap
+            expCube2['irfs'] = 'P8R3_SOURCE_V3'
+            expCube2['evtype'] = '3'
+            expCube2['nxpix'] = 1800
+            expCube2['nypix'] = 900
+            expCube2['binsz'] = 0.2
+            expCube2['coordsys'] = 'CEL'
+            expCube2['xref'] = ra
+            expCube2['yref'] = dec
+            expCube2['axisrot'] = 0
+            expCube2['proj'] = 'AIT'
+            expCube2['ebinalg'] = 'FILE'
+            expCube2['ebinfile'] = ebinfile
+            expCube2.run()
+        else:
+            print(f'{binexpmap} file exists!')
+        
+        ####### Make model #######
+         ##### Run make4FGLxml Command #####
+        make4FGLxml_command = [f'make4FGLxml ./data/gll_psc_v32.xml --event_file {gti_noflares} -o {model} --free_radius 5.0 --norms_free_only True --sigma_to_free 25 --variable_free True']
+    
+        # Run the command using subprocess
+        subprocess.run(make4FGLxml_command, shell=True, check=True, executable='/bin/bash')
+        tree = ET.parse(f'{model}')
+        modify_and_save(tree, source_name, method, loop_item)
+
+    return
+
+def source_maps(vars, snrratios=None, time_intervals=None):
+    # Extract variables
+    source_name, ra, dec, method, specin, _, _, minimal_energy, maximal_energy = vars
+    source_name_cleaned = source_name.replace(" ", "").replace(".", "dot").replace("+", "plus").replace("-", "minus")
+
+    general_path = f'./data/{source_name_cleaned}/'
+    # Determine the loop items based on the method
+    if method == "SNR":
+        loop_items = snrratios
+    elif method == "LIN":
+        loop_items = time_intervals
+    else:
+        loop_items = "NONE"  # No looping for the "NONE" method
+    
+    input_model = general_path + f'{method}/expmap/input_model.xml'
+    
+    # If there is nothing to loop over, handle the "NONE" method directly
+    if method == "NONE":
+        ltcube = general_path + f'{method}/ltcube/ltcube.fits'
+        ccube = general_path + f'{method}/ccube/ccube.fits'
+        binexpmap = general_path + f'{method}/expmap/BinnedExpMap.fits'
+        srcmap = general_path + f'{method}/expmap/srcmap.fits'
+        #input_model = general_path + f'{method}/expmap/input_model.xml'
+        print(f"Processing method {method} without looping.")
+        # Add your logic for the "NONE" case here
+    else:
+        for loop_item in loop_items:
+            if method == "SNR":
+                ltcube = general_path + f'{method}/ltcube/ltcube_snr{loop_item}.fits'
+                ccube = general_path + f'{method}/ccube/ccube_snr{loop_item}.fits'
+                binexpmap = general_path + f'{method}/expmap/BinnedExpMap_snr{loop_item}.fits'
+                srcmap = general_path + f'{method}/expmap/srcmap_snr{loop_item}.fits'
+                #input_model = general_path + f'{method}/expmap/input_model_snr{loop_item}.xml'
+            elif method == "LIN":
+                ltcube = general_path + f'{method}/ltcube/ltcube_{loop_item}.fits'
+                ccube = general_path + f'{method}/ccube/ccube_{loop_item}.fits'
+                binexpmap = general_path + f'{method}/expmap/BinnedExpMap_{loop_item}.fits'
+                srcmap = general_path + f'{method}/expmap/srcmap_{loop_item}.fits'
+                #input_model = general_path + f'{method}/expmap/input_model_{loop_item}.xml'
+
+        if not os.path.exists(srcmap):
+            ####### Source Map #######
+            print(f"Creating sourcemap for {method}: {loop_item}")
+            my_apps.srcMaps['expcube'] = ltcube
+            my_apps.srcMaps['cmap'] = ccube
+            my_apps.srcMaps['srcmdl'] = input_model
+            my_apps.srcMaps['bexpmap'] = binexpmap
+            my_apps.srcMaps['outfile'] = srcmap
+            my_apps.srcMaps['irfs'] = 'P8R3_SOURCE_V3'
+            my_apps.srcMaps['evtype'] = '3'
+            my_apps.srcMaps.run()
+        else:
+            print(f'{srcmap} file exists!')
+    pass
+
+##################################################################################
+##################################################################################
 check_paths("4FGL J0319.8+4130", 'SNR', 7)
 check_paths("4FGL J0319.8+4130", 'LIN', 7)
+check_paths("4FGL J0319.8+4130", 'NONE', 7)
+'''
+filename = "Source_ra_dec_specin.txt"
 
-vars_snr = ("4FGL J0319.8+4130", "SNR", None, None, 49.9507, 41.5117, 100, 1000000)
+with open(filename, "r") as file:
+    for line in file:
+        # Strip any extra whitespace and extract components
+        parts = line.strip().split()
+        
+        # Extract required data
+        source_name = parts[0]  # First part: source name
+        ra = float(parts[1])    # Second part: RA
+        dec = float(parts[2])   # Third part: Dec
+        specin = float(parts[3])  # Fourth part: spectral index
+        
+        # Construct vars_snr tuple
+        vars_snr = (source_name, ra, dec, "SNR", specin, None, None, 100, 1000000)
+'''
+vars_snr = ("4FGL J0319.8+4130", 49.9507, 41.5117, 2.05, "SNR", None, None,  100, 1000000)
 snrratios = [3, 5, 10]
-filtering(vars_snr, snrratios=snrratios)
-
-vars_lin = ("4FGL J0319.8+4130", "LIN", None, None, 49.9507, 41.5117, 100, 1000000)
+vars_lin = ("4FGL J0319.8+4130", 49.9507, 41.5117, 2.05, "LIN", None, None,  100, 1000000)
 time_intervals = ["week", "month"]
+vars_none= ("4FGL J0319.8+4130", 49.9507, 41.5117, 2.05, "NONE", None, None,  100, 1000000)
+filtering(vars_snr, snrratios=snrratios)
 filtering(vars_lin, time_intervals=time_intervals)
 print('Filtering done!')
+
+generate_files(vars_none, number_of_bins=7)
+source_maps(vars_none)
+
+generate_files(vars_snr, snrratios=snrratios, number_of_bins=7)
+# mangler input model
+source_maps(vars_snr, snrratios=snrratios)
+
+generate_files(vars_lin, time_intervals=time_intervals, number_of_bins=7)
+source_maps(vars_lin, time_intervals=time_intervals)
+
+
     
 '''
 def run_analysis(source_name, num_workers, method, snrratio, time_interval_name, ra, dec, minimal_energy, maximal_energy, number_of_bins, bins_def_filename):
@@ -351,133 +610,6 @@ def run_analysis(source_name, num_workers, method, snrratio, time_interval_name,
     #snr_arg = source_name, method, snrratio, time_interval_name, ra, dec, minimal_energy, maximal_energy
     #filtering(snr_arg)
     
-
-def snr_filtering_per_bin(vars, energy_bins):
-    ####### Livetime Cube #######
-    source_name, time_interval_name, ra, dec = vars
-    source_name_cleaned = source_name.replace(" ", "").replace(".", "dot").replace("+", "plus").replace("-", "minus")
-
-    effective_area = 7000  # in cm^2
-    average_photon_flux = 3.3525944e-07  # photon flux in ph / cm^2 / s
-    seconds_in_a_year = 365.25 * 24 * 3600  # accounting for leap years
-    seconds_in_a_month = 30.44 * 24 * 3600
-
-    # Recalculate the counts (per month) considering the effective area
-    num_photons_across_bins = average_photon_flux* seconds_in_a_month * effective_area 
-
-    gt = my_apps
-    evc = 128
-    convt = 3
-    roi = 1.
-    
-    sc = f'./data/{source_name_cleaned}/SC.fits'
-
-    for energy_bin_index, (emin, emax) in enumerate(energy_bins):
-
-        tmp_evlist = f'@./data/{source_name_cleaned}/events.list'
-        tmp_gti_bin = f'./data/{source_name_cleaned}/snr/temp_git_bin_{energy_bin_index+1}.fits'
-        gtifilter = '(DATA_QUAL>0)&&(LAT_CONFIG==1)'
-        sc = f'./data/{source_name_cleaned}/SC.fits'
-        gti_bin = f'./data/{source_name_cleaned}/snr/gti_bin_{energy_bin_index+1}.fits'
-
-        print('GTSELECT started!')
-        gt.filter['evclass'] = evc
-        gt.filter['evtype']=convt
-        gt.filter['ra'] = ra
-        gt.filter['dec'] = dec
-        gt.filter['rad'] = roi
-        gt.filter['emin'] = emin
-        gt.filter['emax'] = emax
-        gt.filter['zmax'] = 90
-        gt.filter['tmin'] = 239557417
-        gt.filter['tmax'] = 435456000
-        gt.filter['infile'] = tmp_evlist
-        gt.filter['outfile'] = tmp_gti_bin
-        gt.filter.run() #run GTSELECT
-        print('GTSELECT finished!')
-        #Add our own GTIs:
-        #UpdateGTIs(tmp_gti,'h.dat',method='in')
-        #UpdateGTIs(tmp_gti,'flares.dat',method='out')
-        # done with our own gtis
-        print('GTMKTIME start')
-        gt.maketime['scfile'] = sc
-        gt.maketime['filter'] = gtifilter
-        gt.maketime['roicut'] = 'yes'
-        gt.maketime['evfile'] = tmp_gti_bin
-        gt.maketime['outfile'] = gti_bin
-        gt.maketime.run()
-        try:
-                os.remove(tmp_gti_bin)
-        except:
-            pass
-        print('done!')
-
-        print('Sorting event file by time...')
-        with fits.open(gti_bin, 'update') as f:
-            data = f[1].data
-            order = np.argsort(data['TIME'])
-
-            for kk in data.names:
-                data[kk] = data[kk][order]
-
-            f[1].data = data
-
-        print('done!')
-        print()
-
-        print(f'Processing energy bin {energy_bin_index + 1}: {emin}-{emax} MeV')
-        lc_bin = f'./data/{source_name_cleaned}/snr/lc_bin_{energy_bin_index + 1}.fits'
-
-        bin_size = emax-emin  # in MeV
-        # Photon counts per energy bin
-        num_photons_per_bin = average_photon_flux  * effective_area * 3*seconds_in_a_month / bin_size
-
-        # SNR per energy bin
-        snr_per_bin = num_photons_per_bin**0.5
-
-        print(f"Photon counts per bin: {num_photons_per_bin:.2e}")
-        print(f"SNR per bin: {snr_per_bin:.2f}")
-
-        print('Creating LC for energy bin')
-        my_apps.evtbin['evfile'] = gti_bin
-        my_apps.evtbin['outfile'] = lc_bin
-        my_apps.evtbin['scfile'] = sc
-        my_apps.evtbin['algorithm'] = 'LC'
-        my_apps.evtbin['tbinalg'] = 'SNR'
-        my_apps.evtbin['tstart'] = 239557417
-        my_apps.evtbin['tstop'] = 435456000
-        my_apps.evtbin['emin'] = emin
-        my_apps.evtbin['emax'] = emax
-        my_apps.evtbin['ebinalg'] = "NONE"
-        my_apps.evtbin['ebinfile'] = "NONE"
-        my_apps.evtbin['snratio'] = 3
-        my_apps.evtbin['lcemin'] = emin
-        my_apps.evtbin['lcemax'] = emax
-        my_apps.evtbin.run()
-
-        calc_exposure = True
-        with fits.open(lc_bin) as f:
-            if 'EXPOSURE' in f[1].data.names:
-                calc_exposure = False
-
-        if calc_exposure:
-            print(f'Launching gtexposure for energy bin {energy_bin_index + 1}')
-            gtexposure = my_apps.GtApp('gtexposure')
-            gtexposure['infile'] = lc_bin
-            gtexposure['scfile'] = sc
-            gtexposure['irfs'] = 'CALDB'
-            gtexposure['specin'] = -2.05
-            gtexposure['apcorr'] = 'yes'
-            gtexposure['enumbins'] = 30
-            gtexposure['emin'] = emin
-            gtexposure['emax'] = emax
-            gtexposure['ra'] = ra
-            gtexposure['dec'] = dec
-            gtexposure['rad'] = roi
-            gtexposure.run()
-        else:
-            print(f'EXPOSURE column already exists for energy bin {energy_bin_index + 1}!')
-            print('If you want to re-create it, set always_redo_exposure=True')
 
 # Function to read energy bins
 def get_energy_bins(bins_def_filename):
@@ -490,195 +622,6 @@ def get_energy_bins(bins_def_filename):
             emin, emax = map(float, line.split())
             energy_bins.append((emin, emax))
     return energy_bins
-
-# Function to generate livetime cube
-def generate_ltcube(vars):
-    i, source_name, time_interval_name, ra, dec, short_name = vars
-    source_name_cleaned = source_name.replace(" ", "").replace(".", "dot").replace("+", "plus").replace("-", "minus")
-
-    gti = f'./data/{source_name_cleaned}/filtered_gti.fits'
-    lc = f'./data/{source_name_cleaned}/snr/lc.fits'
-    sc = f'./data/{source_name_cleaned}/SC.fits' 
-    event_file = f'./data/{source_name_cleaned}/snr/time_interval_{i}.fits'
-    ltcube = f'./data/{source_name_cleaned}/snr/ltcube/ltcube_{i}.fits'
-
-    my_apps.expCube['evfile'] =  event_file
-    my_apps.expCube['scfile'] = sc
-    my_apps.expCube['outfile'] = ltcube
-    my_apps.expCube['zmax'] = 90
-    my_apps.expCube['dcostheta'] = 0.025
-    my_apps.expCube['binsz'] = 1
-    my_apps.expCube.run()
-    pass
-# Function to generate files for full spectrum
-def generate_files(vars):
-    ####### Livetime Cube #######
-    i, source_name, time_interval_name, ra, dec, minimal_energy, maximal_energy, number_of_bins = vars
-    source_name_cleaned = source_name.replace(" ", "").replace(".", "dot").replace("+", "plus").replace("-", "minus")
-
-    ccube = f'./data/{source_name_cleaned}/snr/ccube/ccube_{i}.fits'
-    event_file = f'./data/{source_name_cleaned}/snr/time_interval_{i}.fits'
-    ltcube = f'./data/{source_name_cleaned}/snr/ltcube/ltcube_{i}.fits'
-    expmap = f'./data/{source_name_cleaned}/snr/expmap/BinnedExpMap_{i}.fits'
-
-    my_apps.evtbin['evfile'] = event_file
-    my_apps.evtbin['outfile'] = ccube
-    my_apps.evtbin['scfile'] = 'NONE'
-    my_apps.evtbin['algorithm'] = 'CCUBE'
-    my_apps.evtbin['nxpix'] = 100
-    my_apps.evtbin['nypix'] = 100
-    my_apps.evtbin['binsz'] = 0.2
-    my_apps.evtbin['coordsys'] = 'CEL'
-    my_apps.evtbin['xref'] = ra
-    my_apps.evtbin['yref'] = dec
-    my_apps.evtbin['axisrot'] = 0
-    my_apps.evtbin['proj'] = 'AIT'
-    my_apps.evtbin['ebinalg'] = 'FILE'
-    my_apps.evtbin['ebinfile'] = f'./energy_bins_def/{number_of_bins}/energy_bins_gtbindef.fits'
-    my_apps.evtbin.run()
-
-    ####### Exposure Map #######
-    expCube2['infile'] = ltcube
-    expCube2['cmap'] = 'none'
-    expCube2['outfile'] = expmap
-    expCube2['irfs'] = 'P8R3_SOURCE_V3'
-    expCube2['evtype'] = '3'
-    expCube2['nxpix'] = 1800
-    expCube2['nypix'] = 900
-    expCube2['binsz'] = 0.2
-    expCube2['coordsys'] = 'CEL'
-    expCube2['xref'] = ra
-    expCube2['yref'] = dec
-    expCube2['axisrot'] = 0
-    expCube2['proj'] = 'AIT'
-    expCube2['ebinalg'] = 'FILE'
-    expCube2['ebinfile'] = f'./energy_bins_def/{number_of_bins}/energy_bins_gtbindef.fits'
-    expCube2.run()
-
-    ####### Make model #######
-    ##### Run make4FGLxml Command #####
-    make4FGLxml_command = [f'make4FGLxml ./data/gll_psc_v32.xml --event_file ./data/{source_name_cleaned}/snr/time_interval_{i}.fits -o ./data/{source_name_cleaned}/snr/models/input_model_{i}.xml --free_radius 5.0 --norms_free_only True --sigma_to_free 25 --variable_free True']
-    
-    # Run the command using subprocess
-    subprocess.run(make4FGLxml_command, shell=True, check=True, executable='/bin/bash')
-
-def modify_and_save(tree, param_to_free, output_path, source_name):
-    """
-    Modifies the XML tree to set the 'free' attribute for a specific parameter
-    and saves it to a new file.
-
-    Args:
-        tree (ET.ElementTree): The parsed XML tree.
-        param_to_free (str): The name of the parameter to free ('alpha' or 'beta').
-        output_path (str): The path to save the modified XML file.
-    """
-    root = tree.getroot()
-
-    # Look for the specific source by name
-    source = root.find(f".//source[@name='{source_name}']")
-
-    if source is not None:
-        print(f"Modifying source: {source.get('name')}")
-
-        # Find the 'spectrum' tag within this source
-        spectrum = source.find('spectrum')
-        
-        if spectrum is not None:
-            # Loop through the parameters within the spectrum
-            for param in spectrum.findall('parameter'):
-                param_name = param.get('name')  # Get the parameter name
-                
-                # Modify the specified parameter
-                if param_name == param_to_free:
-                    print(f"Changing 'free' attribute for {param_name}")
-                    param.set('free', '1')  # Set 'free' attribute to '1'
-        else:
-            print("No 'spectrum' tag found in the source.")
-    else:
-        print(f"Source with name '{source_name}' not found.")
-
-    # Save the modified XML back to a new file
-    os.makedirs(os.path.dirname(output_path), exist_ok=True)  # Ensure the directory exists
-    tree.write(output_path, encoding='utf-8', xml_declaration=True)
-    print(f"Modified file saved to: {output_path}")
-
-def call_xml_modifier(vars):
-    i, source_name, source_name_cleaned, time_interval_name, parameter = vars
-    source_file_path = f'./data/{source_name_cleaned}/snr/models/input_model_{i}.xml'
-
-    if parameter == 'alpha':
-        output_file_alpha = f'./data/{source_name_cleaned}/snr/models/input_model_{i}_free_alpha.xml'
-        try:
-            # Load the original XML file
-            tree = ET.parse(source_file_path)
-
-            # Create one file freeing 'alpha'
-            modify_and_save(tree, 'alpha', output_file_alpha, source_name)
-
-        except FileNotFoundError:
-            print(f"File not found: {source_file_path}")
-        except ET.ParseError:
-            print("Error parsing the XML file.")
-        except Exception as e:
-            print(f"An unexpected error occurred: {e}")
-    if parameter == 'beta':
-        output_file_beta = f'./data/{source_name_cleaned}/snr/models/input_model_{i}_free_beta.xml'
-        try:
-            # Load the original XML file
-            tree = ET.parse(source_file_path)
-
-            # Create one file freeing 'alpha'
-            modify_and_save(tree, 'beta', output_file_beta, source_name)
-
-        except FileNotFoundError:
-            print(f"File not found: {source_file_path}")
-        except ET.ParseError:
-            print("Error parsing the XML file.")
-        except Exception as e:
-            print(f"An unexpected error occurred: {e}")
-
-
-def source_maps_free_alpha(vars):
-    i, source_name, time_interval_name, ra, dec, minimal_energy, maximal_energy, number_of_bins= vars
-    source_name_cleaned = source_name.replace(" ", "").replace(".", "dot").replace("+", "plus").replace("-", "minus")
-
-    ccube = f'./data/{source_name_cleaned}/snr/ccube/ccube_{i}.fits'
-    ltcube = f'./data/{source_name_cleaned}/snr/ltcube/ltcube_{i}.fits'
-    expmap = f'./data/{source_name_cleaned}/snr/expmap/BinnedExpMap_{i}.fits'
-    model = f'./data/{source_name_cleaned}/snr/models/input_model_{i}_free_alpha.xml'
-    srcmap = f'./data/{source_name_cleaned}/snr/srcmap/srcmap_{i}_free_alpha.fits'
-
-     ####### Source Map #######
-    my_apps.srcMaps['expcube'] = ltcube
-    my_apps.srcMaps['cmap'] = ccube
-    my_apps.srcMaps['srcmdl'] = model
-    my_apps.srcMaps['bexpmap'] = expmap
-    my_apps.srcMaps['outfile'] = srcmap
-    my_apps.srcMaps['irfs'] = 'P8R3_SOURCE_V3'
-    my_apps.srcMaps['evtype'] = '3'
-    my_apps.srcMaps.run()
-    pass
-
-def source_maps_free_beta(vars):
-    i, source_name, time_interval_name, ra, dec, minimal_energy, maximal_energy, number_of_bins= vars
-    source_name_cleaned = source_name.replace(" ", "").replace(".", "dot").replace("+", "plus").replace("-", "minus")
-
-    ccube = f'./data/{source_name_cleaned}/snr/ccube/ccube_{i}.fits'
-    ltcube = f'./data/{source_name_cleaned}/snr/ltcube/ltcube_{i}.fits'
-    expmap = f'./data/{source_name_cleaned}/snr/expmap/BinnedExpMap_{i}.fits'
-    model = f'./data/{source_name_cleaned}/snr/models/input_model_{i}_free_beta.xml'
-    srcmap = f'./data/{source_name_cleaned}/snr/srcmap/srcmap_{i}_free_beta.fits'
-
-    ####### Source Map #######
-    my_apps.srcMaps['expcube'] = ltcube
-    my_apps.srcMaps['cmap'] = ccube
-    my_apps.srcMaps['srcmdl'] = model
-    my_apps.srcMaps['bexpmap'] = expmap
-    my_apps.srcMaps['outfile'] = srcmap
-    my_apps.srcMaps['irfs'] = 'P8R3_SOURCE_V3'
-    my_apps.srcMaps['evtype'] = '3'
-    my_apps.srcMaps.run()
-    pass
 
 def run_binned_likelihood_free_alpha(vars):
     i, source_name, time_interval_name, ra, dec, minimal_energy, maximal_energy, number_of_bins = vars
