@@ -583,11 +583,11 @@ with open(filename, "r") as file:
         # Construct vars_snr tuple
         vars_snr = (source_name, ra, dec, "SNR", specin, None, None, 100, 1000000)
 '''
-vars_snr = ("4FGL J0319.8+4130", 49.9507, 41.5117, 2.05, "SNR", None, None,  100, 1000000)
+vars_snr = ("4FGL J0319.8+4130", 49.9507, 41.5117,"SNR", 2.05, None, None,  100, 1000000)
 snrratios = [3, 5, 10]
-vars_lin = ("4FGL J0319.8+4130", 49.9507, 41.5117, 2.05, "LIN", None, None,  100, 1000000)
+vars_lin = ("4FGL J0319.8+4130", 49.9507, 41.5117,"LIN", 2.05, None, None,  100, 1000000)
 time_intervals = ["week", "month"]
-vars_none= ("4FGL J0319.8+4130", 49.9507, 41.5117, 2.05, "NONE", None, None,  100, 1000000)
+vars_none= ("4FGL J0319.8+4130", 49.9507, 41.5117, "NONE", 2.05, None, None,  100, 1000000)
 filtering(vars_snr, snrratios=snrratios)
 filtering(vars_lin, time_intervals=time_intervals)
 print('Filtering done!')
