@@ -596,7 +596,7 @@ def source_maps(vars, snrratios=None, time_intervals=None):
         
         if not os.path.exists(srcmap):
             ####### Source Map #######
-            print(f"Creating sourcemap for {method}: {loop_item}")
+            print(f"Creating sourcemap for {method}")
             my_apps.srcMaps['expcube'] = ltcube
             my_apps.srcMaps['cmap'] = ccube
             my_apps.srcMaps['srcmdl'] = input_model
