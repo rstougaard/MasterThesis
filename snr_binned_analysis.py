@@ -423,7 +423,70 @@ def generate_files(vars, snrratios=None, time_intervals=None, number_of_bins=Non
         binexpmap = general_path + f'{method}/expmap/BinnedExpMap.fits'
         model = f'./data/{source_name_cleaned}/{method}/models/input_model.xml'
         print(f"Processing method {method} without looping.")
-        # Add your logic for the "NONE" case here
+        
+        if not os.path.exists(ltcube):
+            print(f"Creating ltcube for {method}: {loop_item}")
+            my_apps.expCube['evfile'] = gti_noflares
+            my_apps.expCube['scfile'] = sc
+            my_apps.expCube['outfile'] = ltcube
+            my_apps.expCube['zmax'] = 90
+            my_apps.expCube['dcostheta'] = 0.025
+            my_apps.expCube['binsz'] = 1
+            my_apps.expCube.run()
+        else:
+            print(f'{ltcube} file exists!')
+
+        if not os.path.exists(ccube):
+            print(f"Creating ccube for {method}: {loop_item}")
+            ####### Counts Cube #######
+            my_apps.evtbin['evfile'] = gti_noflares
+            my_apps.evtbin['outfile'] = ccube
+            my_apps.evtbin['scfile'] = 'NONE'
+            my_apps.evtbin['algorithm'] = 'CCUBE'
+            my_apps.evtbin['nxpix'] = 100
+            my_apps.evtbin['nypix'] = 100
+            my_apps.evtbin['binsz'] = 0.2
+            my_apps.evtbin['coordsys'] = 'CEL'
+            my_apps.evtbin['xref'] = ra
+            my_apps.evtbin['yref'] = dec
+            my_apps.evtbin['axisrot'] = 0
+            my_apps.evtbin['proj'] = 'AIT'
+            my_apps.evtbin['ebinalg'] = 'FILE'
+            my_apps.evtbin['ebinfile'] = ebinfile
+            my_apps.evtbin.run()
+        else:
+            print(f'{ccube} file exists!')
+
+        if not os.path.exists(binexpmap):
+            print(f"Creating exposuremap for {method}: {loop_item}")
+            ####### Exposure Map #######
+            expCube2['infile'] = ltcube
+            expCube2['cmap'] = 'none'
+            expCube2['outfile'] = binexpmap
+            expCube2['irfs'] = 'P8R3_SOURCE_V3'
+            expCube2['evtype'] = '3'
+            expCube2['nxpix'] = 1800
+            expCube2['nypix'] = 900
+            expCube2['binsz'] = 0.2
+            expCube2['coordsys'] = 'CEL'
+            expCube2['xref'] = ra
+            expCube2['yref'] = dec
+            expCube2['axisrot'] = 0
+            expCube2['proj'] = 'AIT'
+            expCube2['ebinalg'] = 'FILE'
+            expCube2['ebinfile'] = ebinfile
+            expCube2.run()
+        else:
+            print(f'{binexpmap} file exists!')
+    
+        ####### Make model #######
+        ##### Run make4FGLxml Command #####
+        make4FGLxml_command = [f'make4FGLxml ./data/gll_psc_v32.xml --event_file {gti_noflares} -o {model} --free_radius 5.0 --norms_free_only True --sigma_to_free 25 --variable_free True']
+    
+        # Run the command using subprocess
+        subprocess.run(make4FGLxml_command, shell=True, check=True, executable='/bin/bash')
+        tree = ET.parse(f'{model}')
+        modify_and_save(tree, source_name, method, loop_item)
     else:
         for loop_item in loop_items:
             
@@ -530,7 +593,20 @@ def source_maps(vars, snrratios=None, time_intervals=None):
         srcmap = general_path + f'{method}/expmap/srcmap.fits'
         #input_model = general_path + f'{method}/expmap/input_model.xml'
         print(f"Processing method {method} without looping.")
-        # Add your logic for the "NONE" case here
+        
+        if not os.path.exists(srcmap):
+            ####### Source Map #######
+            print(f"Creating sourcemap for {method}: {loop_item}")
+            my_apps.srcMaps['expcube'] = ltcube
+            my_apps.srcMaps['cmap'] = ccube
+            my_apps.srcMaps['srcmdl'] = input_model
+            my_apps.srcMaps['bexpmap'] = binexpmap
+            my_apps.srcMaps['outfile'] = srcmap
+            my_apps.srcMaps['irfs'] = 'P8R3_SOURCE_V3'
+            my_apps.srcMaps['evtype'] = '3'
+            my_apps.srcMaps.run()
+        else:
+            print(f'{srcmap} file exists!')
     else:
         for loop_item in loop_items:
             if method == "SNR":
