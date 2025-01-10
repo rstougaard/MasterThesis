@@ -374,8 +374,8 @@ def get_spectral_points(vars, snrratios=None, time_intervals=None):
                     emin_float, emax_float = map(float, line.split())
 
                     # Convert the values to integers for the filename
-                    emin = int(emin)
-                    emax = int(emax)
+                    emin = int(emin_float)
+                    emax = int(emax_float)
                     print(f"Processing {method}: {loop_item} {emin_float}MeV - {emax_float}MeV")
 
                     if method == 'SNR':
