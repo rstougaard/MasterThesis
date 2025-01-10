@@ -792,7 +792,7 @@ def save_source_results_to_fits(source_name, method_results, filename):
     hdul.writeto(filename, overwrite=True)
 ##################################################################################
 ##################################################################################
-def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params = None)
+def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params = None):
     source_name, ra, dec, method, specin, _, _, minimal_energy, maximal_energy = vars
     source_name_cleaned = source_name.replace(" ", "").replace(".", "dot").replace("+", "plus").replace("-", "minus")
 
@@ -933,7 +933,7 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
 
         # Save results for the source to a FITS file
         save_source_results_to_fits(source_name, method_results, results_output_file)
-                    
+    return
                    
 
 ##################################################################################
