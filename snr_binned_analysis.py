@@ -583,7 +583,7 @@ def source_maps(vars, snrratios=None, time_intervals=None):
     else:
         loop_items = "NONE"  # No looping for the "NONE" method
     
-    input_model = general_path + f'{method}/models/input_model.xml'
+    input_model = general_path + f'NONE/models/input_model.xml'
     
     # If there is nothing to loop over, handle the "NONE" method directly
     if method == "NONE":
