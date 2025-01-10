@@ -455,17 +455,6 @@ def get_spectral_points(vars, snrratios=None, time_intervals=None):
       
        
     else:
-        if method == 'SNR':
-                        temp_gti_noflares_bin = f'./data/{source_name_cleaned}/{method}/temp_gti_noflares_snr{loop_item}_{emin}_{emax}.fits'
-                        gti_noflares_bin = f'./data/{source_name_cleaned}/{method}/gti_noflares_snr{loop_item}_{emin}_{emax}.fits'
-                        lc_noflare_bin = f'./data/{source_name_cleaned}/{method}/lc_snr{loop_item}_{emin}_{emax}.fits'
-                        output_file_flares = f'./data/{source_name_cleaned}/{method}/flare_intervals_snr{loop_item}.txt'
-                        
-        elif method == 'LIN':
-                        temp_gti_noflares_bin = f'./data/{source_name_cleaned}/{method}/temp_gti_noflares_{loop_item}_{emin}_{emax}.fits'
-                        gti_noflares_bin = f'./data/{source_name_cleaned}/{method}/gti_noflares_{loop_item}_{emin}_{emax}.fits'
-                        lc_noflare_bin = f'./data/{source_name_cleaned}/{method}/lc_{loop_item}_{emin}_{emax}.fits'
-                        output_file_flares = f'./data/{source_name_cleaned}/{method}/flare_intervals_{loop_item}.txt'
         for loop_item in loop_items:
             with open(f'{ebinfile_txt}', 'r') as file:
                 for line in file:
