@@ -13,6 +13,7 @@ import pickle
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 from operate_gtis import *
+from astropy.table import Table
 
 # Function to ensure paths exist
 def check_paths(source_name, method, number_of_bins):
@@ -28,7 +29,7 @@ def check_paths(source_name, method, number_of_bins):
         f'./data/{source_name_cleaned}/{method}/CountsSpectra/',
         f'./data/{source_name_cleaned}/{method}/likeresults/',
         f'./data/{source_name_cleaned}/{method}/fit_params/',
-        f'./energy_bins_def/{number_of_bins}'
+        f'./energy_bins_def/{number_of_bins}/'
     ]
     for path in paths:
         os.makedirs(path, exist_ok=True)
@@ -48,6 +49,7 @@ def filtering(vars, snrratios=None, time_intervals=None):
     gtifilter = '(DATA_QUAL>0)&&(LAT_CONFIG==1)'
     sc = f'./data/{source_name_cleaned}/SC.fits'
     gti = f'./data/{source_name_cleaned}/gti.fits'
+    ebinfile_txt = f'energy_7bins_gtbindef.txt '
 
     # Ensure either snrratios or time_intervals is provided based on method
     if method == "SNR" and not snrratios:
@@ -324,12 +326,145 @@ def filtering(vars, snrratios=None, time_intervals=None):
         else:
             print(f'{gti_noflares} file exists!')
 
+
+
     # Print results for all light curves
     for item, initial_mean, final_mean, final_threshold, valid_intervals, invalid_intervals in zip(
         loop_items, initial_means, final_means, final_thresholds, valid_intervals_list, invalid_intervals_list
     ):
         print(f"{item}: Initial Mean {initial_mean:.2e} |Final Mean {final_mean:.2e} | Final Threshold {final_threshold:.2e} | "
             f"Valid intervals: {valid_intervals} | Invalid intervals: {invalid_intervals}")
+
+#####################
+def get_spectral_points(vars, snrratios=None, time_intervals=None):
+    # Extract variables
+    source_name, ra, dec, method, specin, _, _, minimal_energy, maximal_energy = vars
+    source_name_cleaned = source_name.replace(" ", "").replace(".", "dot").replace("+", "plus").replace("-", "minus")
+    gt = my_apps
+    ebinfile_txt = f'energy_7bins_gtbindef.txt '
+    evc = 128
+    convt = 3
+    roi = 1.
+
+    gtifilter = '(DATA_QUAL>0)&&(LAT_CONFIG==1)'
+    sc = f'./data/{source_name_cleaned}/SC.fits'
+    # Determine the loop items based on the method
+    if method == "SNR":
+        loop_items = snrratios
+    elif method == "LIN":
+        loop_items = time_intervals
+    else:
+        loop_items = "NONE"  # No looping for the "NONE" method
+
+    # If there is nothing to loop over, handle the "NONE" method directly
+    if method == "NONE":
+        temp_gti_noflares_bin = f'./data/{source_name_cleaned}/{method}/temp_gti_noflares_snr{loop_item}_{emin}_{emax}.fits'
+        gti_noflares_bin = f'./data/{source_name_cleaned}/{method}/gti_noflares_snr{loop_item}_{emin}_{emax}.fits'
+        lc_noflare_bin = f'./data/{source_name_cleaned}/{method}/lc_snr{loop_item}_{emin}_{emax}.fits'
+        gti_noflares = f'./data/{source_name_cleaned}/{method}/gti_noflares_{loop_item}.fits'
+       
+    else:
+        for loop_item in loop_items:
+            print(f"Processing {method}: {loop_item} {emin}MeV - {emax}MeV'")
+
+            with open(f'{ebinfile_txt}', 'r') as file:
+                for line in file:
+                    line = line.strip()
+                    if not line or len(line.split()) != 2:
+                        continue
+                    emin, emax = map(float, line.split())
+
+                    if method == 'SNR':
+                        temp_gti_noflares_bin = f'./data/{source_name_cleaned}/{method}/temp_gti_noflares_snr{loop_item}_{emin}_{emax}.fits'
+                        gti_noflares_bin = f'./data/{source_name_cleaned}/{method}/gti_noflares_snr{loop_item}_{emin}_{emax}.fits'
+                        lc_noflare_bin = f'./data/{source_name_cleaned}/{method}/lc_snr{loop_item}_{emin}_{emax}.fits'
+                        gti_noflares = f'./data/{source_name_cleaned}/{method}/gti_noflares_snr{loop_item}.fits'
+                    elif method == 'LIN':
+                        temp_gti_noflares_bin = f'./data/{source_name_cleaned}/{method}/temp_gti_noflares_snr{loop_item}_{emin}_{emax}.fits'
+                        gti_noflares_bin = f'./data/{source_name_cleaned}/{method}/_gti_noflares_snr{loop_item}_{emin}_{emax}.fits'
+                        lc_noflare_bin = f'./data/{source_name_cleaned}/{method}/lc_{loop_item}_{emin}_{emax}.fits'
+                        gti_noflares = f'./data/{source_name_cleaned}/{method}/gti_noflares_{loop_item}.fits'
+                    
+                    #Make spectral points per method per loop_item
+                    if not os.path.exists(gti_noflares_bin):
+                        print( 'Making spectral points!' )
+                        print( 'GTSELECT started!' )
+                        gt.filter['evclass'] = evc
+                        gt.filter['evtype']=convt
+                        gt.filter['ra'] = ra
+                        gt.filter['dec'] = dec
+                        gt.filter['rad'] = roi
+                        gt.filter['emin'] = emin
+                        gt.filter['emax'] = emax
+                        gt.filter['zmax'] = 90
+                        gt.filter['tmin'] = 239557417
+                        gt.filter['tmax'] = 435456000
+                        gt.filter['infile'] = gti_noflares
+                        gt.filter['outfile'] = temp_gti_noflares_bin
+                        gt.filter.run() #run GTSELECT
+                        print( 'GTSELCT finished!' )
+
+                        print( 'GTMKTIME start' )
+                        gt.maketime['scfile'] = sc
+                        gt.maketime['filter'] = gtifilter
+                        gt.maketime['roicut'] = 'no'
+                        gt.maketime['evfile'] = temp_gti_noflares_bin
+                        gt.maketime['outfile'] = gti_noflares_bin
+                        gt.maketime.run()
+                        try:
+                            os.remove(temp_gti_noflares_bin)
+                        except Exception as e:
+                            print(f"Error removing tmp_gti: {e}")
+                        print('done!')
+                    else:
+                        print(f'{gti_noflares_bin} file exists!')
+
+                    # Create light curve
+                    print('Creating LC')
+                    always_redo_exposure = True
+                    gt.evtbin['evfile'] = gti_noflares_bin
+                    gt.evtbin['outfile'] = lc_noflare_bin
+                    gt.evtbin['scfile'] = sc
+                    gt.evtbin['algorithm'] = 'LC'
+                    gt.evtbin['tbinalg'] = 'LIN'
+                    gt.evtbin['tstart'] = 239557417
+                    gt.evtbin['tstop'] = 435456000
+                    gt.evtbin['emin'] = emin
+                    gt.evtbin['emax'] = emax
+                    gt.evtbin['ebinalg'] = "NONE"
+                    gt.evtbin['ebinfile'] = "NONE"
+                    gt.evtbin['dtime'] = (435456000 - 239557417)
+                    gt.evtbin.run()
+                    
+
+                    print(f'LC created for {method}: {loop_item} {emin}MeV - {emax}MeV')
+
+                    calc_exposure = True
+                    with fits.open(lc_noflare_bin) as f:
+                        if('EXPOSURE' in f[1].data.names): calc_exposure=False
+
+                    if(calc_exposure or always_redo_exposure):
+                        print('Launching gtexposure for ',lc_noflare_bin)
+                        gtexposure = my_apps.GtApp('gtexposure')
+                        gtexposure['infile'] = gti_noflares_bin
+                        gtexposure['scfile'] = sc
+                        gtexposure['irfs'] = 'CALDB'
+                        gtexposure['specin'] = -specin
+                        gtexposure['apcorr'] = 'yes' #change this, if you are sure
+                        gtexposure['enumbins'] = 30
+                        gtexposure['emin'] = emin
+                        gtexposure['emax'] = emax
+                        gtexposure['ra'] = ra
+                        gtexposure['dec'] = dec
+                        gtexposure['rad'] = roi
+                        gtexposure.run()
+                    else:
+                        print('EXPOSURE column already exists!')
+                        print('If you want to re-create it, launch with always_redo_exposure=True')
+                else:
+                    print(f'{lc_noflare_bin} file exists!')
+
+            
 ##################################################################################
 ##################################################################################
 def modify_and_save(tree, source_name, method, loop_item):
@@ -636,6 +771,170 @@ def source_maps(vars, snrratios=None, time_intervals=None):
             else:
                 print(f'{srcmap} file exists!')
     pass
+##################################################################################
+##################################################################################
+def save_source_results_to_fits(source_name, method_results, filename):
+    """
+    Save a single source's fit results to a FITS file.
+
+    Args:
+        source_name (str): Name of the source.
+        method_results (dict): Dictionary of method results for the source.
+        filename (str): Path to save the FITS file.
+    """
+    hdul = fits.HDUList([fits.PrimaryHDU()])
+
+    for method, data in method_results.items():
+        table = Table(data)
+        hdu = fits.BinTableHDU(table, name=method)
+        hdul.append(hdu)
+
+    hdul.writeto(filename, overwrite=True)
+##################################################################################
+##################################################################################
+def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params = None)
+    source_name, ra, dec, method, specin, _, _, minimal_energy, maximal_energy = vars
+    source_name_cleaned = source_name.replace(" ", "").replace(".", "dot").replace("+", "plus").replace("-", "minus")
+
+    general_path = f'./data/{source_name_cleaned}/'
+    method_results = {}
+    # Determine the loop items based on the method
+    if method == "SNR":
+        loop_items = snrratios
+    elif method == "LIN":
+        loop_items = time_intervals
+    else:
+        loop_items = "NONE"  # No looping for the "NONE" method
+
+    # If there is nothing to loop over, handle the "NONE" method directly
+    if method == "NONE":
+        ltcube = general_path + f'{method}/ltcube/ltcube.fits'
+        ccube = general_path + f'{method}/ccube/ccube.fits'
+        binexpmap = general_path + f'{method}/expmap/BinnedExpMap.fits'
+        srcmap = general_path + f'{method}/srcmap/srcmap.fits'
+        if free_params == "alpha":
+            input_model = general_path + f'{method}/models/input_model_free_alpha.xml'
+            cspectra = general_path + f'{method}/CountsSpectra/cspectra_free_alpha.fits'
+            writexml = general_path + f'{method}/fit_params/fit_free_alpha.xml'
+            results_output_file = f"{source_name_cleaned}_free_alpha_results.fits"
+        elif free_params == "beta":
+            input_model = general_path + f'{method}/models/input_model_free_beta.xml'
+            cspectra = general_path + f'{method}/CountsSpectra/cspectra_free_beta.fits'
+            writexml = general_path + f'{method}/fit_params/fit_free_beta.xml'
+            results_output_file = f"{source_name_cleaned}_free_beta_results.fits"
+        elif free_params == "alpha and beta":
+            input_model = general_path + f'{method}/models/input_model_free_alpha_beta.xml'
+            cspectra = general_path + f'{method}/CountsSpectra/cspectra_free_alpha_beta.fits'
+            writexml = general_path + f'{method}/fit_params/fit_free_alpha_beta.xml'
+            results_output_file = f"{source_name_cleaned}_free_alpha_beta_results.fits"
+        print(f"Processing method {method} without looping.")
+        
+        #Likelihood here
+    else:
+        for loop_item in loop_items:
+            if method == "SNR":
+                ltcube = general_path + f'{method}/ltcube/ltcube_snr{loop_item}.fits'
+                ccube = general_path + f'{method}/ccube/ccube_snr{loop_item}.fits'
+                binexpmap = general_path + f'{method}/expmap/BinnedExpMap_snr{loop_item}.fits'
+                srcmap = general_path + f'{method}/srcmap/srcmap_snr{loop_item}.fits'
+                if free_params == "alpha":
+                    input_model = general_path + f'{method}/models/input_model_snr{loop_item}_free_alpha.xml'
+                    cspectra = general_path + f'{method}/CountsSpectra/cspectra_snr{loop_item}_free_alpha.fits'
+                    writexml = general_path + f'{method}/fit_params/fit_snr{loop_item}_free_alpha.xml'
+                    results_output_file = f"{source_name_cleaned}_snr{loop_item}_free_alpha_results.fits"
+                elif free_params == "beta":
+                    input_model = general_path + f'{method}/models/input_model_snr{loop_item}_free_beta.xml'
+                    cspectra = general_path + f'{method}/CountsSpectra/cspectra_snr{loop_item}_free_beta.fits'
+                    writexml = general_path + f'{method}/fit_params/fit_snr{loop_item}_free_beta.xml'
+                    results_output_file = f"{source_name_cleaned}_snr{loop_item}_free_beta_results.fits"
+                elif free_params == "alpha and beta":
+                    input_model = general_path + f'{method}/models/input_model_snr{loop_item}_free_alpha_beta.xml'
+                    cspectra = general_path + f'{method}/CountsSpectra/cspectra_snr{loop_item}_free_alpha_beta.fits'
+                    writexml = general_path + f'{method}/fit_params/fit_snr{loop_item}_free_alpha_beta.xml'
+                    results_output_file = f"{source_name_cleaned}_snr{loop_item}_free_alpha_beta_results.fits"
+            elif method == "LIN":
+                ltcube = general_path + f'{method}/ltcube/ltcube_{loop_item}.fits'
+                ccube = general_path + f'{method}/ccube/ccube_{loop_item}.fits'
+                binexpmap = general_path + f'{method}/expmap/BinnedExpMap_{loop_item}.fits'
+                srcmap = general_path + f'{method}/srcmap/srcmap_{loop_item}.fits'
+                if free_params == "alpha":
+                    input_model = general_path + f'{method}/models/input_model_{loop_item}_free_alpha.xml'
+                    cspectra = general_path + f'{method}/CountsSpectra/cspectra_{loop_item}_free_alpha.fits'
+                    writexml = general_path + f'{method}/fit_params/fit_{loop_item}_free_alpha.xml'
+                    results_output_file = f"{source_name_cleaned}_{loop_item}_free_alpha_results.fits"
+                elif free_params == "beta":
+                    input_model = general_path + f'{method}/models/input_model_{loop_item}_free_beta.xml'
+                    cspectra = general_path + f'{method}/CountsSpectra/cspectra_{loop_item}_free_beta.fits'
+                    writexml = general_path + f'{method}/fit_params/fit_{loop_item}_free_beta.xml'
+                    results_output_file = f"{source_name_cleaned}_{loop_item}_free_beta_results.fits"
+                elif free_params == "alpha and beta":
+                    input_model = general_path + f'{method}/models/input_model_{loop_item}_free_alpha_beta.xml'
+                    cspectra = general_path + f'{method}/CountsSpectra/cspectra_{loop_item}_free_alpha_beta.fits'
+                    writexml = general_path + f'{method}/fit_params/fit_{loop_item}_free_alpha_beta.xml'
+                    results_output_file = f"{source_name_cleaned}_{loop_item}_free_alpha_beta_results.fits"
+
+                     ####### Binned Likelihood Analysis #######
+            try:
+                obs = BinnedObs(srcMaps=srcmap, binnedExpMap=binexpmap, expCube=ltcube, irfs='CALDB')
+                like = BinnedAnalysis(obs, input_model, optimizer='NewMinuit')
+                likeobj = pyLikelihood.NewMinuit(like.logLike)
+                like.fit(verbosity=0, covar=True, optObject=likeobj)
+                like.writeCountsSpectra(cspectra) 
+                like.logLike.writeXml(writexml)
+                tree = ET.parse(writexml)
+                #root = tree.getroot()
+
+                flux_tot_value = like.flux(source_name, emin=minimal_energy, emax=maximal_energy)
+                flux_tot_error = like.fluxError(source_name, emin=minimal_energy, emax=maximal_energy)
+                alpha = like.model[source_name].funcs['Spectrum'].getParam('alpha').value()
+                alpha_err = like.model[source_name].funcs['Spectrum'].getParam('alpha').error()
+                beta = like.model[source_name].funcs['Spectrum'].getParam('beta').value()
+                beta_err = like.model[source_name].funcs['Spectrum'].getParam('beta').error()
+                Eb = like.model[source_name].funcs['Spectrum'].getParam('Eb').value()
+                Eb_err = like.model[source_name].funcs['Spectrum'].getParam('Eb').error()
+
+                E = (like.energies[:-1] + like.energies[1:]) / 2.
+                nobs = like.nobs
+
+                fit_data = {
+                    'loop_item': loop_item,
+                    'flux_tot_value': float(flux_tot_value),
+                    'flux_tot_error': float(flux_tot_error),
+                    'alpha_value': float(alpha),
+                    'alpha_error': float(alpha_err),
+                    'beta_value': float(beta),
+                    'beta_error': float(beta_err),
+                    'Eb_value': float(Eb),
+                    'Eb_error': float(Eb_err),
+                    'E_points': E.tolist(),
+                    'nobs': list(nobs),
+                }
+
+            except Exception as e:
+                print(f"Error processing {method} loop_item {loop_item}: {e}")
+                fit_data = {
+                    'loop_item': loop_item,
+                    'flux_tot_value': None,
+                    'flux_tot_error': None,
+                    'alpha_value': None,
+                    'alpha_error': None,
+                    'beta_value': None,
+                    'beta_error': None,
+                    'Eb_value': None,
+                    'Eb_error': None,
+                    'E_points': None,
+                    'nobs': None,
+                }
+
+            # Collect results for the method
+            if method not in method_results:
+                method_results[method] = []
+            method_results[method].append(fit_data)
+
+        # Save results for the source to a FITS file
+        save_source_results_to_fits(source_name, method_results, results_output_file)
+                    
+                   
 
 ##################################################################################
 ##################################################################################
@@ -667,6 +966,10 @@ vars_none= ("4FGL J0319.8+4130", 49.9507, 41.5117, "NONE", 2.05, None, None,  10
 filtering(vars_snr, snrratios=snrratios)
 filtering(vars_lin, time_intervals=time_intervals)
 print('Filtering done!')
+get_spectral_points(vars_snr, snrratios=snrratios)
+get_spectral_points(vars_lin, time_intervals=vars_lin)
+get_spectral_points(vars_none)
+
 
 generate_files(vars_none, number_of_bins=7)
 source_maps(vars_none)
