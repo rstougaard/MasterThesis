@@ -341,7 +341,7 @@ def get_spectral_points(vars, snrratios=None, time_intervals=None):
     source_name, ra, dec, method, specin, _, _, minimal_energy, maximal_energy = vars
     source_name_cleaned = source_name.replace(" ", "").replace(".", "dot").replace("+", "plus").replace("-", "minus")
     gt = my_apps
-    ebinfile_txt = f'./energy_7bins_gtbindef.txt '
+    ebinfile_txt = f'./energy_7bins_gtbindef.txt'
     evc = 128
     convt = 3
     roi = 1.
