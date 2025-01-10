@@ -365,7 +365,6 @@ def get_spectral_points(vars, snrratios=None, time_intervals=None):
        
     else:
         for loop_item in loop_items:
-            print(f"Processing {method}: {loop_item} {emin}MeV - {emax}MeV'")
 
             with open(f'{ebinfile_txt}', 'r') as file:
                 for line in file:
@@ -373,6 +372,7 @@ def get_spectral_points(vars, snrratios=None, time_intervals=None):
                     if not line or len(line.split()) != 2:
                         continue
                     emin, emax = map(float, line.split())
+                    print(f"Processing {method}: {loop_item} {emin}MeV - {emax}MeV'")
 
                     if method == 'SNR':
                         temp_gti_noflares_bin = f'./data/{source_name_cleaned}/{method}/temp_gti_noflares_snr{loop_item}_{emin}_{emax}.fits'
