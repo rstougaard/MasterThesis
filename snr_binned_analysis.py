@@ -371,8 +371,12 @@ def get_spectral_points(vars, snrratios=None, time_intervals=None):
                     line = line.strip()
                     if not line or len(line.split()) != 2:
                         continue
-                    emin, emax = map(float, line.split())
-                    print(f"Processing {method}: {loop_item} {emin}MeV - {emax}MeV'")
+                    emin_float, emax_float = map(float, line.split())
+
+                    # Convert the values to integers for the filename
+                    emin = int(emin)
+                    emax = int(emax)
+                    print(f"Processing {method}: {loop_item} {emin_float}MeV - {emax_float}MeV")
 
                     if method == 'SNR':
                         temp_gti_noflares_bin = f'./data/{source_name_cleaned}/{method}/temp_gti_noflares_snr{loop_item}_{emin}_{emax}.fits'
