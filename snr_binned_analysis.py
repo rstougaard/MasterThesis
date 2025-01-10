@@ -435,7 +435,7 @@ def get_spectral_points(vars, snrratios=None, time_intervals=None):
                     if(calc_exposure or always_redo_exposure):
                         print('Launching gtexposure for ',lc_noflare_bin)
                         gtexposure = my_apps.GtApp('gtexposure')
-                        gtexposure['infile'] = gti_noflares_bin
+                        gtexposure['infile'] = lc_noflare_bin
                         gtexposure['scfile'] = sc
                         gtexposure['irfs'] = 'CALDB'
                         gtexposure['specin'] = -specin
