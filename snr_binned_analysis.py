@@ -375,83 +375,84 @@ def get_spectral_points(vars, snrratios=None, time_intervals=None):
                     print(f"Processing {method}: {emin_float}MeV - {emax_float}MeV")                        
                     
                     #Make spectral points per method per loop_item
-                    if not os.path.exists(gti_noflares_bin):
-                        print( 'Making spectral points!' )
-                        print( 'GTSELECT started!' )
-                        gt.filter['evclass'] = evc
-                        gt.filter['evtype']=convt
-                        gt.filter['ra'] = ra
-                        gt.filter['dec'] = dec
-                        gt.filter['rad'] = roi
-                        gt.filter['emin'] = emin
-                        gt.filter['emax'] = emax
-                        gt.filter['zmax'] = 90
-                        gt.filter['tmin'] = 239557417
-                        gt.filter['tmax'] = 435456000
-                        gt.filter['infile'] = evlist
-                        gt.filter['outfile'] = temp_gti_noflares_bin
-                        gt.filter.run() #run GTSELECT
-                        print( 'GTSELCT finished!' )
+                    if not os.path.exists(lc_noflare_bin):
+                        if not os.path.exists(gti_noflares_bin):
+                            print( 'Making spectral points!' )
+                            print( 'GTSELECT started!' )
+                            gt.filter['evclass'] = evc
+                            gt.filter['evtype']=convt
+                            gt.filter['ra'] = ra
+                            gt.filter['dec'] = dec
+                            gt.filter['rad'] = roi
+                            gt.filter['emin'] = emin
+                            gt.filter['emax'] = emax
+                            gt.filter['zmax'] = 90
+                            gt.filter['tmin'] = 239557417
+                            gt.filter['tmax'] = 435456000
+                            gt.filter['infile'] = evlist
+                            gt.filter['outfile'] = temp_gti_noflares_bin
+                            gt.filter.run() #run GTSELECT
+                            print( 'GTSELCT finished!' )
 
-                        print( 'GTMKTIME start' )
-                        gt.maketime['scfile'] = sc
-                        gt.maketime['filter'] = gtifilter
-                        gt.maketime['roicut'] = 'no'
-                        gt.maketime['evfile'] = temp_gti_noflares_bin
-                        gt.maketime['outfile'] = gti_noflares_bin
-                        gt.maketime.run()
-                        try:
-                            os.remove(temp_gti_noflares_bin)
-                        except Exception as e:
-                            print(f"Error removing tmp_gti: {e}")
-                        print('done!')
+                            print( 'GTMKTIME start' )
+                            gt.maketime['scfile'] = sc
+                            gt.maketime['filter'] = gtifilter
+                            gt.maketime['roicut'] = 'no'
+                            gt.maketime['evfile'] = temp_gti_noflares_bin
+                            gt.maketime['outfile'] = gti_noflares_bin
+                            gt.maketime.run()
+                            try:
+                                os.remove(temp_gti_noflares_bin)
+                            except Exception as e:
+                                print(f"Error removing tmp_gti: {e}")
+                            print('done!')
+                        else:
+                            print(f'{gti_noflares_bin} file exists!')
+
+                        # Create light curve
+                        print('Creating LC')
+                        always_redo_exposure = True
+                        gt.evtbin['evfile'] = gti_noflares_bin
+                        gt.evtbin['outfile'] = lc_noflare_bin
+                        gt.evtbin['scfile'] = sc
+                        gt.evtbin['algorithm'] = 'LC'
+                        gt.evtbin['tbinalg'] = 'LIN'
+                        gt.evtbin['tstart'] = 239557417
+                        gt.evtbin['tstop'] = 435456000
+                        gt.evtbin['emin'] = emin
+                        gt.evtbin['emax'] = emax
+                        gt.evtbin['ebinalg'] = "NONE"
+                        gt.evtbin['ebinfile'] = "NONE"
+                        gt.evtbin['dtime'] = (435456000 - 239557417)
+                        gt.evtbin.run()
+                        
+
+                        print(f'LC created for {method}: {emin}MeV - {emax}MeV')
+
+                        calc_exposure = True
+                        with fits.open(lc_noflare_bin) as f:
+                            if('EXPOSURE' in f[1].data.names): calc_exposure=False
+
+                        if(calc_exposure or always_redo_exposure):
+                            print('Launching gtexposure for ',lc_noflare_bin)
+                            gtexposure = my_apps.GtApp('gtexposure')
+                            gtexposure['infile'] = lc_noflare_bin
+                            gtexposure['scfile'] = sc
+                            gtexposure['irfs'] = 'CALDB'
+                            gtexposure['specin'] = -specin
+                            gtexposure['apcorr'] = 'yes' #change this, if you are sure
+                            gtexposure['enumbins'] = 30
+                            gtexposure['emin'] = emin
+                            gtexposure['emax'] = emax
+                            gtexposure['ra'] = ra
+                            gtexposure['dec'] = dec
+                            gtexposure['rad'] = roi
+                            gtexposure.run()
+                        else:
+                            print('EXPOSURE column already exists!')
+                            print('If you want to re-create it, launch with always_redo_exposure=True')
                     else:
-                        print(f'{gti_noflares_bin} file exists!')
-
-                    # Create light curve
-                    print('Creating LC')
-                    always_redo_exposure = True
-                    gt.evtbin['evfile'] = gti_noflares_bin
-                    gt.evtbin['outfile'] = lc_noflare_bin
-                    gt.evtbin['scfile'] = sc
-                    gt.evtbin['algorithm'] = 'LC'
-                    gt.evtbin['tbinalg'] = 'LIN'
-                    gt.evtbin['tstart'] = 239557417
-                    gt.evtbin['tstop'] = 435456000
-                    gt.evtbin['emin'] = emin
-                    gt.evtbin['emax'] = emax
-                    gt.evtbin['ebinalg'] = "NONE"
-                    gt.evtbin['ebinfile'] = "NONE"
-                    gt.evtbin['dtime'] = (435456000 - 239557417)
-                    gt.evtbin.run()
-                    
-
-                    print(f'LC created for {method}: {emin}MeV - {emax}MeV')
-
-                    calc_exposure = True
-                    with fits.open(lc_noflare_bin) as f:
-                        if('EXPOSURE' in f[1].data.names): calc_exposure=False
-
-                    if(calc_exposure or always_redo_exposure):
-                        print('Launching gtexposure for ',lc_noflare_bin)
-                        gtexposure = my_apps.GtApp('gtexposure')
-                        gtexposure['infile'] = lc_noflare_bin
-                        gtexposure['scfile'] = sc
-                        gtexposure['irfs'] = 'CALDB'
-                        gtexposure['specin'] = -specin
-                        gtexposure['apcorr'] = 'yes' #change this, if you are sure
-                        gtexposure['enumbins'] = 30
-                        gtexposure['emin'] = emin
-                        gtexposure['emax'] = emax
-                        gtexposure['ra'] = ra
-                        gtexposure['dec'] = dec
-                        gtexposure['rad'] = roi
-                        gtexposure.run()
-                    else:
-                        print('EXPOSURE column already exists!')
-                        print('If you want to re-create it, launch with always_redo_exposure=True')
-                else:
-                    print(f'{lc_noflare_bin} file exists!')
+                        print(f'{lc_noflare_bin} file exists!')
       
        
     else:
@@ -482,85 +483,86 @@ def get_spectral_points(vars, snrratios=None, time_intervals=None):
                         
                     
                     #Make spectral points per method per loop_item
-                    if not os.path.exists(gti_noflares_bin):
-                        print( 'Making spectral points!' )
-                        print( 'GTSELECT started!' )
-                        gt.filter['evclass'] = evc
-                        gt.filter['evtype']=convt
-                        gt.filter['ra'] = ra
-                        gt.filter['dec'] = dec
-                        gt.filter['rad'] = roi
-                        gt.filter['emin'] = emin
-                        gt.filter['emax'] = emax
-                        gt.filter['zmax'] = 90
-                        gt.filter['tmin'] = 239557417
-                        gt.filter['tmax'] = 435456000
-                        gt.filter['infile'] = evlist
-                        gt.filter['outfile'] = temp_gti_noflares_bin
-                        gt.filter.run() #run GTSELECT
-                        print( 'GTSELCT finished!' )
+                    if not os.path.exists(lc_noflare_bin):
+                        if not os.path.exists(gti_noflares_bin):
+                            print( 'Making spectral points!' )
+                            print( 'GTSELECT started!' )
+                            gt.filter['evclass'] = evc
+                            gt.filter['evtype']=convt
+                            gt.filter['ra'] = ra
+                            gt.filter['dec'] = dec
+                            gt.filter['rad'] = roi
+                            gt.filter['emin'] = emin
+                            gt.filter['emax'] = emax
+                            gt.filter['zmax'] = 90
+                            gt.filter['tmin'] = 239557417
+                            gt.filter['tmax'] = 435456000
+                            gt.filter['infile'] = evlist
+                            gt.filter['outfile'] = temp_gti_noflares_bin
+                            gt.filter.run() #run GTSELECT
+                            print( 'GTSELCT finished!' )
 
-                        UpdateGTIs(temp_gti_noflares_bin, output_file_flares, method='out', times_in_mjd=False)
+                            UpdateGTIs(temp_gti_noflares_bin, output_file_flares, method='out', times_in_mjd=False)
 
-                        print( 'GTMKTIME start' )
-                        gt.maketime['scfile'] = sc
-                        gt.maketime['filter'] = gtifilter
-                        gt.maketime['roicut'] = 'no'
-                        gt.maketime['evfile'] = temp_gti_noflares_bin
-                        gt.maketime['outfile'] = gti_noflares_bin
-                        gt.maketime.run()
-                        try:
-                            os.remove(temp_gti_noflares_bin)
-                        except Exception as e:
-                            print(f"Error removing tmp_gti: {e}")
-                        print('done!')
+                            print( 'GTMKTIME start' )
+                            gt.maketime['scfile'] = sc
+                            gt.maketime['filter'] = gtifilter
+                            gt.maketime['roicut'] = 'no'
+                            gt.maketime['evfile'] = temp_gti_noflares_bin
+                            gt.maketime['outfile'] = gti_noflares_bin
+                            gt.maketime.run()
+                            try:
+                                os.remove(temp_gti_noflares_bin)
+                            except Exception as e:
+                                print(f"Error removing tmp_gti: {e}")
+                            print('done!')
+                        else:
+                            print(f'{gti_noflares_bin} file exists!')
+
+                        # Create light curve
+                        print('Creating LC')
+                        always_redo_exposure = True
+                        gt.evtbin['evfile'] = gti_noflares_bin
+                        gt.evtbin['outfile'] = lc_noflare_bin
+                        gt.evtbin['scfile'] = sc
+                        gt.evtbin['algorithm'] = 'LC'
+                        gt.evtbin['tbinalg'] = 'LIN'
+                        gt.evtbin['tstart'] = 239557417
+                        gt.evtbin['tstop'] = 435456000
+                        gt.evtbin['emin'] = emin
+                        gt.evtbin['emax'] = emax
+                        gt.evtbin['ebinalg'] = "NONE"
+                        gt.evtbin['ebinfile'] = "NONE"
+                        gt.evtbin['dtime'] = (435456000 - 239557417)
+                        gt.evtbin.run()
+                        
+
+                        print(f'LC created for {method}: {loop_item} {emin}MeV - {emax}MeV')
+
+                        calc_exposure = True
+                        with fits.open(lc_noflare_bin) as f:
+                            if('EXPOSURE' in f[1].data.names): calc_exposure=False
+
+                        if(calc_exposure or always_redo_exposure):
+                            print('Launching gtexposure for ',lc_noflare_bin)
+                            gtexposure = my_apps.GtApp('gtexposure')
+                            gtexposure['infile'] = lc_noflare_bin
+                            gtexposure['scfile'] = sc
+                            gtexposure['irfs'] = 'CALDB'
+                            gtexposure['specin'] = -specin
+                            gtexposure['apcorr'] = 'yes' #change this, if you are sure
+                            gtexposure['enumbins'] = 30
+                            gtexposure['emin'] = emin
+                            gtexposure['emax'] = emax
+                            gtexposure['ra'] = ra
+                            gtexposure['dec'] = dec
+                            gtexposure['rad'] = roi
+                            gtexposure.run()
+                        else:
+                            print('EXPOSURE column already exists!')
+                            print('If you want to re-create it, launch with always_redo_exposure=True')
                     else:
-                        print(f'{gti_noflares_bin} file exists!')
-
-                    # Create light curve
-                    print('Creating LC')
-                    always_redo_exposure = True
-                    gt.evtbin['evfile'] = gti_noflares_bin
-                    gt.evtbin['outfile'] = lc_noflare_bin
-                    gt.evtbin['scfile'] = sc
-                    gt.evtbin['algorithm'] = 'LC'
-                    gt.evtbin['tbinalg'] = 'LIN'
-                    gt.evtbin['tstart'] = 239557417
-                    gt.evtbin['tstop'] = 435456000
-                    gt.evtbin['emin'] = emin
-                    gt.evtbin['emax'] = emax
-                    gt.evtbin['ebinalg'] = "NONE"
-                    gt.evtbin['ebinfile'] = "NONE"
-                    gt.evtbin['dtime'] = (435456000 - 239557417)
-                    gt.evtbin.run()
-                    
-
-                    print(f'LC created for {method}: {loop_item} {emin}MeV - {emax}MeV')
-
-                    calc_exposure = True
-                    with fits.open(lc_noflare_bin) as f:
-                        if('EXPOSURE' in f[1].data.names): calc_exposure=False
-
-                    if(calc_exposure or always_redo_exposure):
-                        print('Launching gtexposure for ',lc_noflare_bin)
-                        gtexposure = my_apps.GtApp('gtexposure')
-                        gtexposure['infile'] = lc_noflare_bin
-                        gtexposure['scfile'] = sc
-                        gtexposure['irfs'] = 'CALDB'
-                        gtexposure['specin'] = -specin
-                        gtexposure['apcorr'] = 'yes' #change this, if you are sure
-                        gtexposure['enumbins'] = 30
-                        gtexposure['emin'] = emin
-                        gtexposure['emax'] = emax
-                        gtexposure['ra'] = ra
-                        gtexposure['dec'] = dec
-                        gtexposure['rad'] = roi
-                        gtexposure.run()
-                    else:
-                        print('EXPOSURE column already exists!')
-                        print('If you want to re-create it, launch with always_redo_exposure=True')
-                else:
-                    print(f'{lc_noflare_bin} file exists!')
+                        print(f'{lc_noflare_bin} file exists!')
 
             
 ##################################################################################
@@ -1067,6 +1069,7 @@ print('Filtering done!')
 get_spectral_points(vars_snr, snrratios=snrratios)
 get_spectral_points(vars_lin, time_intervals=time_intervals)
 get_spectral_points(vars_none)
+print('Spectral points ready!')
 
 
 generate_files(vars_none, number_of_bins=7)
@@ -1078,6 +1081,7 @@ source_maps(vars_snr, snrratios=snrratios)
 
 generate_files(vars_lin, time_intervals=time_intervals, number_of_bins=7)
 source_maps(vars_lin, time_intervals=time_intervals)
+print('Generated all files for Likelihood!')
 
 
     
