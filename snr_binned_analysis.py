@@ -1065,7 +1065,7 @@ filtering(vars_snr, snrratios=snrratios)
 filtering(vars_lin, time_intervals=time_intervals)
 print('Filtering done!')
 get_spectral_points(vars_snr, snrratios=snrratios)
-get_spectral_points(vars_lin, time_intervals=vars_lin)
+get_spectral_points(vars_lin, time_intervals=time_intervals)
 get_spectral_points(vars_none)
 
 
