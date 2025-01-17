@@ -336,7 +336,7 @@ def filtering(vars, snrratios=None, time_intervals=None):
             f"Valid intervals: {valid_intervals} | Invalid intervals: {invalid_intervals}")
 
 #####################
-def get_spectral_points(vars, snrratios=None, time_intervals=None):
+def get_gti_bin(vars, snrratios=None, time_intervals=None):
     # Extract variables
     source_name, ra, dec, method, specin, _, _, minimal_energy, maximal_energy = vars
     source_name_cleaned = source_name.replace(" ", "").replace(".", "dot").replace("+", "plus").replace("-", "minus")
@@ -370,89 +370,42 @@ def get_spectral_points(vars, snrratios=None, time_intervals=None):
                     emax = int(emax_float)
                     temp_gti_noflares_bin = f'./data/{source_name_cleaned}/{method}/temp_gti_{emin}_{emax}.fits'
                     gti_noflares_bin = f'./data/{source_name_cleaned}/{method}/gti_{emin}_{emax}.fits'
-                    lc_noflare_bin = f'./data/{source_name_cleaned}/{method}/lc_{emin}_{emax}.fits'
 
                     print(f"Processing {method}: {emin_float}MeV - {emax_float}MeV")                        
                     
                     #Make spectral points per method per loop_item
-                    if not os.path.exists(lc_noflare_bin):
-                        if not os.path.exists(gti_noflares_bin):
-                            print( 'Making spectral points!' )
-                            print( 'GTSELECT started!' )
-                            gt.filter['evclass'] = evc
-                            gt.filter['evtype']=convt
-                            gt.filter['ra'] = ra
-                            gt.filter['dec'] = dec
-                            gt.filter['rad'] = roi
-                            gt.filter['emin'] = emin
-                            gt.filter['emax'] = emax
-                            gt.filter['zmax'] = 90
-                            gt.filter['tmin'] = 239557417
-                            gt.filter['tmax'] = 435456000
-                            gt.filter['infile'] = evlist
-                            gt.filter['outfile'] = temp_gti_noflares_bin
-                            gt.filter.run() #run GTSELECT
-                            print( 'GTSELCT finished!' )
+                    if not os.path.exists(gti_noflares_bin):
+                        print( 'Making spectral points!' )
+                        print( 'GTSELECT started!' )
+                        gt.filter['evclass'] = evc
+                        gt.filter['evtype']=convt
+                        gt.filter['ra'] = ra
+                        gt.filter['dec'] = dec
+                        gt.filter['rad'] = roi
+                        gt.filter['emin'] = emin
+                        gt.filter['emax'] = emax
+                        gt.filter['zmax'] = 90
+                        gt.filter['tmin'] = 239557417
+                        gt.filter['tmax'] = 435456000
+                        gt.filter['infile'] = evlist
+                        gt.filter['outfile'] = temp_gti_noflares_bin
+                        gt.filter.run() #run GTSELECT
+                        print( 'GTSELCT finished!' )
 
-                            print( 'GTMKTIME start' )
-                            gt.maketime['scfile'] = sc
-                            gt.maketime['filter'] = gtifilter
-                            gt.maketime['roicut'] = 'no'
-                            gt.maketime['evfile'] = temp_gti_noflares_bin
-                            gt.maketime['outfile'] = gti_noflares_bin
-                            gt.maketime.run()
-                            try:
-                                os.remove(temp_gti_noflares_bin)
-                            except Exception as e:
-                                print(f"Error removing tmp_gti: {e}")
-                            print('done!')
-                        else:
-                            print(f'{gti_noflares_bin} file exists!')
-
-                        # Create light curve
-                        print('Creating LC')
-                        always_redo_exposure = True
-                        gt.evtbin['evfile'] = gti_noflares_bin
-                        gt.evtbin['outfile'] = lc_noflare_bin
-                        gt.evtbin['scfile'] = sc
-                        gt.evtbin['algorithm'] = 'LC'
-                        gt.evtbin['tbinalg'] = 'LIN'
-                        gt.evtbin['tstart'] = 239557417
-                        gt.evtbin['tstop'] = 435456000
-                        gt.evtbin['emin'] = emin
-                        gt.evtbin['emax'] = emax
-                        gt.evtbin['ebinalg'] = "NONE"
-                        gt.evtbin['ebinfile'] = "NONE"
-                        gt.evtbin['dtime'] = (435456000 - 239557417)
-                        gt.evtbin.run()
-                        
-
-                        print(f'LC created for {method}: {emin}MeV - {emax}MeV')
-
-                        calc_exposure = True
-                        with fits.open(lc_noflare_bin) as f:
-                            if('EXPOSURE' in f[1].data.names): calc_exposure=False
-
-                        if(calc_exposure or always_redo_exposure):
-                            print('Launching gtexposure for ',lc_noflare_bin)
-                            gtexposure = my_apps.GtApp('gtexposure')
-                            gtexposure['infile'] = lc_noflare_bin
-                            gtexposure['scfile'] = sc
-                            gtexposure['irfs'] = 'CALDB'
-                            gtexposure['specin'] = -specin
-                            gtexposure['apcorr'] = 'yes' #change this, if you are sure
-                            gtexposure['enumbins'] = 30
-                            gtexposure['emin'] = emin
-                            gtexposure['emax'] = emax
-                            gtexposure['ra'] = ra
-                            gtexposure['dec'] = dec
-                            gtexposure['rad'] = roi
-                            gtexposure.run()
-                        else:
-                            print('EXPOSURE column already exists!')
-                            print('If you want to re-create it, launch with always_redo_exposure=True')
+                        print( 'GTMKTIME start' )
+                        gt.maketime['scfile'] = sc
+                        gt.maketime['filter'] = gtifilter
+                        gt.maketime['roicut'] = 'no'
+                        gt.maketime['evfile'] = temp_gti_noflares_bin
+                        gt.maketime['outfile'] = gti_noflares_bin
+                        gt.maketime.run()
+                        try:
+                            os.remove(temp_gti_noflares_bin)
+                        except Exception as e:
+                            print(f"Error removing tmp_gti: {e}")
+                        print('done!')
                     else:
-                        print(f'{lc_noflare_bin} file exists!')
+                        print(f'{gti_noflares_bin} file exists!')
       
        
     else:
@@ -472,97 +425,48 @@ def get_spectral_points(vars, snrratios=None, time_intervals=None):
                     if method == 'SNR':
                         temp_gti_noflares_bin = f'./data/{source_name_cleaned}/{method}/temp_gti_noflares_snr{loop_item}_{emin}_{emax}.fits'
                         gti_noflares_bin = f'./data/{source_name_cleaned}/{method}/gti_noflares_snr{loop_item}_{emin}_{emax}.fits'
-                        lc_noflare_bin = f'./data/{source_name_cleaned}/{method}/lc_snr{loop_item}_{emin}_{emax}.fits'
                         output_file_flares = f'./data/{source_name_cleaned}/{method}/flare_intervals_snr{loop_item}.txt'
                         
                     elif method == 'LIN':
                         temp_gti_noflares_bin = f'./data/{source_name_cleaned}/{method}/temp_gti_noflares_{loop_item}_{emin}_{emax}.fits'
                         gti_noflares_bin = f'./data/{source_name_cleaned}/{method}/gti_noflares_{loop_item}_{emin}_{emax}.fits'
-                        lc_noflare_bin = f'./data/{source_name_cleaned}/{method}/lc_{loop_item}_{emin}_{emax}.fits'
                         output_file_flares = f'./data/{source_name_cleaned}/{method}/flare_intervals_{loop_item}.txt'
                         
                     
-                    #Make spectral points per method per loop_item
-                    if not os.path.exists(lc_noflare_bin):
-                        if not os.path.exists(gti_noflares_bin):
-                            print( 'Making spectral points!' )
-                            print( 'GTSELECT started!' )
-                            gt.filter['evclass'] = evc
-                            gt.filter['evtype']=convt
-                            gt.filter['ra'] = ra
-                            gt.filter['dec'] = dec
-                            gt.filter['rad'] = roi
-                            gt.filter['emin'] = emin
-                            gt.filter['emax'] = emax
-                            gt.filter['zmax'] = 90
-                            gt.filter['tmin'] = 239557417
-                            gt.filter['tmax'] = 435456000
-                            gt.filter['infile'] = evlist
-                            gt.filter['outfile'] = temp_gti_noflares_bin
-                            gt.filter.run() #run GTSELECT
-                            print( 'GTSELCT finished!' )
+                    if not os.path.exists(gti_noflares_bin):
+                        print( 'Making spectral points!' )
+                        print( 'GTSELECT started!' )
+                        gt.filter['evclass'] = evc
+                        gt.filter['evtype']=convt
+                        gt.filter['ra'] = ra
+                        gt.filter['dec'] = dec
+                        gt.filter['rad'] = roi
+                        gt.filter['emin'] = emin
+                        gt.filter['emax'] = emax
+                        gt.filter['zmax'] = 90
+                        gt.filter['tmin'] = 239557417
+                        gt.filter['tmax'] = 435456000
+                        gt.filter['infile'] = evlist
+                        gt.filter['outfile'] = temp_gti_noflares_bin
+                        gt.filter.run() #run GTSELECT
+                        print( 'GTSELCT finished!' )
 
-                            UpdateGTIs(temp_gti_noflares_bin, output_file_flares, method='out', times_in_mjd=False)
+                        UpdateGTIs(temp_gti_noflares_bin, output_file_flares, method='out', times_in_mjd=False)
 
-                            print( 'GTMKTIME start' )
-                            gt.maketime['scfile'] = sc
-                            gt.maketime['filter'] = gtifilter
-                            gt.maketime['roicut'] = 'no'
-                            gt.maketime['evfile'] = temp_gti_noflares_bin
-                            gt.maketime['outfile'] = gti_noflares_bin
-                            gt.maketime.run()
-                            try:
-                                os.remove(temp_gti_noflares_bin)
-                            except Exception as e:
-                                print(f"Error removing tmp_gti: {e}")
-                            print('done!')
-                        else:
-                            print(f'{gti_noflares_bin} file exists!')
-
-                        # Create light curve
-                        print('Creating LC')
-                        always_redo_exposure = True
-                        gt.evtbin['evfile'] = gti_noflares_bin
-                        gt.evtbin['outfile'] = lc_noflare_bin
-                        gt.evtbin['scfile'] = sc
-                        gt.evtbin['algorithm'] = 'LC'
-                        gt.evtbin['tbinalg'] = 'LIN'
-                        gt.evtbin['tstart'] = 239557417
-                        gt.evtbin['tstop'] = 435456000
-                        gt.evtbin['emin'] = emin
-                        gt.evtbin['emax'] = emax
-                        gt.evtbin['ebinalg'] = "NONE"
-                        gt.evtbin['ebinfile'] = "NONE"
-                        gt.evtbin['dtime'] = (435456000 - 239557417)
-                        gt.evtbin.run()
-                        
-
-                        print(f'LC created for {method}: {loop_item} {emin}MeV - {emax}MeV')
-
-                        calc_exposure = True
-                        with fits.open(lc_noflare_bin) as f:
-                            if('EXPOSURE' in f[1].data.names): calc_exposure=False
-
-                        if(calc_exposure or always_redo_exposure):
-                            print('Launching gtexposure for ',lc_noflare_bin)
-                            gtexposure = my_apps.GtApp('gtexposure')
-                            gtexposure['infile'] = lc_noflare_bin
-                            gtexposure['scfile'] = sc
-                            gtexposure['irfs'] = 'CALDB'
-                            gtexposure['specin'] = -specin
-                            gtexposure['apcorr'] = 'yes' #change this, if you are sure
-                            gtexposure['enumbins'] = 30
-                            gtexposure['emin'] = emin
-                            gtexposure['emax'] = emax
-                            gtexposure['ra'] = ra
-                            gtexposure['dec'] = dec
-                            gtexposure['rad'] = roi
-                            gtexposure.run()
-                        else:
-                            print('EXPOSURE column already exists!')
-                            print('If you want to re-create it, launch with always_redo_exposure=True')
+                        print( 'GTMKTIME start' )
+                        gt.maketime['scfile'] = sc
+                        gt.maketime['filter'] = gtifilter
+                        gt.maketime['roicut'] = 'no'
+                        gt.maketime['evfile'] = temp_gti_noflares_bin
+                        gt.maketime['outfile'] = gti_noflares_bin
+                        gt.maketime.run()
+                        try:
+                            os.remove(temp_gti_noflares_bin)
+                        except Exception as e:
+                            print(f"Error removing tmp_gti: {e}")
+                        print('done!')
                     else:
-                        print(f'{lc_noflare_bin} file exists!')
+                        print(f'{gti_noflares_bin} file exists!')
 
             
 ##################################################################################
@@ -641,7 +545,32 @@ def generate_files(vars, snrratios=None, time_intervals=None, number_of_bins=Non
     general_path = f'./data/{source_name_cleaned}/'
     sc = general_path+'SC.fits'
     ebinfile = f'./energy_bins_def/{number_of_bins}/energy_bins_gtbindef.fits'
+    ebinfile_txt = f'./energy_7bins_gtbindef.txt'
 
+    with open(f'{ebinfile_txt}', 'r') as file:
+                for line in file:
+                    line = line.strip()
+                    if not line or len(line.split()) != 2:
+                        continue
+                    emin_float, emax_float = map(float, line.split())
+
+                    # Convert the values to integers for the filename
+                    emin = int(emin_float)
+                    emax = int(emax_float)
+
+                    # Create energy bin definition file for this bin
+                    energy_bin_txt = f'./energy_bins_def/{number_of_bins}/energy_bin_{emin}_{emax}.txt'
+                    with open(energy_bin_txt, 'w') as f:
+                        f.write(f'{emin_float}   {emax_float}\n')
+
+                    # Create the energy bin FITS file
+                    gtbindef_energy_command = [
+                        'gtbindef',
+                        'E',
+                        energy_bin_txt,
+                        f'./energy_bins_def/{number_of_bins}/energy_bin_{emin}_{emax}.fits',
+                        'MeV']
+                    subprocess.run(gtbindef_energy_command, check=True)
     # Determine the loop items based on the method
     if method == "SNR":
         loop_items = snrratios
@@ -652,155 +581,181 @@ def generate_files(vars, snrratios=None, time_intervals=None, number_of_bins=Non
 
     # If there is nothing to loop over, handle the "NONE" method directly
     if method == "NONE":
-        gti_noflares = general_path + 'gti.fits'
-        ltcube = general_path + f'{method}/ltcube/ltcube.fits'
-        ccube = general_path + f'{method}/ccube/ccube.fits'
-        binexpmap = general_path + f'{method}/expmap/BinnedExpMap.fits'
-        model = f'./data/{source_name_cleaned}/{method}/models/input_model.xml'
-        print(f"Processing method {method} without looping.")
-        
-        if not os.path.exists(ltcube):
-            print(f"Creating ltcube for {method}")
-            my_apps.expCube['evfile'] = gti_noflares
-            my_apps.expCube['scfile'] = sc
-            my_apps.expCube['outfile'] = ltcube
-            my_apps.expCube['zmax'] = 90
-            my_apps.expCube['dcostheta'] = 0.025
-            my_apps.expCube['binsz'] = 1
-            my_apps.expCube.run()
-        else:
-            print(f'{ltcube} file exists!')
+        with open(f'{ebinfile_txt}', 'r') as file:
+                for line in file:
+                    line = line.strip()
+                    if not line or len(line.split()) != 2:
+                        continue
+                    emin_float, emax_float = map(float, line.split())
 
-        if not os.path.exists(ccube):
-            print(f"Creating ccube for {method}")
-            ####### Counts Cube #######
-            my_apps.evtbin['evfile'] = gti_noflares
-            my_apps.evtbin['outfile'] = ccube
-            my_apps.evtbin['scfile'] = 'NONE'
-            my_apps.evtbin['algorithm'] = 'CCUBE'
-            my_apps.evtbin['nxpix'] = 100
-            my_apps.evtbin['nypix'] = 100
-            my_apps.evtbin['binsz'] = 0.2
-            my_apps.evtbin['coordsys'] = 'CEL'
-            my_apps.evtbin['xref'] = ra
-            my_apps.evtbin['yref'] = dec
-            my_apps.evtbin['axisrot'] = 0
-            my_apps.evtbin['proj'] = 'AIT'
-            my_apps.evtbin['ebinalg'] = 'FILE'
-            my_apps.evtbin['ebinfile'] = ebinfile
-            my_apps.evtbin.run()
-        else:
-            print(f'{ccube} file exists!')
+                    # Convert the values to integers for the filename
+                    emin = int(emin_float)
+                    emax = int(emax_float)
+                    gti_noflares = general_path + f'gti_{emin}_{emax}.fits'
+                    ltcube = general_path + f'{method}/ltcube/ltcube.fits'
+                    ccube = general_path + f'{method}/ccube/ccube_{emin}_{emax}.fits'
+                    binexpmap = general_path + f'{method}/expmap/BinnedExpMap_{emin}_{emax}.fits'
+                    model = f'./data/{source_name_cleaned}/{method}/models/input_model.xml'
+                    print(f"Processing method {method} without looping.")
+                    
+                    if not os.path.exists(ltcube):
+                        print(f"Creating ltcube for {method}")
+                        my_apps.expCube['evfile'] = gti_noflares
+                        my_apps.expCube['scfile'] = sc
+                        my_apps.expCube['outfile'] = ltcube
+                        my_apps.expCube['zmax'] = 90
+                        my_apps.expCube['dcostheta'] = 0.025
+                        my_apps.expCube['binsz'] = 1
+                        my_apps.expCube.run()
+                    else:
+                        print(f'{ltcube} file exists!')
 
-        if not os.path.exists(binexpmap):
-            print(f"Creating exposuremap for {method}")
-            ####### Exposure Map #######
-            expCube2['infile'] = ltcube
-            expCube2['cmap'] = 'none'
-            expCube2['outfile'] = binexpmap
-            expCube2['irfs'] = 'P8R3_SOURCE_V3'
-            expCube2['evtype'] = '3'
-            expCube2['nxpix'] = 1800
-            expCube2['nypix'] = 900
-            expCube2['binsz'] = 0.2
-            expCube2['coordsys'] = 'CEL'
-            expCube2['xref'] = ra
-            expCube2['yref'] = dec
-            expCube2['axisrot'] = 0
-            expCube2['proj'] = 'AIT'
-            expCube2['ebinalg'] = 'FILE'
-            expCube2['ebinfile'] = ebinfile
-            expCube2.run()
-        else:
-            print(f'{binexpmap} file exists!')
-    
-        ####### Make model #######
-        ##### Run make4FGLxml Command #####
-        make4FGLxml_command = [f'make4FGLxml ./data/gll_psc_v32.xml --event_file {gti_noflares} -o {model} --free_radius 5.0 --norms_free_only True --sigma_to_free 25 --variable_free True']
-    
-        # Run the command using subprocess
-        subprocess.run(make4FGLxml_command, shell=True, check=True, executable='/bin/bash')
-        tree = ET.parse(f'{model}')
-        modify_and_save(tree, source_name, method, None)
+                    if not os.path.exists(ccube):
+                        print(f"Creating ccube for {method}")
+                        ####### Counts Cube #######
+                        my_apps.evtbin['evfile'] = gti_noflares
+                        my_apps.evtbin['outfile'] = ccube
+                        my_apps.evtbin['scfile'] = 'NONE'
+                        my_apps.evtbin['algorithm'] = 'CCUBE'
+                        my_apps.evtbin['nxpix'] = 100
+                        my_apps.evtbin['nypix'] = 100
+                        my_apps.evtbin['binsz'] = 0.2
+                        my_apps.evtbin['coordsys'] = 'CEL'
+                        my_apps.evtbin['xref'] = ra
+                        my_apps.evtbin['yref'] = dec
+                        my_apps.evtbin['axisrot'] = 0
+                        my_apps.evtbin['proj'] = 'AIT'
+                        my_apps.evtbin['ebinalg'] = 'FILE'
+                        my_apps.evtbin['ebinfile'] = f'./energy_bins_def/{number_of_bins}/energy_bin_{emin}_{emax}.fits'
+                        my_apps.evtbin.run()
+                    else:
+                        print(f'{ccube} file exists!')
+
+                    if not os.path.exists(binexpmap):
+                        print(f"Creating exposuremap for {method}")
+                        ####### Exposure Map #######
+                        expCube2['infile'] = ltcube
+                        expCube2['cmap'] = 'none'
+                        expCube2['outfile'] = binexpmap
+                        expCube2['irfs'] = 'P8R3_SOURCE_V3'
+                        expCube2['evtype'] = '3'
+                        expCube2['nxpix'] = 1800
+                        expCube2['nypix'] = 900
+                        expCube2['binsz'] = 0.2
+                        expCube2['coordsys'] = 'CEL'
+                        expCube2['xref'] = ra
+                        expCube2['yref'] = dec
+                        expCube2['axisrot'] = 0
+                        expCube2['proj'] = 'AIT'
+                        expCube2['ebinalg'] = 'FILE'
+                        expCube2['ebinfile'] = f'./energy_bins_def/{number_of_bins}/energy_bin_{emin}_{emax}.fits'
+                        expCube2.run()
+                    else:
+                        print(f'{binexpmap} file exists!')
+                
+                    ####### Make model #######
+                    ##### Run make4FGLxml Command #####
+                    if not os.path.exists(model):
+                        make4FGLxml_command = [f'make4FGLxml ./data/gll_psc_v32.xml --event_file {gti_noflares} -o {model} --free_radius 5.0 --norms_free_only True --sigma_to_free 25 --variable_free True']
+                        subprocess.run(make4FGLxml_command, shell=True, check=True, executable='/bin/bash')
+                    else:
+                        print(f'{model} file exists!')
+                    # Run the command using subprocess
+                    
+                    #tree = ET.parse(f'{model}')
+                    #modify_and_save(tree, source_name, method, None)
     else:
         for loop_item in loop_items:
+            with open(f'{ebinfile_txt}', 'r') as file:
+                for line in file:
+                    line = line.strip()
+                    if not line or len(line.split()) != 2:
+                        continue
+                    emin_float, emax_float = map(float, line.split())
+
+                    # Convert the values to integers for the filename
+                    emin = int(emin_float)
+                    emax = int(emax_float)
             
-            if method == "SNR":
-                gti_noflares = general_path + f'{method}/gti_noflares_snr{loop_item}.fits'
-                ltcube = general_path + f'{method}/ltcube/ltcube_snr{loop_item}.fits'
-                ccube = general_path + f'{method}/ccube/ccube_snr{loop_item}.fits'
-                binexpmap = general_path + f'{method}/expmap/BinnedExpMap_snr{loop_item}.fits'
-                model = f'./data/{source_name_cleaned}/{method}/models/input_model_snr{loop_item}.xml'
-            elif method == "LIN":
-                gti_noflares = general_path + f'{method}/gti_noflares_{loop_item}.fits'
-                ltcube = general_path + f'{method}/ltcube/ltcube_{loop_item}.fits'
-                ccube = general_path + f'{method}/ccube/ccube_{loop_item}.fits'
-                binexpmap = general_path + f'{method}/expmap/BinnedExpMap_{loop_item}.fits'
-                model = f'./data/{source_name_cleaned}/{method}/models/input_model_{loop_item}.xml'
+                    if method == "SNR":
+                        gti_noflares = general_path + f'{method}/gti_noflares_snr{loop_item}_{emin}_{emax}.fits'
+                        ltcube = general_path + f'{method}/ltcube/ltcube_snr{loop_item}.fits'
+                        ccube = general_path + f'{method}/ccube/ccube_snr{loop_item}_{emin}_{emax}.fits'
+                        binexpmap = general_path + f'{method}/expmap/BinnedExpMap_snr{loop_item}_{emin}_{emax}.fits'
+                        model = f'./data/{source_name_cleaned}/{method}/models/input_model_snr{loop_item}.xml'
+                    elif method == "LIN":
+                        gti_noflares = general_path + f'{method}/gti_noflares_{loop_item}_{emin}_{emax}.fits'
+                        ltcube = general_path + f'{method}/ltcube/ltcube_{loop_item}.fits'
+                        ccube = general_path + f'{method}/ccube/ccube_{loop_item}_{emin}_{emax}.fits'
+                        binexpmap = general_path + f'{method}/expmap/BinnedExpMap_{loop_item}_{emin}_{emax}.fits'
+                        model = f'./data/{source_name_cleaned}/{method}/models/input_model_{loop_item}.xml'
 
-            if not os.path.exists(ltcube):
-                print(f"Creating ltcube for {method}: {loop_item}")
-                my_apps.expCube['evfile'] = gti_noflares
-                my_apps.expCube['scfile'] = sc
-                my_apps.expCube['outfile'] = ltcube
-                my_apps.expCube['zmax'] = 90
-                my_apps.expCube['dcostheta'] = 0.025
-                my_apps.expCube['binsz'] = 1
-                my_apps.expCube.run()
-            else:
-                print(f'{ltcube} file exists!')
+                    if not os.path.exists(ltcube):
+                        print(f"Creating ltcube for {method}: {loop_item}")
+                        my_apps.expCube['evfile'] = gti_noflares
+                        my_apps.expCube['scfile'] = sc
+                        my_apps.expCube['outfile'] = ltcube
+                        my_apps.expCube['zmax'] = 90
+                        my_apps.expCube['dcostheta'] = 0.025
+                        my_apps.expCube['binsz'] = 1
+                        my_apps.expCube.run()
+                    else:
+                        print(f'{ltcube} file exists!')
 
-            if not os.path.exists(ccube):
-                print(f"Creating ccube for {method}: {loop_item}")
-                ####### Counts Cube #######
-                my_apps.evtbin['evfile'] = gti_noflares
-                my_apps.evtbin['outfile'] = ccube
-                my_apps.evtbin['scfile'] = 'NONE'
-                my_apps.evtbin['algorithm'] = 'CCUBE'
-                my_apps.evtbin['nxpix'] = 100
-                my_apps.evtbin['nypix'] = 100
-                my_apps.evtbin['binsz'] = 0.2
-                my_apps.evtbin['coordsys'] = 'CEL'
-                my_apps.evtbin['xref'] = ra
-                my_apps.evtbin['yref'] = dec
-                my_apps.evtbin['axisrot'] = 0
-                my_apps.evtbin['proj'] = 'AIT'
-                my_apps.evtbin['ebinalg'] = 'FILE'
-                my_apps.evtbin['ebinfile'] = ebinfile
-                my_apps.evtbin.run()
-            else:
-                print(f'{ccube} file exists!')
+                    if not os.path.exists(ccube):
+                        print(f"Creating ccube for {method}: {loop_item}")
+                        ####### Counts Cube #######
+                        my_apps.evtbin['evfile'] = gti_noflares
+                        my_apps.evtbin['outfile'] = ccube
+                        my_apps.evtbin['scfile'] = 'NONE'
+                        my_apps.evtbin['algorithm'] = 'CCUBE'
+                        my_apps.evtbin['nxpix'] = 100
+                        my_apps.evtbin['nypix'] = 100
+                        my_apps.evtbin['binsz'] = 0.2
+                        my_apps.evtbin['coordsys'] = 'CEL'
+                        my_apps.evtbin['xref'] = ra
+                        my_apps.evtbin['yref'] = dec
+                        my_apps.evtbin['axisrot'] = 0
+                        my_apps.evtbin['proj'] = 'AIT'
+                        my_apps.evtbin['ebinalg'] = 'FILE'
+                        my_apps.evtbin['ebinfile'] = f'./energy_bins_def/{number_of_bins}/energy_bin_{emin}_{emax}.fits'
+                        my_apps.evtbin.run()
+                    else:
+                        print(f'{ccube} file exists!')
 
-            if not os.path.exists(binexpmap):
-                print(f"Creating exposuremap for {method}: {loop_item}")
-                ####### Exposure Map #######
-                expCube2['infile'] = ltcube
-                expCube2['cmap'] = 'none'
-                expCube2['outfile'] = binexpmap
-                expCube2['irfs'] = 'P8R3_SOURCE_V3'
-                expCube2['evtype'] = '3'
-                expCube2['nxpix'] = 1800
-                expCube2['nypix'] = 900
-                expCube2['binsz'] = 0.2
-                expCube2['coordsys'] = 'CEL'
-                expCube2['xref'] = ra
-                expCube2['yref'] = dec
-                expCube2['axisrot'] = 0
-                expCube2['proj'] = 'AIT'
-                expCube2['ebinalg'] = 'FILE'
-                expCube2['ebinfile'] = ebinfile
-                expCube2.run()
-            else:
-                print(f'{binexpmap} file exists!')
-        
-            ####### Make model #######
-            ##### Run make4FGLxml Command #####
-            make4FGLxml_command = [f'make4FGLxml ./data/gll_psc_v32.xml --event_file {gti_noflares} -o {model} --free_radius 5.0 --norms_free_only True --sigma_to_free 25 --variable_free True']
-        
-            # Run the command using subprocess
-            subprocess.run(make4FGLxml_command, shell=True, check=True, executable='/bin/bash')
-            tree = ET.parse(f'{model}')
-            modify_and_save(tree, source_name, method, loop_item)
+                    if not os.path.exists(binexpmap):
+                        print(f"Creating exposuremap for {method}: {loop_item}")
+                        ####### Exposure Map #######
+                        expCube2['infile'] = ltcube
+                        expCube2['cmap'] = 'none'
+                        expCube2['outfile'] = binexpmap
+                        expCube2['irfs'] = 'P8R3_SOURCE_V3'
+                        expCube2['evtype'] = '3'
+                        expCube2['nxpix'] = 1800
+                        expCube2['nypix'] = 900
+                        expCube2['binsz'] = 0.2
+                        expCube2['coordsys'] = 'CEL'
+                        expCube2['xref'] = ra
+                        expCube2['yref'] = dec
+                        expCube2['axisrot'] = 0
+                        expCube2['proj'] = 'AIT'
+                        expCube2['ebinalg'] = 'FILE'
+                        expCube2['ebinfile'] = f'./energy_bins_def/{number_of_bins}/energy_bin_{emin}_{emax}.fits'
+                        expCube2.run()
+                    else:
+                        print(f'{binexpmap} file exists!')
+                
+                    ####### Make model #######
+                    ##### Run make4FGLxml Command #####
+                    if not os.path.exists(model):
+                        make4FGLxml_command = [f'make4FGLxml ./data/gll_psc_v32.xml --event_file {gti_noflares} -o {model} --free_radius 5.0 --norms_free_only True --sigma_to_free 25 --variable_free True']
+                        subprocess.run(make4FGLxml_command, shell=True, check=True, executable='/bin/bash')
+                    else:
+                        print(f'{model} file exists!')
+                    # Run the command using subprocess
+                    
+                    #tree = ET.parse(f'{model}')
+                    #modify_and_save(tree, source_name, method, loop_item)
 
     return
 
@@ -810,6 +765,7 @@ def source_maps(vars, snrratios=None, time_intervals=None):
     source_name_cleaned = source_name.replace(" ", "").replace(".", "dot").replace("+", "plus").replace("-", "minus")
 
     general_path = f'./data/{source_name_cleaned}/'
+    ebinfile_txt = f'./energy_7bins_gtbindef.txt'
     # Determine the loop items based on the method
     if method == "SNR":
         loop_items = snrratios
@@ -823,53 +779,75 @@ def source_maps(vars, snrratios=None, time_intervals=None):
     # If there is nothing to loop over, handle the "NONE" method directly
     if method == "NONE":
         ltcube = general_path + f'{method}/ltcube/ltcube.fits'
-        ccube = general_path + f'{method}/ccube/ccube.fits'
-        binexpmap = general_path + f'{method}/expmap/BinnedExpMap.fits'
-        srcmap = general_path + f'{method}/srcmap/srcmap.fits'
-        #input_model = general_path + f'{method}/expmap/input_model.xml'
-        print(f"Processing method {method} without looping.")
-        
-        if not os.path.exists(srcmap):
-            ####### Source Map #######
-            print(f"Creating sourcemap for {method}")
-            my_apps.srcMaps['expcube'] = ltcube
-            my_apps.srcMaps['cmap'] = ccube
-            my_apps.srcMaps['srcmdl'] = input_model
-            my_apps.srcMaps['bexpmap'] = binexpmap
-            my_apps.srcMaps['outfile'] = srcmap
-            my_apps.srcMaps['irfs'] = 'P8R3_SOURCE_V3'
-            my_apps.srcMaps['evtype'] = '3'
-            my_apps.srcMaps.run()
-        else:
-            print(f'{srcmap} file exists!')
+        with open(f'{ebinfile_txt}', 'r') as file:
+                for line in file:
+                    line = line.strip()
+                    if not line or len(line.split()) != 2:
+                        continue
+                    emin_float, emax_float = map(float, line.split())
+
+                    # Convert the values to integers for the filename
+                    emin = int(emin_float)
+                    emax = int(emax_float)
+                    
+                    ccube = general_path + f'{method}/ccube/ccube_{emin}_{emax}.fits'
+                    binexpmap = general_path + f'{method}/expmap/BinnedExpMap_{emin}_{emax}.fits'
+                    srcmap = general_path + f'{method}/srcmap/srcmap_{emin}_{emax}.fits'
+                    #input_model = general_path + f'{method}/expmap/input_model.xml'
+                    print(f"Processing method {method} without looping.")
+                    
+                    if not os.path.exists(srcmap):
+                        ####### Source Map #######
+                        print(f"Creating sourcemap for {method}: {emin_float}MeV - {emax_float}MeV")
+                        my_apps.srcMaps['expcube'] = ltcube
+                        my_apps.srcMaps['cmap'] = ccube
+                        my_apps.srcMaps['srcmdl'] = input_model
+                        my_apps.srcMaps['bexpmap'] = binexpmap
+                        my_apps.srcMaps['outfile'] = srcmap
+                        my_apps.srcMaps['irfs'] = 'P8R3_SOURCE_V3'
+                        my_apps.srcMaps['evtype'] = '3'
+                        my_apps.srcMaps.run()
+                    else:
+                        print(f'{srcmap} file exists!')
     else:
         for loop_item in loop_items:
-            if method == "SNR":
-                ltcube = general_path + f'{method}/ltcube/ltcube_snr{loop_item}.fits'
-                ccube = general_path + f'{method}/ccube/ccube_snr{loop_item}.fits'
-                binexpmap = general_path + f'{method}/expmap/BinnedExpMap_snr{loop_item}.fits'
-                srcmap = general_path + f'{method}/srcmap/srcmap_snr{loop_item}.fits'
-                #input_model = general_path + f'{method}/expmap/input_model_snr{loop_item}.xml'
-            elif method == "LIN":
-                ltcube = general_path + f'{method}/ltcube/ltcube_{loop_item}.fits'
-                ccube = general_path + f'{method}/ccube/ccube_{loop_item}.fits'
-                binexpmap = general_path + f'{method}/expmap/BinnedExpMap_{loop_item}.fits'
-                srcmap = general_path + f'{method}/srcmap/srcmap_{loop_item}.fits'
-                #input_model = general_path + f'{method}/expmap/input_model_{loop_item}.xml'
+            with open(f'{ebinfile_txt}', 'r') as file:
+                for line in file:
+                    line = line.strip()
+                    if not line or len(line.split()) != 2:
+                        continue
+                    emin_float, emax_float = map(float, line.split())
 
-            if not os.path.exists(srcmap):
-                ####### Source Map #######
-                print(f"Creating sourcemap for {method}: {loop_item}")
-                my_apps.srcMaps['expcube'] = ltcube
-                my_apps.srcMaps['cmap'] = ccube
-                my_apps.srcMaps['srcmdl'] = input_model
-                my_apps.srcMaps['bexpmap'] = binexpmap
-                my_apps.srcMaps['outfile'] = srcmap
-                my_apps.srcMaps['irfs'] = 'P8R3_SOURCE_V3'
-                my_apps.srcMaps['evtype'] = '3'
-                my_apps.srcMaps.run()
-            else:
-                print(f'{srcmap} file exists!')
+                    # Convert the values to integers for the filename
+                    emin = int(emin_float)
+                    emax = int(emax_float)
+
+                    if method == "SNR":
+                        ltcube = general_path + f'{method}/ltcube/ltcube_snr{loop_item}.fits'
+                        ccube = general_path + f'{method}/ccube/ccube_snr{loop_item}_{emin}_{emax}.fits'
+                        binexpmap = general_path + f'{method}/expmap/BinnedExpMap_snr{loop_item}_{emin}_{emax}.fits'
+                        srcmap = general_path + f'{method}/srcmap/srcmap_snr{loop_item}_{emin}_{emax}.fits'
+                        #input_model = general_path + f'{method}/expmap/input_model_snr{loop_item}.xml'
+                    elif method == "LIN":
+                        ltcube = general_path + f'{method}/ltcube/ltcube_{loop_item}.fits'
+                        ccube = general_path + f'{method}/ccube/ccube_{loop_item}_{emin}_{emax}.fits'
+                        binexpmap = general_path + f'{method}/expmap/BinnedExpMap_{loop_item}_{emin}_{emax}.fits'
+                        srcmap = general_path + f'{method}/srcmap/srcmap_{loop_item}_{emin}_{emax}.fits'
+                        #input_model = general_path + f'{method}/expmap/input_model_{loop_item}.xml'
+
+                    if not os.path.exists(srcmap):
+                        ####### Source Map #######
+                        print(f"Creating sourcemap for {method}: {loop_item}: {emin_float}MeV - {emax_float}MeV")
+                        my_apps.srcMaps['expcube'] = ltcube
+                        my_apps.srcMaps['cmap'] = ccube
+                        my_apps.srcMaps['srcmdl'] = input_model
+                        my_apps.srcMaps['bexpmap'] = binexpmap
+                        my_apps.srcMaps['outfile'] = srcmap
+                        my_apps.srcMaps['irfs'] = 'P8R3_SOURCE_V3'
+                        my_apps.srcMaps['evtype'] = '3'
+                        my_apps.srcMaps.run()
+                    else:
+                        print(f'{srcmap} file exists!')
     pass
 ##################################################################################
 ##################################################################################
@@ -895,9 +873,9 @@ def save_source_results_to_fits(source_name, method_results, filename):
 def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params = None):
     source_name, ra, dec, method, specin, _, _, minimal_energy, maximal_energy = vars
     source_name_cleaned = source_name.replace(" ", "").replace(".", "dot").replace("+", "plus").replace("-", "minus")
-
+    ebinfile_txt = f'./energy_7bins_gtbindef.txt'
     general_path = f'./data/{source_name_cleaned}/'
-    method_results = {}
+    method_data = {}
     # Determine the loop items based on the method
     if method == "SNR":
         loop_items = snrratios
@@ -908,70 +886,174 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
 
     # If there is nothing to loop over, handle the "NONE" method directly
     if method == "NONE":
-        ltcube = general_path + f'{method}/ltcube/ltcube.fits'
-        ccube = general_path + f'{method}/ccube/ccube.fits'
-        binexpmap = general_path + f'{method}/expmap/BinnedExpMap.fits'
-        srcmap = general_path + f'{method}/srcmap/srcmap.fits'
-        if free_params == "alpha":
-            input_model = general_path + f'{method}/models/input_model_free_alpha.xml'
-            cspectra = general_path + f'{method}/CountsSpectra/cspectra_free_alpha.fits'
-            writexml = general_path + f'{method}/fit_params/fit_free_alpha.xml'
-            results_output_file = f"{source_name_cleaned}_free_alpha_results.fits"
-        elif free_params == "beta":
-            input_model = general_path + f'{method}/models/input_model_free_beta.xml'
-            cspectra = general_path + f'{method}/CountsSpectra/cspectra_free_beta.fits'
-            writexml = general_path + f'{method}/fit_params/fit_free_beta.xml'
-            results_output_file = f"{source_name_cleaned}_free_beta_results.fits"
-        elif free_params == "alpha and beta":
-            input_model = general_path + f'{method}/models/input_model_free_alpha_beta.xml'
-            cspectra = general_path + f'{method}/CountsSpectra/cspectra_free_alpha_beta.fits'
-            writexml = general_path + f'{method}/fit_params/fit_free_alpha_beta.xml'
-            results_output_file = f"{source_name_cleaned}_free_alpha_beta_results.fits"
-        print(f"Processing method {method} without looping.")
+        fit_data_list = []  # Accumulate all fit_data for the method
+        with open(f'{ebinfile_txt}', 'r') as file:
+                for line in file:
+                    line = line.strip()
+                    if not line or len(line.split()) != 2:
+                        continue
+                    emin_float, emax_float = map(float, line.split())
+
+                    # Convert the values to integers for the filename
+                    emin = int(emin_float)
+                    emax = int(emax_float)
+                    print(f"Processing {method}: {emin_float}MeV - {emax_float}MeV")
+                    ltcube = general_path + f'{method}/ltcube/ltcube.fits'
+                    ccube = general_path + f'{method}/ccube/ccube_{emin}_{emax}.fits'
+                    binexpmap = general_path + f'{method}/expmap/BinnedExpMap_{emin}_{emax}.fits'
+                    srcmap = general_path + f'{method}/srcmap/srcmap_{emin}_{emax}.fits'
+                    if free_params == "None":
+                        input_model = general_path + f'{method}/models/input_model.xml'
+                        cspectra = general_path + f'{method}/CountsSpectra/cspectra_{emin}_{emax}.fits'
+                        writexml = general_path + f'{method}/fit_params/fit_{emin}_{emax}.xml'
+                        results_output_file = f"{source_name_cleaned}_results.fits"
+                    elif free_params == "alpha":
+                        input_model = general_path + f'{method}/models/input_model_free_alpha.xml'
+                        cspectra = general_path + f'{method}/CountsSpectra/cspectra_free_alpha.fits'
+                        writexml = general_path + f'{method}/fit_params/fit_free_alpha.xml'
+                        results_output_file = f"{source_name_cleaned}_free_alpha_results.fits"
+                    elif free_params == "beta":
+                        input_model = general_path + f'{method}/models/input_model_free_beta.xml'
+                        cspectra = general_path + f'{method}/CountsSpectra/cspectra_free_beta.fits'
+                        writexml = general_path + f'{method}/fit_params/fit_free_beta.xml'
+                        results_output_file = f"{source_name_cleaned}_free_beta_results.fits"
+                    elif free_params == "alpha and beta":
+                        input_model = general_path + f'{method}/models/input_model_free_alpha_beta.xml'
+                        cspectra = general_path + f'{method}/CountsSpectra/cspectra_free_alpha_beta.fits'
+                        writexml = general_path + f'{method}/fit_params/fit_free_alpha_beta.xml'
+                        results_output_file = f"{source_name_cleaned}_free_alpha_beta_results.fits"
+                    print(f"Processing method {method} without looping.")
+                    try:
+                        obs = BinnedObs(srcMaps=srcmap, binnedExpMap=binexpmap, expCube=ltcube, irfs='CALDB')
+                        like = BinnedAnalysis(obs, input_model, optimizer='NewMinuit')
+                        likeobj = pyLikelihood.NewMinuit(like.logLike)
+                        like.fit(verbosity=0, covar=True, optObject=likeobj)
+                        like.writeCountsSpectra(cspectra) 
+                        like.logLike.writeXml(writexml)
+                        tree = ET.parse(writexml)
+                        #root = tree.getroot()
+
+                        flux_tot_value = like.flux(source_name, emin=emin, emax=emax)
+                        flux_tot_error = like.fluxError(source_name, emin=emin, emax=emax)
+                        alpha = like.model[source_name].funcs['Spectrum'].getParam('alpha').value()
+                        alpha_err = like.model[source_name].funcs['Spectrum'].getParam('alpha').error()
+                        beta = like.model[source_name].funcs['Spectrum'].getParam('beta').value()
+                        beta_err = like.model[source_name].funcs['Spectrum'].getParam('beta').error()
+                        Eb = like.model[source_name].funcs['Spectrum'].getParam('Eb').value()
+                        Eb_err = like.model[source_name].funcs['Spectrum'].getParam('Eb').error()
+
+                        E = (like.energies[:-1] + like.energies[1:]) / 2.
+                        nobs = like.nobs
+                        geometric_mean = (emin*emax)**0.5
+
+                        # Add the data for this energy bin to the list
+                        fit_data_list.append({
+                            'emin': emin,
+                            'emax': emax,
+                            'geometric_mean': geometric_mean,
+                            'e_lower': geometric_mean - emin,
+                            'e_upper': emax - geometric_mean,
+                            'flux_tot_value': float(flux_tot_value),
+                            'flux_tot_error': float(flux_tot_error),
+                            'nobs': list(nobs),
+                        })
+
+                    except Exception as e:
+                        print(f"Error processing {method}: {e}")
+
+    # After processing all lines, save the accumulated data to a single FITS file
+    if fit_data_list:
+        # Extract columns
+        emin_col = [d['emin'] for d in fit_data_list]
+        emax_col = [d['emax'] for d in fit_data_list]
+        geometric_mean_col = [d['geometric_mean'] for d in fit_data_list]
+        e_lower_col = [d['e_lower'] for d in fit_data_list]
+        e_upper_col = [d['e_upper'] for d in fit_data_list]
+        flux_tot_value_col = [d['flux_tot_value'] for d in fit_data_list]
+        flux_tot_error_col = [d['flux_tot_error'] for d in fit_data_list]
+        nobs_col = [np.array(d['nobs']) for d in fit_data_list]
+
+        # Create FITS columns
+        cols = [
+            fits.Column(name='emin', format='E', array=emin_col),
+            fits.Column(name='emax', format='E', array=emax_col),
+            fits.Column(name='geometric_mean', format='E', array=geometric_mean_col),
+            fits.Column(name='e_lower', format='E', array=e_lower_col),
+            fits.Column(name='e_upper', format='E', array=e_upper_col),
+            fits.Column(name='flux_tot_value', format='ph/cm**2/s', array=flux_tot_value_col),
+            fits.Column(name='flux_tot_error', format='ph/cm**2/s', array=flux_tot_error_col),
+            fits.Column(name='nobs', format='PE()', array=nobs_col),
+        ]
+
+        # Write to a single FITS file
+        hdu = fits.BinTableHDU.from_columns(cols)
+        output_fits_file = f'fit_data_{method}.fits'
+        hdu.writeto(output_fits_file, overwrite=True)
+        print(f"Saved single FITS file for method {method}: {output_fits_file}")
         
-        #Likelihood here
     else:
         for loop_item in loop_items:
-            if method == "SNR":
-                ltcube = general_path + f'{method}/ltcube/ltcube_snr{loop_item}.fits'
-                ccube = general_path + f'{method}/ccube/ccube_snr{loop_item}.fits'
-                binexpmap = general_path + f'{method}/expmap/BinnedExpMap_snr{loop_item}.fits'
-                srcmap = general_path + f'{method}/srcmap/srcmap_snr{loop_item}.fits'
-                if free_params == "alpha":
-                    input_model = general_path + f'{method}/models/input_model_snr{loop_item}_free_alpha.xml'
-                    cspectra = general_path + f'{method}/CountsSpectra/cspectra_snr{loop_item}_free_alpha.fits'
-                    writexml = general_path + f'{method}/fit_params/fit_snr{loop_item}_free_alpha.xml'
-                    results_output_file = f"{source_name_cleaned}_snr{loop_item}_free_alpha_results.fits"
-                elif free_params == "beta":
-                    input_model = general_path + f'{method}/models/input_model_snr{loop_item}_free_beta.xml'
-                    cspectra = general_path + f'{method}/CountsSpectra/cspectra_snr{loop_item}_free_beta.fits'
-                    writexml = general_path + f'{method}/fit_params/fit_snr{loop_item}_free_beta.xml'
-                    results_output_file = f"{source_name_cleaned}_snr{loop_item}_free_beta_results.fits"
-                elif free_params == "alpha and beta":
-                    input_model = general_path + f'{method}/models/input_model_snr{loop_item}_free_alpha_beta.xml'
-                    cspectra = general_path + f'{method}/CountsSpectra/cspectra_snr{loop_item}_free_alpha_beta.fits'
-                    writexml = general_path + f'{method}/fit_params/fit_snr{loop_item}_free_alpha_beta.xml'
-                    results_output_file = f"{source_name_cleaned}_snr{loop_item}_free_alpha_beta_results.fits"
-            elif method == "LIN":
-                ltcube = general_path + f'{method}/ltcube/ltcube_{loop_item}.fits'
-                ccube = general_path + f'{method}/ccube/ccube_{loop_item}.fits'
-                binexpmap = general_path + f'{method}/expmap/BinnedExpMap_{loop_item}.fits'
-                srcmap = general_path + f'{method}/srcmap/srcmap_{loop_item}.fits'
-                if free_params == "alpha":
-                    input_model = general_path + f'{method}/models/input_model_{loop_item}_free_alpha.xml'
-                    cspectra = general_path + f'{method}/CountsSpectra/cspectra_{loop_item}_free_alpha.fits'
-                    writexml = general_path + f'{method}/fit_params/fit_{loop_item}_free_alpha.xml'
-                    results_output_file = f"{source_name_cleaned}_{loop_item}_free_alpha_results.fits"
-                elif free_params == "beta":
-                    input_model = general_path + f'{method}/models/input_model_{loop_item}_free_beta.xml'
-                    cspectra = general_path + f'{method}/CountsSpectra/cspectra_{loop_item}_free_beta.fits'
-                    writexml = general_path + f'{method}/fit_params/fit_{loop_item}_free_beta.xml'
-                    results_output_file = f"{source_name_cleaned}_{loop_item}_free_beta_results.fits"
-                elif free_params == "alpha and beta":
-                    input_model = general_path + f'{method}/models/input_model_{loop_item}_free_alpha_beta.xml'
-                    cspectra = general_path + f'{method}/CountsSpectra/cspectra_{loop_item}_free_alpha_beta.fits'
-                    writexml = general_path + f'{method}/fit_params/fit_{loop_item}_free_alpha_beta.xml'
-                    results_output_file = f"{source_name_cleaned}_{loop_item}_free_alpha_beta_results.fits"
+            with open(f'{ebinfile_txt}', 'r') as file:
+                for line in file:
+                    line = line.strip()
+                    if not line or len(line.split()) != 2:
+                        continue
+                    emin_float, emax_float = map(float, line.split())
+
+                    # Convert the values to integers for the filename
+                    emin = int(emin_float)
+                    emax = int(emax_float)
+                    print(f"Processing {method}: {loop_item} {emin_float}MeV - {emax_float}MeV")
+                    if method == "SNR":
+                        ltcube = general_path + f'{method}/ltcube/ltcube_snr{loop_item}.fits'
+                        ccube = general_path + f'{method}/ccube/ccube_snr{loop_item}_{emin}_{emax}.fits'
+                        binexpmap = general_path + f'{method}/expmap/BinnedExpMap_snr{loop_item}_{emin}_{emax}.fits'
+                        srcmap = general_path + f'{method}/srcmap/srcmap_snr{loop_item}_{emin}_{emax}.fits'
+                        if free_params == "None":
+                            input_model = general_path + f'{method}/models/input_model_snr{loop_item}.xml'
+                            cspectra = general_path + f'{method}/CountsSpectra/cspectra_snr{loop_item}_{emin}_{emax}.fits'
+                            writexml = general_path + f'{method}/fit_params/fit_snr{loop_item}_{emin}_{emax}.xml'
+                            results_output_file = f"{source_name_cleaned}_results_snr.fits"
+                        elif free_params == "alpha":
+                            input_model = general_path + f'{method}/models/input_model_snr{loop_item}_free_alpha.xml'
+                            cspectra = general_path + f'{method}/CountsSpectra/cspectra_snr{loop_item}_free_alpha.fits'
+                            writexml = general_path + f'{method}/fit_params/fit_snr{loop_item}_free_alpha.xml'
+                            results_output_file = f"{source_name_cleaned}_snr{loop_item}_free_alpha_results.fits"
+                        elif free_params == "beta":
+                            input_model = general_path + f'{method}/models/input_model_snr{loop_item}_free_beta.xml'
+                            cspectra = general_path + f'{method}/CountsSpectra/cspectra_snr{loop_item}_free_beta.fits'
+                            writexml = general_path + f'{method}/fit_params/fit_snr{loop_item}_free_beta.xml'
+                            results_output_file = f"{source_name_cleaned}_snr{loop_item}_free_beta_results.fits"
+                        elif free_params == "alpha and beta":
+                            input_model = general_path + f'{method}/models/input_model_snr{loop_item}_free_alpha_beta.xml'
+                            cspectra = general_path + f'{method}/CountsSpectra/cspectra_snr{loop_item}_free_alpha_beta.fits'
+                            writexml = general_path + f'{method}/fit_params/fit_snr{loop_item}_free_alpha_beta.xml'
+                            results_output_file = f"{source_name_cleaned}_snr{loop_item}_free_alpha_beta_results.fits"
+                    elif method == "LIN":
+                        ltcube = general_path + f'{method}/ltcube/ltcube_{loop_item}.fits'
+                        ccube = general_path + f'{method}/ccube/ccube_{loop_item}_{emin}_{emax}.fits'
+                        binexpmap = general_path + f'{method}/expmap/BinnedExpMap_{loop_item}_{emin}_{emax}.fits'
+                        srcmap = general_path + f'{method}/srcmap/srcmap_{loop_item}_{emin}_{emax}.fits'
+                        if free_params == "None":
+                            input_model = general_path + f'{method}/models/input_model_{loop_item}.xml'
+                            cspectra = general_path + f'{method}/CountsSpectra/cspectra_{loop_item}_{emin}_{emax}.fits'
+                            writexml = general_path + f'{method}/fit_params/fit_{loop_item}_{emin}_{emax}.xml'
+                            results_output_file = f"{source_name_cleaned}_results_lin.fits"
+                        if free_params == "alpha":
+                            input_model = general_path + f'{method}/models/input_model_{loop_item}_free_alpha.xml'
+                            cspectra = general_path + f'{method}/CountsSpectra/cspectra_{loop_item}_free_alpha.fits'
+                            writexml = general_path + f'{method}/fit_params/fit_{loop_item}_free_alpha.xml'
+                            results_output_file = f"{source_name_cleaned}_{loop_item}_free_alpha_results.fits"
+                        elif free_params == "beta":
+                            input_model = general_path + f'{method}/models/input_model_{loop_item}_free_beta.xml'
+                            cspectra = general_path + f'{method}/CountsSpectra/cspectra_{loop_item}_free_beta.fits'
+                            writexml = general_path + f'{method}/fit_params/fit_{loop_item}_free_beta.xml'
+                            results_output_file = f"{source_name_cleaned}_{loop_item}_free_beta_results.fits"
+                        elif free_params == "alpha and beta":
+                            input_model = general_path + f'{method}/models/input_model_{loop_item}_free_alpha_beta.xml'
+                            cspectra = general_path + f'{method}/CountsSpectra/cspectra_{loop_item}_free_alpha_beta.fits'
+                            writexml = general_path + f'{method}/fit_params/fit_{loop_item}_free_alpha_beta.xml'
+                            results_output_file = f"{source_name_cleaned}_{loop_item}_free_alpha_beta_results.fits"
 
                      ####### Binned Likelihood Analysis #######
             try:
@@ -984,8 +1066,8 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
                 tree = ET.parse(writexml)
                 #root = tree.getroot()
 
-                flux_tot_value = like.flux(source_name, emin=minimal_energy, emax=maximal_energy)
-                flux_tot_error = like.fluxError(source_name, emin=minimal_energy, emax=maximal_energy)
+                flux_tot_value = like.flux(source_name, emin=emin, emax=emax)
+                flux_tot_error = like.fluxError(source_name, emin=emin, emax=emax)
                 alpha = like.model[source_name].funcs['Spectrum'].getParam('alpha').value()
                 alpha_err = like.model[source_name].funcs['Spectrum'].getParam('alpha').error()
                 beta = like.model[source_name].funcs['Spectrum'].getParam('beta').value()
@@ -995,44 +1077,59 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
 
                 E = (like.energies[:-1] + like.energies[1:]) / 2.
                 nobs = like.nobs
+                geometric_mean = (emin*emax)**0.5
 
                 fit_data = {
                     'loop_item': loop_item,
+                    'emin': emin,
+                    'emax': emax,
+                    'geometric_mean': geometric_mean,
+                    'e_lower': geometric_mean - emin,
+                    'e_upper': emax - geometric_mean,
                     'flux_tot_value': float(flux_tot_value),
-                    'flux_tot_error': float(flux_tot_error),
-                    'alpha_value': float(alpha),
-                    'alpha_error': float(alpha_err),
-                    'beta_value': float(beta),
-                    'beta_error': float(beta_err),
-                    'Eb_value': float(Eb),
-                    'Eb_error': float(Eb_err),
-                    'E_points': E.tolist(),
+                    'flux_tot_error': float(flux_tot_error),                    
                     'nobs': list(nobs),
                 }
 
+                # Append data to method_data for the current method
+                if method not in method_data:
+                    method_data[method] = []
+                method_data[method].append(fit_data)
+
             except Exception as e:
-                print(f"Error processing {method} loop_item {loop_item}: {e}")
-                fit_data = {
-                    'loop_item': loop_item,
-                    'flux_tot_value': None,
-                    'flux_tot_error': None,
-                    'alpha_value': None,
-                    'alpha_error': None,
-                    'beta_value': None,
-                    'beta_error': None,
-                    'Eb_value': None,
-                    'Eb_error': None,
-                    'E_points': None,
-                    'nobs': None,
-                }
+                print(f"Error processing {method}: {e}")
 
-            # Collect results for the method
-            if method not in method_results:
-                method_results[method] = []
-            method_results[method].append(fit_data)
+    # Save one FITS file per method
+    for method, data_list in method_data.items():
+        # Flatten data into columns
+        loop_items_col = [data['loop_item'] for data in data_list]
+        emin_col = [data['emin'] for data in data_list]
+        emax_col = [data['emax'] for data in data_list]
+        geometric_mean_col = [data['geometric_mean'] for data in data_list]
+        e_lower_col = [data['e_lower'] for data in data_list]
+        e_upper_col = [data['e_upper'] for data in data_list]
+        flux_tot_value_col = [data['flux_tot_value'] for data in data_list]
+        flux_tot_error_col = [data['flux_tot_error'] for data in data_list]
+        nobs_col = [np.array(data['nobs']) for data in data_list]
 
-        # Save results for the source to a FITS file
-        save_source_results_to_fits(source_name, method_results, results_output_file)
+        # Create FITS columns
+        cols = [
+            fits.Column(name='loop_item', format='20A', array=loop_items_col),
+            fits.Column(name='emin', format='E', array=emin_col),
+            fits.Column(name='emax', format='E', array=emax_col),
+            fits.Column(name='geometric_mean', format='E', array=geometric_mean_col),
+            fits.Column(name='e_lower', format='E', array=e_lower_col),
+            fits.Column(name='e_upper', format='E', array=e_upper_col),
+            fits.Column(name='flux_tot_value', format='ph/cm**2/s', array=flux_tot_value_col),
+            fits.Column(name='flux_tot_error', format='ph/cm**2/s', array=flux_tot_error_col),
+            fits.Column(name='nobs', format='PE()', array=nobs_col)
+        ]
+
+        # Create HDU and write to a single FITS file for the method
+        hdu = fits.BinTableHDU.from_columns(cols)
+        output_fits_file = f'fit_data_{method}.fits'
+        hdu.writeto(output_fits_file, overwrite=True)
+        print(f"Saved FITS file for method {method}: {output_fits_file}")
     return
                    
 
@@ -1066,24 +1163,26 @@ vars_none= ("4FGL J0319.8+4130", 49.9507, 41.5117, "NONE", 2.05, None, None,  10
 filtering(vars_snr, snrratios=snrratios)
 filtering(vars_lin, time_intervals=time_intervals)
 print('Filtering done!')
-get_spectral_points(vars_snr, snrratios=snrratios)
-get_spectral_points(vars_lin, time_intervals=time_intervals)
-get_spectral_points(vars_none)
-print('Spectral points ready!')
-
-
+get_gti_bin(vars_none)
+get_gti_bin(vars_snr, snrratios=snrratios)
+get_gti_bin(vars_lin, time_intervals=time_intervals)
+print('gti files per bin ready!')
 generate_files(vars_none, number_of_bins=7)
 source_maps(vars_none)
 
 generate_files(vars_snr, snrratios=snrratios, number_of_bins=7)
-# mangler input model
 source_maps(vars_snr, snrratios=snrratios)
 
 generate_files(vars_lin, time_intervals=time_intervals, number_of_bins=7)
 source_maps(vars_lin, time_intervals=time_intervals)
 print('Generated all files for Likelihood!')
 
-
+run_binned_likelihood(vars_none, free_params = "None")
+print('Likelihood for non filtered data done!')
+run_binned_likelihood(vars_snr, snrratios=snrratios, free_params = "None")
+print('Likelihood for snr binned data done!')
+run_binned_likelihood(vars_lin, time_intervals=time_intervals, free_params = "None")
+print('Likelihood linear binned done!')
     
 '''
 def run_analysis(source_name, num_workers, method, snrratio, time_interval_name, ra, dec, minimal_energy, maximal_energy, number_of_bins, bins_def_filename):
