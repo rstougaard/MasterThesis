@@ -591,7 +591,7 @@ def generate_files(vars, snrratios=None, time_intervals=None, number_of_bins=Non
                     # Convert the values to integers for the filename
                     emin = int(emin_float)
                     emax = int(emax_float)
-                    gti_noflares = general_path + f'gti_{emin}_{emax}.fits'
+                    gti_noflares = general_path + f'{method}/gti_{emin}_{emax}.fits'
                     ltcube = general_path + f'{method}/ltcube/ltcube.fits'
                     ccube = general_path + f'{method}/ccube/ccube_{emin}_{emax}.fits'
                     binexpmap = general_path + f'{method}/expmap/BinnedExpMap_{emin}_{emax}.fits'
