@@ -963,35 +963,35 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
                     except Exception as e:
                         print(f"Error processing {method}: {e}")
 
-    # After processing all lines, save the accumulated data to a single FITS file
-    if fit_data_list:
-        # Extract columns
-        emin_col = [d['emin'] for d in fit_data_list]
-        emax_col = [d['emax'] for d in fit_data_list]
-        geometric_mean_col = [d['geometric_mean'] for d in fit_data_list]
-        e_lower_col = [d['e_lower'] for d in fit_data_list]
-        e_upper_col = [d['e_upper'] for d in fit_data_list]
-        flux_tot_value_col = [d['flux_tot_value'] for d in fit_data_list]
-        flux_tot_error_col = [d['flux_tot_error'] for d in fit_data_list]
-        nobs_col = [np.array(d['nobs']) for d in fit_data_list]
+        # After processing all lines, save the accumulated data to a single FITS file
+        if fit_data_list:
+            # Extract columns
+            emin_col = [d['emin'] for d in fit_data_list]
+            emax_col = [d['emax'] for d in fit_data_list]
+            geometric_mean_col = [d['geometric_mean'] for d in fit_data_list]
+            e_lower_col = [d['e_lower'] for d in fit_data_list]
+            e_upper_col = [d['e_upper'] for d in fit_data_list]
+            flux_tot_value_col = [d['flux_tot_value'] for d in fit_data_list]
+            flux_tot_error_col = [d['flux_tot_error'] for d in fit_data_list]
+            nobs_col = [np.array(d['nobs']) for d in fit_data_list]
 
-        # Create FITS columns
-        cols = [
-            fits.Column(name='emin', format='E', array=emin_col),
-            fits.Column(name='emax', format='E', array=emax_col),
-            fits.Column(name='geometric_mean', format='E', array=geometric_mean_col),
-            fits.Column(name='e_lower', format='E', array=e_lower_col),
-            fits.Column(name='e_upper', format='E', array=e_upper_col),
-            fits.Column(name='flux_tot_value', format='E', array=flux_tot_value_col),
-            fits.Column(name='flux_tot_error', format='E', array=flux_tot_error_col),
-            fits.Column(name='nobs', format='PE()', array=nobs_col),
-        ]
+            # Create FITS columns
+            cols = [
+                fits.Column(name='emin', format='E', array=emin_col),
+                fits.Column(name='emax', format='E', array=emax_col),
+                fits.Column(name='geometric_mean', format='E', array=geometric_mean_col),
+                fits.Column(name='e_lower', format='E', array=e_lower_col),
+                fits.Column(name='e_upper', format='E', array=e_upper_col),
+                fits.Column(name='flux_tot_value', format='E', array=flux_tot_value_col),
+                fits.Column(name='flux_tot_error', format='E', array=flux_tot_error_col),
+                fits.Column(name='nobs', format='PE()', array=nobs_col),
+            ]
 
-        # Write to a single FITS file
-        hdu = fits.BinTableHDU.from_columns(cols)
-        output_fits_file = f'fit_data_{method}.fits'
-        hdu.writeto(output_fits_file, overwrite=True)
-        print(f"Saved single FITS file for method {method}: {output_fits_file}")
+            # Write to a single FITS file
+            hdu = fits.BinTableHDU.from_columns(cols)
+            output_fits_file = f'fit_data_{method}.fits'
+            hdu.writeto(output_fits_file, overwrite=True)
+            print(f"Saved single FITS file for method {method}: {output_fits_file}")
         
     else:
         for loop_item in loop_items:
