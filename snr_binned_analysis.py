@@ -14,6 +14,8 @@ from tqdm import tqdm
 import matplotlib.pyplot as plt
 from operate_gtis import *
 from astropy.table import Table
+import pyLikelihood
+from BinnedAnalysis import *
 
 # Function to ensure paths exist
 def check_paths(source_name, method, number_of_bins):
