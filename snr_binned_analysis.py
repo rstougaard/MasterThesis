@@ -982,8 +982,8 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
             fits.Column(name='geometric_mean', format='E', array=geometric_mean_col),
             fits.Column(name='e_lower', format='E', array=e_lower_col),
             fits.Column(name='e_upper', format='E', array=e_upper_col),
-            fits.Column(name='flux_tot_value', format='ph/cm**2/s', array=flux_tot_value_col),
-            fits.Column(name='flux_tot_error', format='ph/cm**2/s', array=flux_tot_error_col),
+            fits.Column(name='flux_tot_value', format='ph/cm^2/s', array=flux_tot_value_col),
+            fits.Column(name='flux_tot_error', format='ph/cm^2/s', array=flux_tot_error_col),
             fits.Column(name='nobs', format='PE()', array=nobs_col),
         ]
 
@@ -1122,8 +1122,8 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
             fits.Column(name='geometric_mean', format='E', array=geometric_mean_col),
             fits.Column(name='e_lower', format='E', array=e_lower_col),
             fits.Column(name='e_upper', format='E', array=e_upper_col),
-            fits.Column(name='flux_tot_value', format='ph/cm**2/s', array=flux_tot_value_col),
-            fits.Column(name='flux_tot_error', format='ph/cm**2/s', array=flux_tot_error_col),
+            fits.Column(name='flux_tot_value', format='ph/cm^2/s', array=flux_tot_value_col),
+            fits.Column(name='flux_tot_error', format='ph/cm^2/s', array=flux_tot_error_col),
             fits.Column(name='nobs', format='PE()', array=nobs_col)
         ]
 
