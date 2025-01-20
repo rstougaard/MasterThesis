@@ -1217,6 +1217,7 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
                             nobs = like.nobs
 
                             fit_data = {
+                                'loop_item': loop_item,
                                 'emin': emin,
                                 'emax': emax,
                                 'geometric_mean': geometric_mean,
@@ -1251,9 +1252,9 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
         e_upper_col = [data['e_upper'] for data in data_list]
         flux_tot_value_col = [data['flux_tot_value'] for data in data_list]
         flux_tot_error_col = [data['flux_tot_error'] for data in data_list]
-        nobs_col = [np.array(data['nobs']) for data in data_list]
-        TS_col = [d['TS'] for d in fit_data_list]
-        conv_col = [d['convergence'] for d in fit_data_list]
+        nobs_col = [data['nobs'] for data in data_list]
+        TS_col = [data['TS'] for data in data_list]
+        conv_col = [data['convergence'] for data in data_list]
 
         # Create FITS columns
         cols = [
