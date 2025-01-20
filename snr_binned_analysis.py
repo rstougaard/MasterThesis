@@ -965,6 +965,8 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
                             'flux_tot_value': float(flux_tot_value),
                             'flux_tot_error': float(flux_tot_error),
                             'nobs': list(nobs),
+                            'TS': TS,
+                            'convergence': convergence
                         })
 
                     except Exception as e:
@@ -994,7 +996,8 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
                         like = BinnedAnalysis(obs, ref_model, optimizer='NewMinuit')
                         likeobj = pyLikelihood.NewMinuit(like.logLike)
                         like.fit(verbosity=0, covar=True, optObject=likeobj)
-                        TS = like.Ts(source_name)
+                        TS = like.Ts(source_name) #also include in output file
+                        convergence = likeobj.getRetCode()  #also include in output file
                         like.writeCountsSpectra(cspectra)
                         like.logLike.writeXml(writexml)
 
@@ -1002,7 +1005,6 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
                         flux_tot_error = like.fluxError(source_name, emin=emin, emax=emax)
                         geometric_mean = (emin * emax) ** 0.5
                         nobs = like.nobs
-                        print(nobs)
 
                         fit_data_list.append({
                             'emin': emin,
@@ -1013,6 +1015,8 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
                             'flux_tot_value': float(flux_tot_value),
                             'flux_tot_error': float(flux_tot_error),
                             'nobs': nobs,
+                            'TS': TS,
+                            'convergence': convergence
                         })
                         print(f"Refitted bin succesfully: {emin}-{emax}MeV")
                         refit_success = True
@@ -1032,7 +1036,9 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
             e_upper_col = [d['e_upper'] for d in fit_data_list]
             flux_tot_value_col = [d['flux_tot_value'] for d in fit_data_list]
             flux_tot_error_col = [d['flux_tot_error'] for d in fit_data_list]
-            nobs_col = [np.array(d['nobs']) for d in fit_data_list]
+            nobs_col = [d['nobs'] for d in fit_data_list]
+            TS_col = [d['TS'] for d in fit_data_list]
+            conv_col = [d['convergence'] for d in fit_data_list]
 
             # Create FITS columns
             cols = [
@@ -1044,6 +1050,8 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
                 fits.Column(name='flux_tot_value', format='E', array=flux_tot_value_col),
                 fits.Column(name='flux_tot_error', format='E', array=flux_tot_error_col),
                 fits.Column(name='nobs', format='PE()', array=nobs_col),
+                fits.Column(name='TS', format='PE()', array=TS_col),
+                fits.Column(name='convergence', format='PE()', array=conv_col),
             ]
 
             # Write to a single FITS file
@@ -1054,6 +1062,8 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
         
     else:
         for loop_item in loop_items:
+            failed_bins = []
+            successful_bins = {} 
             with open(f'{ebinfile_txt}', 'r') as file:
                 for line in file:
                     line = line.strip()
@@ -1127,7 +1137,9 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
                         like.writeCountsSpectra(cspectra) 
                         like.logLike.writeXml(writexml)
                         tree = ET.parse(writexml)
-                        #root = tree.getroot()
+                        
+                        # Save successful bin details
+                        successful_bins[(emin, emax)] = writexml
 
                         flux_tot_value = like.flux(source_name, emin=emin, emax=emax)
                         flux_tot_error = like.fluxError(source_name, emin=emin, emax=emax)
@@ -1152,6 +1164,8 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
                             'flux_tot_value': float(flux_tot_value),
                             'flux_tot_error': float(flux_tot_error),                    
                             'nobs': list(nobs),
+                            'TS': TS,
+                            'convergence': convergence
                         }
 
                         # Append data to method_data for the current method
@@ -1160,7 +1174,66 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
                         method_data[method].append(fit_data)
 
                     except Exception as e:
-                        print(f"Error processing {method}: {e}")
+                        print(f"Error processing {method}: {emin_float}-{emax_float}MeV: {e}")
+                        failed_bins.append((emin, emax))
+              # Second pass: Refit failed bins
+            if failed_bins:
+                print(f"Refitting failed bins {method}: {failed_bins}")
+                for emin, emax in failed_bins:
+                    successful_bin_keys = list(successful_bins.keys())
+                    refit_success = False
+                    if method == "SNR":
+                            ltcube = general_path + f'{method}/ltcube/ltcube_snr{loop_item}.fits'
+                            ccube = general_path + f'{method}/ccube/ccube_snr{loop_item}_{emin}_{emax}.fits'
+                            binexpmap = general_path + f'{method}/expmap/BinnedExpMap_snr{loop_item}_{emin}_{emax}.fits'
+                            srcmap = general_path + f'{method}/srcmap/srcmap_snr{loop_item}_{emin}_{emax}.fits'
+                    elif method == "LIN":
+                            ltcube = general_path + f'{method}/ltcube/ltcube_{loop_item}.fits'
+                            ccube = general_path + f'{method}/ccube/ccube_{loop_item}_{emin}_{emax}.fits'
+                            binexpmap = general_path + f'{method}/expmap/BinnedExpMap_{loop_item}_{emin}_{emax}.fits'
+                            srcmap = general_path + f'{method}/srcmap/srcmap_{loop_item}_{emin}_{emax}.fits'
+                
+                    for ref_bin in successful_bin_keys:
+                        if refit_success:  # Stop refitting if already successful
+                            break
+                        ref_model = successful_bins[ref_bin]  # Model of the selected successful bin
+                        writexml = general_path + f'{method}/fit_params/refit_{emin}_{emax}.xml'
+                        cspectra = general_path + f'{method}/CountsSpectra/refit_cspectra_{emin}_{emax}.fits'
+
+                        try:
+                            obs = BinnedObs(srcMaps=srcmap, binnedExpMap=binexpmap, expCube=ltcube, irfs='CALDB')
+                            like = BinnedAnalysis(obs, ref_model, optimizer='NewMinuit')
+                            likeobj = pyLikelihood.NewMinuit(like.logLike)
+                            like.fit(verbosity=0, covar=True, optObject=likeobj)
+                            TS = like.Ts(source_name) #also include in output file
+                            convergence = likeobj.getRetCode()  #also include in output file
+                            like.writeCountsSpectra(cspectra)
+                            like.logLike.writeXml(writexml)
+
+                            flux_tot_value = like.flux(source_name, emin=emin, emax=emax)
+                            flux_tot_error = like.fluxError(source_name, emin=emin, emax=emax)
+                            geometric_mean = (emin * emax) ** 0.5
+                            nobs = like.nobs
+
+                            fit_data_list.append({
+                                'emin': emin,
+                                'emax': emax,
+                                'geometric_mean': geometric_mean,
+                                'e_lower': geometric_mean - emin,
+                                'e_upper': emax - geometric_mean,
+                                'flux_tot_value': float(flux_tot_value),
+                                'flux_tot_error': float(flux_tot_error),
+                                'nobs': nobs,
+                                'TS': TS,
+                                'convergence': convergence
+                            })
+                            print(f"Refitted bin succesfully {method}: {emin}-{emax}MeV")
+                            refit_success = True
+                        except Exception as e:
+                            print(f"Refit failed for {method} {emin}-{emax}MeV: {e}")
+
+                    if not refit_success:
+                        print(f"All refits failed for {method} {emin}-{emax}MeV")
 
     # Save one FITS file per method
     for method, data_list in method_data.items():
@@ -1174,6 +1247,8 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
         flux_tot_value_col = [data['flux_tot_value'] for data in data_list]
         flux_tot_error_col = [data['flux_tot_error'] for data in data_list]
         nobs_col = [np.array(data['nobs']) for data in data_list]
+        TS_col = [d['TS'] for d in fit_data_list]
+        conv_col = [d['convergence'] for d in fit_data_list]
 
         # Create FITS columns
         cols = [
@@ -1185,7 +1260,9 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
             fits.Column(name='e_upper', format='E', array=e_upper_col),
             fits.Column(name='flux_tot_value', format='E', array=flux_tot_value_col),
             fits.Column(name='flux_tot_error', format='E', array=flux_tot_error_col),
-            fits.Column(name='nobs', format='PE()', array=nobs_col)
+            fits.Column(name='nobs', format='PE()', array=nobs_col),
+            fits.Column(name='TS', format='PE()', array=TS_col),
+            fits.Column(name='convergence', format='PE()', array=conv_col),
         ]
 
         # Create HDU and write to a single FITS file for the method
@@ -1242,9 +1319,9 @@ print('Generated all files for Likelihood!')
 
 run_binned_likelihood(vars_none, free_params = "None")
 print('Likelihood for non filtered data done!')
-'''
+
 run_binned_likelihood(vars_snr, snrratios=snrratios, free_params = "None")
 print('Likelihood for snr binned data done!')
+
 run_binned_likelihood(vars_lin, time_intervals=time_intervals, free_params = "None")
 print('Likelihood linear binned done!')
-'''  
