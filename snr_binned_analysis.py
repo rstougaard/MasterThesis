@@ -977,8 +977,10 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
             for emin, emax in failed_bins:
                 successful_bin_keys = list(successful_bins.keys())
                 refit_success = False
-
+            
                 for ref_bin in successful_bin_keys:
+                    if refit_success:  # Stop refitting if already successful
+                        break
                     ref_model = successful_bins[ref_bin]  # Model of the selected successful bin
                     writexml = general_path + f'{method}/fit_params/refit_{emin}_{emax}.xml'
                     cspectra = general_path + f'{method}/CountsSpectra/refit_cspectra_{emin}_{emax}.fits'
