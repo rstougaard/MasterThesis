@@ -929,7 +929,7 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
                         obs = BinnedObs(srcMaps=srcmap, binnedExpMap=binexpmap, expCube=ltcube, irfs='CALDB')
                         like = BinnedAnalysis(obs, input_model, optimizer='NewMinuit')
                         likeobj = pyLikelihood.NewMinuit(like.logLike)
-                        like.fit(verbosity=0, covar=True, optObject=likeobj)
+                        like.fit(verbosity=2, covar=True, optObject=likeobj)
                         like.writeCountsSpectra(cspectra) 
                         like.logLike.writeXml(writexml)
                         tree = ET.parse(writexml)
