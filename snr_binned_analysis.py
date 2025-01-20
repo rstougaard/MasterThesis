@@ -929,7 +929,7 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
                         obs = BinnedObs(srcMaps=srcmap, binnedExpMap=binexpmap, expCube=ltcube, irfs='CALDB')
                         like = BinnedAnalysis(obs, input_model, optimizer='NewMinuit')
                         likeobj = pyLikelihood.NewMinuit(like.logLike)
-                        like.fit(verbosity=2, covar=True, optObject=likeobj)
+                        like.fit(verbosity=0, covar=True, optObject=likeobj)
                         like.writeCountsSpectra(cspectra) 
                         like.logLike.writeXml(writexml)
                         tree = ET.parse(writexml)
@@ -1179,11 +1179,11 @@ generate_files(vars_lin, time_intervals=time_intervals, number_of_bins=7)
 source_maps(vars_lin, time_intervals=time_intervals)
 print('Generated all files for Likelihood!')
 
-run_binned_likelihood(vars_none, free_params = "None")
+run_binned_likelihood(vars_none, free_params = "alpha")
 print('Likelihood for non filtered data done!')
-run_binned_likelihood(vars_snr, snrratios=snrratios, free_params = "None")
+run_binned_likelihood(vars_snr, snrratios=snrratios, free_params = "alpha")
 print('Likelihood for snr binned data done!')
-run_binned_likelihood(vars_lin, time_intervals=time_intervals, free_params = "None")
+run_binned_likelihood(vars_lin, time_intervals=time_intervals, free_params = "alpha")
 print('Likelihood linear binned done!')
     
 '''
