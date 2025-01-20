@@ -1049,9 +1049,9 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
                 fits.Column(name='e_upper', format='E', array=e_upper_col),
                 fits.Column(name='flux_tot_value', format='E', array=flux_tot_value_col),
                 fits.Column(name='flux_tot_error', format='E', array=flux_tot_error_col),
-                fits.Column(name='nobs', format='PE()', array=nobs_col),
-                fits.Column(name='TS', format='PE()', array=TS_col),
-                fits.Column(name='convergence', format='PE()', array=conv_col),
+                fits.Column(name='nobs', format='E', array=nobs_col),
+                fits.Column(name='TS', format='E', array=TS_col),
+                fits.Column(name='convergence', format='E', array=conv_col),
             ]
 
             # Write to a single FITS file
