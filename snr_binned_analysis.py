@@ -1233,8 +1233,9 @@ print('Generated all files for Likelihood!')
 
 run_binned_likelihood(vars_none, free_params = "None")
 print('Likelihood for non filtered data done!')
+'''
 run_binned_likelihood(vars_snr, snrratios=snrratios, free_params = "None")
 print('Likelihood for snr binned data done!')
 run_binned_likelihood(vars_lin, time_intervals=time_intervals, free_params = "None")
 print('Likelihood linear binned done!')
-    
+'''  
