@@ -975,43 +975,44 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
         if failed_bins:
             print(f"Refitting failed bins: {failed_bins}")
             for emin, emax in failed_bins:
-                # Find the next successful bin with higher energy for refitting
-                higher_bins = [key for key in successful_bins.keys() if key[0] >= emax]
-                if not higher_bins:
-                    print(f"No higher-energy bin available for refitting {emin}-{emax}MeV")
-                    continue
-                ref_bin = min(higher_bins, key=lambda x: x[0])  # Select the smallest higher bin
-                ref_model = successful_bins[ref_bin]  # Input model of the selected bin
+                successful_bin_keys = list(successful_bins.keys())
+                refit_success = False
 
-                writexml = general_path + f'{method}/fit_params/refit_{emin}_{emax}.xml'
-                cspectra = general_path + f'{method}/CountsSpectra/refit_cspectra_{emin}_{emax}.fits'
+                for ref_bin in successful_bin_keys:
+                    ref_model = successful_bins[ref_bin]  # Model of the selected successful bin
+                    writexml = general_path + f'{method}/fit_params/refit_{emin}_{emax}.xml'
+                    cspectra = general_path + f'{method}/CountsSpectra/refit_cspectra_{emin}_{emax}.fits'
 
-                try:
-                    obs = BinnedObs(srcMaps=srcmap, binnedExpMap=binexpmap, expCube=ltcube, irfs='CALDB')
-                    like = BinnedAnalysis(obs, ref_model, optimizer='NewMinuit')
-                    likeobj = pyLikelihood.NewMinuit(like.logLike)
-                    like.fit(verbosity=0, covar=True, optObject=likeobj)
-                    TS = like.Ts(source_name)
-                    like.writeCountsSpectra(cspectra)
-                    like.logLike.writeXml(writexml)
-                    
-                    flux_tot_value = like.flux(source_name, emin=emin, emax=emax)
-                    flux_tot_error = like.fluxError(source_name, emin=emin, emax=emax)
-                    geometric_mean = (emin * emax) ** 0.5
+                    try:
+                        obs = BinnedObs(srcMaps=srcmap, binnedExpMap=binexpmap, expCube=ltcube, irfs='CALDB')
+                        like = BinnedAnalysis(obs, ref_model, optimizer='NewMinuit')
+                        likeobj = pyLikelihood.NewMinuit(like.logLike)
+                        like.fit(verbosity=0, covar=True, optObject=likeobj)
+                        TS = like.Ts(source_name)
+                        like.writeCountsSpectra(cspectra)
+                        like.logLike.writeXml(writexml)
 
-                    fit_data_list.append({
-                        'emin': emin,
-                        'emax': emax,
-                        'geometric_mean': geometric_mean,
-                        'e_lower': geometric_mean - emin,
-                        'e_upper': emax - geometric_mean,
-                        'flux_tot_value': float(flux_tot_value),
-                        'flux_tot_error': float(flux_tot_error),
-                        'nobs': list(nobs),
-                    })
-                    print(f"Refitted bin succesfully: {failed_bins}")
-                except Exception as e:
-                    print(f"Refit failed for {emin}-{emax}MeV: {e}")
+                        flux_tot_value = like.flux(source_name, emin=emin, emax=emax)
+                        flux_tot_error = like.fluxError(source_name, emin=emin, emax=emax)
+                        geometric_mean = (emin * emax) ** 0.5
+
+                        fit_data_list.append({
+                            'emin': emin,
+                            'emax': emax,
+                            'geometric_mean': geometric_mean,
+                            'e_lower': geometric_mean - emin,
+                            'e_upper': emax - geometric_mean,
+                            'flux_tot_value': float(flux_tot_value),
+                            'flux_tot_error': float(flux_tot_error),
+                            'nobs': list(nobs),
+                        })
+                        print(f"Refitted bin succesfully: {failed_bins}")
+                        refit_success = True
+                    except Exception as e:
+                        print(f"Refit failed for {emin}-{emax}MeV: {e}")
+
+                if not refit_success:
+                    print(f"All refits failed for {emin}-{emax}MeV")
 
         # After processing all lines, save the accumulated data to a single FITS file
         if fit_data_list:
