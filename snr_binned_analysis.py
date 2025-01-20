@@ -1062,6 +1062,7 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
         
     else:
         for loop_item in loop_items:
+            fit_data_list = []
             failed_bins = []
             successful_bins = {} 
             with open(f'{ebinfile_txt}', 'r') as file:
@@ -1215,7 +1216,7 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
                             geometric_mean = (emin * emax) ** 0.5
                             nobs = like.nobs
 
-                            fit_data_list.append({
+                            fit_data = {
                                 'emin': emin,
                                 'emax': emax,
                                 'geometric_mean': geometric_mean,
@@ -1226,9 +1227,13 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
                                 'nobs': nobs,
                                 'TS': TS,
                                 'convergence': convergence
-                            })
+                            }
                             print(f"Refitted bin succesfully {method}: {emin}-{emax}MeV")
                             refit_success = True
+                            # Append data to method_data for the current method
+                            if method not in method_data:
+                                method_data[method] = []
+                            method_data[method].append(fit_data)
                         except Exception as e:
                             print(f"Refit failed for {method} {emin}-{emax}MeV: {e}")
 
