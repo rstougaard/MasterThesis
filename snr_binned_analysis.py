@@ -889,6 +889,8 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
     # If there is nothing to loop over, handle the "NONE" method directly
     if method == "NONE":
         fit_data_list = []  # Accumulate all fit_data for the method
+        failed_bins = []
+        successful_bins = {}  # Map successful bins to their input_model 
         with open(f'{ebinfile_txt}', 'r') as file:
                 for line in file:
                     line = line.strip()
@@ -937,6 +939,9 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
                         tree = ET.parse(writexml)
                         #root = tree.getroot()
 
+                        # Save successful bin details
+                        successful_bins[(emin, emax)] = writexml
+
                         flux_tot_value = like.flux(source_name, emin=emin, emax=emax)
                         flux_tot_error = like.fluxError(source_name, emin=emin, emax=emax)
                         alpha = like.model[source_name].funcs['Spectrum'].getParam('alpha').value()
@@ -963,7 +968,49 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
                         })
 
                     except Exception as e:
-                        print(f"Error processing {method}: {e}")
+                        print(f"Error processing {method}: {emin_float}-{emax_float}MeV: {e}")
+                        failed_bins.append((emin, emax))
+
+        # Second pass: Refit failed bins
+        if failed_bins:
+            print(f"Refitting failed bins: {failed_bins}")
+            for emin, emax in failed_bins:
+                # Find the next successful bin with higher energy for refitting
+                higher_bins = [key for key in successful_bins.keys() if key[0] >= emax]
+                if not higher_bins:
+                    print(f"No higher-energy bin available for refitting {emin}-{emax}MeV")
+                    continue
+                ref_bin = min(higher_bins, key=lambda x: x[0])  # Select the smallest higher bin
+                ref_model = successful_bins[ref_bin]  # Input model of the selected bin
+
+                writexml = general_path + f'{method}/fit_params/refit_{emin}_{emax}.xml'
+                cspectra = general_path + f'{method}/CountsSpectra/refit_cspectra_{emin}_{emax}.fits'
+
+                try:
+                    obs = BinnedObs(srcMaps=srcmap, binnedExpMap=binexpmap, expCube=ltcube, irfs='CALDB')
+                    like = BinnedAnalysis(obs, ref_model, optimizer='NewMinuit')
+                    likeobj = pyLikelihood.NewMinuit(like.logLike)
+                    like.fit(verbosity=0, covar=True, optObject=likeobj)
+                    TS = like.Ts(source_name)
+                    like.writeCountsSpectra(cspectra)
+                    like.logLike.writeXml(writexml)
+                    
+                    flux_tot_value = like.flux(source_name, emin=emin, emax=emax)
+                    flux_tot_error = like.fluxError(source_name, emin=emin, emax=emax)
+                    geometric_mean = (emin * emax) ** 0.5
+
+                    fit_data_list.append({
+                        'emin': emin,
+                        'emax': emax,
+                        'geometric_mean': geometric_mean,
+                        'e_lower': geometric_mean - emin,
+                        'e_upper': emax - geometric_mean,
+                        'flux_tot_value': float(flux_tot_value),
+                        'flux_tot_error': float(flux_tot_error),
+                        'nobs': list(nobs),
+                    })
+                except Exception as e:
+                    print(f"Refit failed for {emin}-{emax}MeV: {e}")
 
         # After processing all lines, save the accumulated data to a single FITS file
         if fit_data_list:
