@@ -1232,7 +1232,7 @@ generate_files(vars_lin, time_intervals=time_intervals, number_of_bins=7)
 source_maps(vars_lin, time_intervals=time_intervals)
 print('Generated all files for Likelihood!')
 
-run_binned_likelihood(vars_none, free_params = "alpha")
+run_binned_likelihood(vars_none, free_params = "None")
 print('Likelihood for non filtered data done!')
 '''
 run_binned_likelihood(vars_snr, snrratios=snrratios, free_params = "None")
