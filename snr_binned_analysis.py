@@ -997,6 +997,7 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
                         flux_tot_value = like.flux(source_name, emin=emin, emax=emax)
                         flux_tot_error = like.fluxError(source_name, emin=emin, emax=emax)
                         geometric_mean = (emin * emax) ** 0.5
+                        nobs = like.nobs
 
                         fit_data_list.append({
                             'emin': emin,
@@ -1006,7 +1007,7 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
                             'e_upper': emax - geometric_mean,
                             'flux_tot_value': float(flux_tot_value),
                             'flux_tot_error': float(flux_tot_error),
-                            'nobs': list(nobs),
+                            'nobs': nobs,
                         })
                         print(f"Refitted bin succesfully: {emin}-{emax}MeV")
                         refit_success = True
