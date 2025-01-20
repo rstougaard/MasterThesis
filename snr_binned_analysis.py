@@ -1009,6 +1009,7 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
                         'flux_tot_error': float(flux_tot_error),
                         'nobs': list(nobs),
                     })
+                    print(f"Refitted bin succesfully: {failed_bins}")
                 except Exception as e:
                     print(f"Refit failed for {emin}-{emax}MeV: {e}")
 
