@@ -597,7 +597,7 @@ def generate_files(vars, snrratios=None, time_intervals=None, number_of_bins=Non
                     ltcube = general_path + f'{method}/ltcube/ltcube.fits'
                     ccube = general_path + f'{method}/ccube/ccube_{emin}_{emax}.fits'
                     binexpmap = general_path + f'{method}/expmap/BinnedExpMap_{emin}_{emax}.fits'
-                    model = f'./data/{source_name_cleaned}/{method}/models/input_model.xml'
+                    model = f'./data/{source_name_cleaned}/{method}/models/input_model_{emin}_{emax}.xml'
                     print(f"Processing method {method} without looping.")
                     
                     if not os.path.exists(ltcube):
@@ -684,13 +684,13 @@ def generate_files(vars, snrratios=None, time_intervals=None, number_of_bins=Non
                         ltcube = general_path + f'{method}/ltcube/ltcube_snr{loop_item}.fits'
                         ccube = general_path + f'{method}/ccube/ccube_snr{loop_item}_{emin}_{emax}.fits'
                         binexpmap = general_path + f'{method}/expmap/BinnedExpMap_snr{loop_item}_{emin}_{emax}.fits'
-                        model = f'./data/{source_name_cleaned}/{method}/models/input_model_snr{loop_item}.xml'
+                        model = f'./data/{source_name_cleaned}/{method}/models/input_model_snr{loop_item}_{emin}_{emax}.xml'
                     elif method == "LIN":
                         gti_noflares = general_path + f'{method}/gti_noflares_{loop_item}_{emin}_{emax}.fits'
                         ltcube = general_path + f'{method}/ltcube/ltcube_{loop_item}.fits'
                         ccube = general_path + f'{method}/ccube/ccube_{loop_item}_{emin}_{emax}.fits'
                         binexpmap = general_path + f'{method}/expmap/BinnedExpMap_{loop_item}_{emin}_{emax}.fits'
-                        model = f'./data/{source_name_cleaned}/{method}/models/input_model_{loop_item}.xml'
+                        model = f'./data/{source_name_cleaned}/{method}/models/input_model_{loop_item}_{emin}_{emax}.xml'
 
                     if not os.path.exists(ltcube):
                         print(f"Creating ltcube for {method}: {loop_item}")
@@ -776,7 +776,7 @@ def source_maps(vars, snrratios=None, time_intervals=None):
     else:
         loop_items = "NONE"  # No looping for the "NONE" method
     
-    input_model = general_path + f'NONE/models/input_model.xml'
+    #input_model = general_path + f'NONE/models/input_model.xml'
     
     # If there is nothing to loop over, handle the "NONE" method directly
     if method == "NONE":
@@ -795,7 +795,7 @@ def source_maps(vars, snrratios=None, time_intervals=None):
                     ccube = general_path + f'{method}/ccube/ccube_{emin}_{emax}.fits'
                     binexpmap = general_path + f'{method}/expmap/BinnedExpMap_{emin}_{emax}.fits'
                     srcmap = general_path + f'{method}/srcmap/srcmap_{emin}_{emax}.fits'
-                    #input_model = general_path + f'{method}/expmap/input_model.xml'
+                    input_model = general_path + f'{method}/models/input_model_{emin}_{emax}.xml'
                     print(f"Processing method {method} without looping.")
                     
                     if not os.path.exists(srcmap):
@@ -829,13 +829,13 @@ def source_maps(vars, snrratios=None, time_intervals=None):
                         ccube = general_path + f'{method}/ccube/ccube_snr{loop_item}_{emin}_{emax}.fits'
                         binexpmap = general_path + f'{method}/expmap/BinnedExpMap_snr{loop_item}_{emin}_{emax}.fits'
                         srcmap = general_path + f'{method}/srcmap/srcmap_snr{loop_item}_{emin}_{emax}.fits'
-                        #input_model = general_path + f'{method}/expmap/input_model_snr{loop_item}.xml'
+                        input_model = general_path + f'{method}/models/input_model_snr{loop_item}.xml'
                     elif method == "LIN":
                         ltcube = general_path + f'{method}/ltcube/ltcube_{loop_item}.fits'
                         ccube = general_path + f'{method}/ccube/ccube_{loop_item}_{emin}_{emax}.fits'
                         binexpmap = general_path + f'{method}/expmap/BinnedExpMap_{loop_item}_{emin}_{emax}.fits'
                         srcmap = general_path + f'{method}/srcmap/srcmap_{loop_item}_{emin}_{emax}.fits'
-                        #input_model = general_path + f'{method}/expmap/input_model_{loop_item}.xml'
+                        input_model = general_path + f'{method}/models/input_model_{loop_item}.xml'
 
                     if not os.path.exists(srcmap):
                         ####### Source Map #######
@@ -905,7 +905,7 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
                     binexpmap = general_path + f'{method}/expmap/BinnedExpMap_{emin}_{emax}.fits'
                     srcmap = general_path + f'{method}/srcmap/srcmap_{emin}_{emax}.fits'
                     if free_params == "None":
-                        input_model = general_path + f'{method}/models/input_model.xml'
+                        input_model = general_path + f'{method}/models/input_model_{emin}_{emax}.xml'
                         cspectra = general_path + f'{method}/CountsSpectra/cspectra_{emin}_{emax}.fits'
                         writexml = general_path + f'{method}/fit_params/fit_{emin}_{emax}.xml'
                         results_output_file = f"{source_name_cleaned}_results.fits"
@@ -1012,7 +1012,7 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
                         binexpmap = general_path + f'{method}/expmap/BinnedExpMap_snr{loop_item}_{emin}_{emax}.fits'
                         srcmap = general_path + f'{method}/srcmap/srcmap_snr{loop_item}_{emin}_{emax}.fits'
                         if free_params == "None":
-                            input_model = general_path + f'{method}/models/input_model_snr{loop_item}.xml'
+                            input_model = general_path + f'{method}/models/input_model_snr{loop_item}_{emin}_{emax}.xml'
                             cspectra = general_path + f'{method}/CountsSpectra/cspectra_snr{loop_item}_{emin}_{emax}.fits'
                             writexml = general_path + f'{method}/fit_params/fit_snr{loop_item}_{emin}_{emax}.xml'
                             results_output_file = f"{source_name_cleaned}_results_snr.fits"
@@ -1037,7 +1037,7 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
                         binexpmap = general_path + f'{method}/expmap/BinnedExpMap_{loop_item}_{emin}_{emax}.fits'
                         srcmap = general_path + f'{method}/srcmap/srcmap_{loop_item}_{emin}_{emax}.fits'
                         if free_params == "None":
-                            input_model = general_path + f'{method}/models/input_model_{loop_item}.xml'
+                            input_model = general_path + f'{method}/models/input_model_{loop_item}_{emin}_{emax}.xml'
                             cspectra = general_path + f'{method}/CountsSpectra/cspectra_{loop_item}_{emin}_{emax}.fits'
                             writexml = general_path + f'{method}/fit_params/fit_{loop_item}_{emin}_{emax}.xml'
                             results_output_file = f"{source_name_cleaned}_results_lin.fits"
