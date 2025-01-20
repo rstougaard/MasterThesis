@@ -977,6 +977,10 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
             for emin, emax in failed_bins:
                 successful_bin_keys = list(successful_bins.keys())
                 refit_success = False
+                ltcube = general_path + f'{method}/ltcube/ltcube.fits'
+                ccube = general_path + f'{method}/ccube/ccube_{emin}_{emax}.fits'
+                binexpmap = general_path + f'{method}/expmap/BinnedExpMap_{emin}_{emax}.fits'
+                srcmap = general_path + f'{method}/srcmap/srcmap_{emin}_{emax}.fits'
             
                 for ref_bin in successful_bin_keys:
                     if refit_success:  # Stop refitting if already successful
@@ -998,6 +1002,7 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
                         flux_tot_error = like.fluxError(source_name, emin=emin, emax=emax)
                         geometric_mean = (emin * emax) ** 0.5
                         nobs = like.nobs
+                        print(nobs)
 
                         fit_data_list.append({
                             'emin': emin,
