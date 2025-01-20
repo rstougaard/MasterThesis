@@ -924,7 +924,7 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
                         cspectra = general_path + f'{method}/CountsSpectra/cspectra_free_alpha_beta.fits'
                         writexml = general_path + f'{method}/fit_params/fit_free_alpha_beta.xml'
                         results_output_file = f"{source_name_cleaned}_free_alpha_beta_results.fits"
-                    print(f"Processing method {method} without looping.")
+                    
                     try:
                         obs = BinnedObs(srcMaps=srcmap, binnedExpMap=binexpmap, expCube=ltcube, irfs='CALDB')
                         like = BinnedAnalysis(obs, input_model, optimizer='NewMinuit')
@@ -1058,48 +1058,48 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
                             results_output_file = f"{source_name_cleaned}_{loop_item}_free_alpha_beta_results.fits"
 
                      ####### Binned Likelihood Analysis #######
-            try:
-                obs = BinnedObs(srcMaps=srcmap, binnedExpMap=binexpmap, expCube=ltcube, irfs='CALDB')
-                like = BinnedAnalysis(obs, input_model, optimizer='NewMinuit')
-                likeobj = pyLikelihood.NewMinuit(like.logLike)
-                like.fit(verbosity=0, covar=True, optObject=likeobj)
-                like.writeCountsSpectra(cspectra) 
-                like.logLike.writeXml(writexml)
-                tree = ET.parse(writexml)
-                #root = tree.getroot()
+                    try:
+                        obs = BinnedObs(srcMaps=srcmap, binnedExpMap=binexpmap, expCube=ltcube, irfs='CALDB')
+                        like = BinnedAnalysis(obs, input_model, optimizer='NewMinuit')
+                        likeobj = pyLikelihood.NewMinuit(like.logLike)
+                        like.fit(verbosity=0, covar=True, optObject=likeobj)
+                        like.writeCountsSpectra(cspectra) 
+                        like.logLike.writeXml(writexml)
+                        tree = ET.parse(writexml)
+                        #root = tree.getroot()
 
-                flux_tot_value = like.flux(source_name, emin=emin, emax=emax)
-                flux_tot_error = like.fluxError(source_name, emin=emin, emax=emax)
-                alpha = like.model[source_name].funcs['Spectrum'].getParam('alpha').value()
-                alpha_err = like.model[source_name].funcs['Spectrum'].getParam('alpha').error()
-                beta = like.model[source_name].funcs['Spectrum'].getParam('beta').value()
-                beta_err = like.model[source_name].funcs['Spectrum'].getParam('beta').error()
-                Eb = like.model[source_name].funcs['Spectrum'].getParam('Eb').value()
-                Eb_err = like.model[source_name].funcs['Spectrum'].getParam('Eb').error()
+                        flux_tot_value = like.flux(source_name, emin=emin, emax=emax)
+                        flux_tot_error = like.fluxError(source_name, emin=emin, emax=emax)
+                        alpha = like.model[source_name].funcs['Spectrum'].getParam('alpha').value()
+                        alpha_err = like.model[source_name].funcs['Spectrum'].getParam('alpha').error()
+                        beta = like.model[source_name].funcs['Spectrum'].getParam('beta').value()
+                        beta_err = like.model[source_name].funcs['Spectrum'].getParam('beta').error()
+                        Eb = like.model[source_name].funcs['Spectrum'].getParam('Eb').value()
+                        Eb_err = like.model[source_name].funcs['Spectrum'].getParam('Eb').error()
 
-                E = (like.energies[:-1] + like.energies[1:]) / 2.
-                nobs = like.nobs
-                geometric_mean = (emin*emax)**0.5
+                        E = (like.energies[:-1] + like.energies[1:]) / 2.
+                        nobs = like.nobs
+                        geometric_mean = (emin*emax)**0.5
 
-                fit_data = {
-                    'loop_item': loop_item,
-                    'emin': emin,
-                    'emax': emax,
-                    'geometric_mean': geometric_mean,
-                    'e_lower': geometric_mean - emin,
-                    'e_upper': emax - geometric_mean,
-                    'flux_tot_value': float(flux_tot_value),
-                    'flux_tot_error': float(flux_tot_error),                    
-                    'nobs': list(nobs),
-                }
+                        fit_data = {
+                            'loop_item': loop_item,
+                            'emin': emin,
+                            'emax': emax,
+                            'geometric_mean': geometric_mean,
+                            'e_lower': geometric_mean - emin,
+                            'e_upper': emax - geometric_mean,
+                            'flux_tot_value': float(flux_tot_value),
+                            'flux_tot_error': float(flux_tot_error),                    
+                            'nobs': list(nobs),
+                        }
 
-                # Append data to method_data for the current method
-                if method not in method_data:
-                    method_data[method] = []
-                method_data[method].append(fit_data)
+                        # Append data to method_data for the current method
+                        if method not in method_data:
+                            method_data[method] = []
+                        method_data[method].append(fit_data)
 
-            except Exception as e:
-                print(f"Error processing {method}: {e}")
+                    except Exception as e:
+                        print(f"Error processing {method}: {e}")
 
     # Save one FITS file per method
     for method, data_list in method_data.items():
@@ -1179,7 +1179,7 @@ generate_files(vars_lin, time_intervals=time_intervals, number_of_bins=7)
 source_maps(vars_lin, time_intervals=time_intervals)
 print('Generated all files for Likelihood!')
 
-run_binned_likelihood(vars_none, free_params = "None")
+run_binned_likelihood(vars_none, free_params = "alpha")
 print('Likelihood for non filtered data done!')
 run_binned_likelihood(vars_snr, snrratios=snrratios, free_params = "None")
 print('Likelihood for snr binned data done!')
