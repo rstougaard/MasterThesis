@@ -1299,11 +1299,16 @@ def process_line(line):
     """Function to process a single line of the input file"""
     parts = line.strip().split()
     
-    # Extract required data
-    source_name = parts[0]  # First part: source name
-    ra = float(parts[1])    # Second part: RA
-    dec = float(parts[2])   # Third part: Dec
-    specin = float(parts[3])  # Fourth part: spectral index
+    # Extract and clean the source name (removing surrounding quotes)
+    source_name = parts[0].strip('"')  # Remove any remaining double quotes
+
+    try:
+        ra = float(parts[1])    # Second part: RA
+        dec = float(parts[2])   # Third part: Dec
+        specin = float(parts[3])  # Fourth part: spectral index
+    except ValueError as e:
+        print(f"Error converting values for {source_name}: {e}")
+        return  # Skip this line if conversion fails
 
     # Run analysis steps
     check_paths(source_name, 'SNR', 7)
