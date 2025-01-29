@@ -16,6 +16,7 @@ from operate_gtis import *
 from astropy.table import Table
 import pyLikelihood
 from BinnedAnalysis import *
+import multiprocessing
 
 # Function to ensure paths exist
 def check_paths(source_name, method, number_of_bins):
@@ -31,7 +32,8 @@ def check_paths(source_name, method, number_of_bins):
         f'./data/{source_name_cleaned}/{method}/CountsSpectra/',
         f'./data/{source_name_cleaned}/{method}/likeresults/',
         f'./data/{source_name_cleaned}/{method}/fit_params/',
-        f'./energy_bins_def/{number_of_bins}/'
+        f'./energy_bins_def/{number_of_bins}/',
+        f'./fit_results/'
     ]
     for path in paths:
         os.makedirs(path, exist_ok=True)
@@ -46,10 +48,13 @@ def filtering(vars, snrratios=None, time_intervals=None):
     convt = 3
     roi = 1.
 
-    tmp_evlist = f'@./data/{source_name_cleaned}/events.list'
+    #tmp_evlist = f'@./data/{source_name_cleaned}/events.list'
     tmp_gti = f'./data/{source_name_cleaned}/temp_git.fits'
     gtifilter = '(DATA_QUAL>0)&&(LAT_CONFIG==1)'
-    sc = f'./data/{source_name_cleaned}/SC.fits'
+    #sc = f'./data/{source_name_cleaned}/SC.fits'
+    tmp_evlist = "./weekly_LAT_files/weekly/photon/lat_alldata.fits"
+    sc = "./mission/spacecraft/lat_spacecraft_merged.fits" 
+
     gti = f'./data/{source_name_cleaned}/gti.fits'
     ebinfile_txt = f'energy_7bins_gtbindef.txt '
 
@@ -347,9 +352,11 @@ def get_gti_bin(vars, snrratios=None, time_intervals=None):
     evc = 128
     convt = 3
     roi = 1.
-    evlist = f'@./data/{source_name_cleaned}/events.list'
+    #evlist = f'@./data/{source_name_cleaned}/events.list'
     gtifilter = '(DATA_QUAL>0)&&(LAT_CONFIG==1)'
-    sc = f'./data/{source_name_cleaned}/SC.fits'
+    #sc = f'./data/{source_name_cleaned}/SC.fits'
+    evlist = "./weekly_LAT_files/weekly/photon/lat_alldata.fits"
+    sc = "./mission/spacecraft/lat_spacecraft_merged.fits" 
     # Determine the loop items based on the method
     if method == "SNR":
         loop_items = snrratios
@@ -545,7 +552,7 @@ def generate_files(vars, snrratios=None, time_intervals=None, number_of_bins=Non
     source_name_cleaned = source_name.replace(" ", "").replace(".", "dot").replace("+", "plus").replace("-", "minus")
 
     general_path = f'./data/{source_name_cleaned}/'
-    sc = general_path+'SC.fits'
+    sc = "./mission/spacecraft/lat_spacecraft_merged.fits" 
     ebinfile = f'./energy_bins_def/{number_of_bins}/energy_bins_gtbindef.fits'
     ebinfile_txt = f'./energy_7bins_gtbindef.txt'
 
@@ -1056,7 +1063,7 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
 
             # Write to a single FITS file
             hdu = fits.BinTableHDU.from_columns(cols)
-            output_fits_file = f'fit_data_{method}.fits'
+            output_fits_file = f'./fit_results/{source_name_cleaned}_fit_data_{method}.fits'
             hdu.writeto(output_fits_file, overwrite=True)
             print(f"Saved single FITS file for method {method}: {output_fits_file}")
         
@@ -1273,7 +1280,7 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
 
         # Create HDU and write to a single FITS file for the method
         hdu = fits.BinTableHDU.from_columns(cols)
-        output_fits_file = f'fit_data_{method}.fits'
+        output_fits_file = f'./fit_results/{source_name_cleaned}_fit_data_{method}.fits'
         hdu.writeto(output_fits_file, overwrite=True)
         print(f"Saved FITS file for method {method}: {output_fits_file}")
     return
@@ -1281,31 +1288,84 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
 
 ##################################################################################
 ##################################################################################
+
+#snrratios = [3, 5, 10]
+#time_intervals = ["week", "month"]
+filename = "Top5_Source_ra_dec_specin.txt"
+snrratios = [10]
+time_intervals = ["month"]
+
+def process_line(line):
+    """Function to process a single line of the input file"""
+    parts = line.strip().split()
+    
+    # Extract required data
+    source_name = parts[0]  # First part: source name
+    ra = float(parts[1])    # Second part: RA
+    dec = float(parts[2])   # Third part: Dec
+    specin = float(parts[3])  # Fourth part: spectral index
+
+    # Run analysis steps
+    check_paths(source_name, 'SNR', 7)
+    check_paths(source_name, 'LIN', 7)
+    check_paths(source_name, 'NONE', 7)
+
+    # Construct vars_snr tuple
+    vars_none = (source_name, ra, dec, "NONE", specin, None, None, 100, 1000000)
+    vars_snr = (source_name, ra, dec, "SNR", specin, None, None, 100, 1000000)
+    vars_lin = (source_name, ra, dec, "LIN", specin, None, None, 100, 1000000)
+
+    filtering(vars_snr, snrratios=snrratios)
+    filtering(vars_lin, time_intervals=time_intervals)
+    print(f'Filtering done for {source_name}!')
+
+    get_gti_bin(vars_none)
+    get_gti_bin(vars_snr, snrratios=snrratios)
+    get_gti_bin(vars_lin, time_intervals=time_intervals)
+    print(f'GTI files per bin ready for {source_name}!')
+
+    generate_files(vars_none, number_of_bins=7)
+    source_maps(vars_none)
+
+    generate_files(vars_snr, snrratios=snrratios, number_of_bins=7)
+    source_maps(vars_snr, snrratios=snrratios)
+
+    generate_files(vars_lin, time_intervals=time_intervals, number_of_bins=7)
+    source_maps(vars_lin, time_intervals=time_intervals)
+    print(f'Generated all files for Likelihood for {source_name}!')
+
+    run_binned_likelihood(vars_none, free_params="None")
+    print(f'Likelihood for non-filtered data done for {source_name}!')
+
+    run_binned_likelihood(vars_snr, snrratios=snrratios, free_params="None")
+    print(f'Likelihood for SNR binned data done for {source_name}!')
+
+    run_binned_likelihood(vars_lin, time_intervals=time_intervals, free_params="None")
+    print(f'Likelihood linear binned done for {source_name}!')
+
+def run_analysis():
+    """Main function to use multiprocessing"""
+    with open(filename, "r") as file:
+        lines = file.readlines()
+
+    # Use multiprocessing Pool to process each line in parallel
+    with multiprocessing.Pool(processes=len(lines)) as pool:
+        pool.map(process_line, lines)
+
+if __name__ == "__main__":
+    run_analysis()
+
+
+'''
 check_paths("4FGL J0319.8+4130", 'SNR', 7)
 check_paths("4FGL J0319.8+4130", 'LIN', 7)
 check_paths("4FGL J0319.8+4130", 'NONE', 7)
-'''
-filename = "Source_ra_dec_specin.txt"
-
-with open(filename, "r") as file:
-    for line in file:
-        # Strip any extra whitespace and extract components
-        parts = line.strip().split()
-        
-        # Extract required data
-        source_name = parts[0]  # First part: source name
-        ra = float(parts[1])    # Second part: RA
-        dec = float(parts[2])   # Third part: Dec
-        specin = float(parts[3])  # Fourth part: spectral index
-        
-        # Construct vars_snr tuple
-        vars_snr = (source_name, ra, dec, "SNR", specin, None, None, 100, 1000000)
-'''
 vars_snr = ("4FGL J0319.8+4130", 49.9507, 41.5117,"SNR", 2.05, None, None,  100, 1000000)
-snrratios = [3, 5, 10]
+
 vars_lin = ("4FGL J0319.8+4130", 49.9507, 41.5117,"LIN", 2.05, None, None,  100, 1000000)
-time_intervals = ["week", "month"]
+
 vars_none= ("4FGL J0319.8+4130", 49.9507, 41.5117, "NONE", 2.05, None, None,  100, 1000000)
+
 filtering(vars_snr, snrratios=snrratios)
 filtering(vars_lin, time_intervals=time_intervals)
 print('Filtering done!')
@@ -1331,3 +1391,4 @@ print('Likelihood for snr binned data done!')
 
 run_binned_likelihood(vars_lin, time_intervals=time_intervals, free_params = "None")
 print('Likelihood linear binned done!')
+'''
