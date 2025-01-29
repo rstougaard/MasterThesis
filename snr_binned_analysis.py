@@ -17,6 +17,7 @@ from astropy.table import Table
 import pyLikelihood
 from BinnedAnalysis import *
 import multiprocessing
+import shlex
 
 # Function to ensure paths exist
 def check_paths(source_name, method, number_of_bins):
@@ -1299,8 +1300,11 @@ def process_line(line):
     """Function to process a single line of the input file"""
     parts = line.strip().split()
     
-    # Extract and clean the source name (removing surrounding quotes)
-    source_name = parts[0].strip('"')  # Remove any remaining double quotes
+    # Properly split handling quotes
+    parts = shlex.split(line)
+
+    # Extract the source name (already properly split)
+    source_name = parts[0]  # No need to strip quotes, shlex handles it
 
     try:
         ra = float(parts[1])    # Second part: RA
