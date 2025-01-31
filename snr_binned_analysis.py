@@ -837,13 +837,13 @@ def source_maps(vars, snrratios=None, time_intervals=None):
                         ccube = general_path + f'{method}/ccube/ccube_snr{loop_item}_{emin}_{emax}.fits'
                         binexpmap = general_path + f'{method}/expmap/BinnedExpMap_snr{loop_item}_{emin}_{emax}.fits'
                         srcmap = general_path + f'{method}/srcmap/srcmap_snr{loop_item}_{emin}_{emax}.fits'
-                        input_model = general_path + f'{method}/models/input_model_snr{loop_item}.xml'
+                        input_model = general_path + f'{method}/models/input_model_snr{loop_item}_{emin}_{emax}.xml'
                     elif method == "LIN":
                         ltcube = general_path + f'{method}/ltcube/ltcube_{loop_item}.fits'
                         ccube = general_path + f'{method}/ccube/ccube_{loop_item}_{emin}_{emax}.fits'
                         binexpmap = general_path + f'{method}/expmap/BinnedExpMap_{loop_item}_{emin}_{emax}.fits'
                         srcmap = general_path + f'{method}/srcmap/srcmap_{loop_item}_{emin}_{emax}.fits'
-                        input_model = general_path + f'{method}/models/input_model_{loop_item}.xml'
+                        input_model = general_path + f'{method}/models/input_model_{loop_item}_{emin}_{emax}.xml'
 
                     if not os.path.exists(srcmap):
                         ####### Source Map #######
