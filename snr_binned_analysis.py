@@ -554,9 +554,10 @@ def generate_files(vars, snrratios=None, time_intervals=None, number_of_bins=Non
 
     general_path = f'./data/{source_name_cleaned}/'
     sc = "./mission/spacecraft/lat_spacecraft_merged.fits" 
-    ebinfile = f'./energy_bins_def/{number_of_bins}/energy_bins_gtbindef.fits'
+    
     ebinfile_txt = f'./energy_7bins_gtbindef.txt'
 
+    
     with open(f'{ebinfile_txt}', 'r') as file:
                 for line in file:
                     line = line.strip()
@@ -567,20 +568,21 @@ def generate_files(vars, snrratios=None, time_intervals=None, number_of_bins=Non
                     # Convert the values to integers for the filename
                     emin = int(emin_float)
                     emax = int(emax_float)
+                    ebinfile = f'./energy_bins_def/{number_of_bins}/energy_bins_{emin}_{emax}.fits'
+                    if not os.path.exists(ebinfile):
+                        # Create energy bin definition file for this bin
+                        energy_bin_txt = f'./energy_bins_def/{number_of_bins}/energy_bin_{emin}_{emax}.txt'
+                        with open(energy_bin_txt, 'w') as f:
+                            f.write(f'{emin_float}   {emax_float}\n')
 
-                    # Create energy bin definition file for this bin
-                    energy_bin_txt = f'./energy_bins_def/{number_of_bins}/energy_bin_{emin}_{emax}.txt'
-                    with open(energy_bin_txt, 'w') as f:
-                        f.write(f'{emin_float}   {emax_float}\n')
-
-                    # Create the energy bin FITS file
-                    gtbindef_energy_command = [
-                        'gtbindef',
-                        'E',
-                        energy_bin_txt,
-                        f'./energy_bins_def/{number_of_bins}/energy_bin_{emin}_{emax}.fits',
-                        'MeV']
-                    subprocess.run(gtbindef_energy_command, check=True)
+                        # Create the energy bin FITS file
+                        gtbindef_energy_command = [
+                            'gtbindef',
+                            'E',
+                            energy_bin_txt,
+                            ebinfile,
+                            'MeV']
+                        subprocess.run(gtbindef_energy_command, check=True)
     # Determine the loop items based on the method
     if method == "SNR":
         loop_items = snrratios
@@ -606,6 +608,7 @@ def generate_files(vars, snrratios=None, time_intervals=None, number_of_bins=Non
                     ccube = general_path + f'{method}/ccube/ccube_{emin}_{emax}.fits'
                     binexpmap = general_path + f'{method}/expmap/BinnedExpMap_{emin}_{emax}.fits'
                     model = f'./data/{source_name_cleaned}/{method}/models/input_model_{emin}_{emax}.xml'
+                    ebinfile = f'./energy_bins_def/{number_of_bins}/energy_bins_{emin}_{emax}.fits'
                     print(f"Processing method {method} without looping.")
                     
                     if not os.path.exists(ltcube):
@@ -636,7 +639,7 @@ def generate_files(vars, snrratios=None, time_intervals=None, number_of_bins=Non
                         my_apps.evtbin['axisrot'] = 0
                         my_apps.evtbin['proj'] = 'AIT'
                         my_apps.evtbin['ebinalg'] = 'FILE'
-                        my_apps.evtbin['ebinfile'] = f'./energy_bins_def/{number_of_bins}/energy_bin_{emin}_{emax}.fits'
+                        my_apps.evtbin['ebinfile'] = ebinfile
                         my_apps.evtbin.run()
                     else:
                         print(f'{ccube} file exists!')
@@ -658,7 +661,7 @@ def generate_files(vars, snrratios=None, time_intervals=None, number_of_bins=Non
                         expCube2['axisrot'] = 0
                         expCube2['proj'] = 'AIT'
                         expCube2['ebinalg'] = 'FILE'
-                        expCube2['ebinfile'] = f'./energy_bins_def/{number_of_bins}/energy_bin_{emin}_{emax}.fits'
+                        expCube2['ebinfile'] = ebinfile
                         expCube2.run()
                     else:
                         print(f'{binexpmap} file exists!')
@@ -686,7 +689,7 @@ def generate_files(vars, snrratios=None, time_intervals=None, number_of_bins=Non
                     # Convert the values to integers for the filename
                     emin = int(emin_float)
                     emax = int(emax_float)
-            
+                    ebinfile = f'./energy_bins_def/{number_of_bins}/energy_bins_{emin}_{emax}.fits'
                     if method == "SNR":
                         gti_noflares = general_path + f'{method}/gti_noflares_snr{loop_item}_{emin}_{emax}.fits'
                         ltcube = general_path + f'{method}/ltcube/ltcube_snr{loop_item}.fits'
@@ -728,7 +731,7 @@ def generate_files(vars, snrratios=None, time_intervals=None, number_of_bins=Non
                         my_apps.evtbin['axisrot'] = 0
                         my_apps.evtbin['proj'] = 'AIT'
                         my_apps.evtbin['ebinalg'] = 'FILE'
-                        my_apps.evtbin['ebinfile'] = f'./energy_bins_def/{number_of_bins}/energy_bin_{emin}_{emax}.fits'
+                        my_apps.evtbin['ebinfile'] = ebinfile
                         my_apps.evtbin.run()
                     else:
                         print(f'{ccube} file exists!')
@@ -750,7 +753,7 @@ def generate_files(vars, snrratios=None, time_intervals=None, number_of_bins=Non
                         expCube2['axisrot'] = 0
                         expCube2['proj'] = 'AIT'
                         expCube2['ebinalg'] = 'FILE'
-                        expCube2['ebinfile'] = f'./energy_bins_def/{number_of_bins}/energy_bin_{emin}_{emax}.fits'
+                        expCube2['ebinfile'] = ebinfile
                         expCube2.run()
                     else:
                         print(f'{binexpmap} file exists!')
