@@ -272,7 +272,7 @@ def filtering(vars, snrratios=None, time_intervals=None):
             # Customize plot
             plt.ylabel('photons/cm²/s')
             plt.xlabel('Time')
-            plt.title(f'Lightcurve SNR for {lc}')
+            plt.title(f'Lightcurve for {loop_item}')
             plt.xscale('log')
             plt.yscale('log')
             plt.grid(True, which="both", linestyle="--", linewidth=0.5)
