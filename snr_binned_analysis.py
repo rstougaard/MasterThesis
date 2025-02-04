@@ -1296,7 +1296,7 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
 #snrratios = [3, 5, 10]
 #time_intervals = ["week", "month"]
 filename = "Top5_Source_ra_dec_specin.txt"
-snrratios = [10]
+snrratios = [10, 5, 3]
 time_intervals = ["month"]
 
 def process_line(line):
