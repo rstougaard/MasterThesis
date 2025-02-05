@@ -38,7 +38,7 @@ def check_paths(source_name, method, number_of_bins):
     ]
     for path in paths:
         os.makedirs(path, exist_ok=True)
-        print(f"Ensured existence of: {path}")
+        #print(f"Ensured existence of: {path}")
 
 def filtering(vars, snrratios=None, time_intervals=None):
     # Extract variables
@@ -1297,7 +1297,7 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
 #time_intervals = ["week", "month"]
 filename = "Top5_Source_ra_dec_specin.txt"
 snrratios = [10, 5, 3]
-time_intervals = ["month"]
+time_intervals = ["week","month"]
 
 def process_line(line):
     """Function to process a single line of the input file"""
