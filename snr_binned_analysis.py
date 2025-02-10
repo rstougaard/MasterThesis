@@ -1352,7 +1352,7 @@ def process_line(line):
         source_maps(vars_none)
         run_binned_likelihood(vars_none, free_params="alpha")
         print(f'Likelihood for non-filtered data done for {source_name}!')
-        delete_fits_and_xml_files(source_name_cleaned, method = "NONE")
+        #delete_fits_and_xml_files(source_name_cleaned, method = "NONE")
     else:
         print(f'Likelihood for non-filtered data done for {source_name}!')
 
@@ -1363,7 +1363,7 @@ def process_line(line):
         source_maps(vars_snr, snrratios=snrratios)
         run_binned_likelihood(vars_snr, snrratios=snrratios, free_params="alpha")
         print(f'Likelihood for SNR binned data done for {source_name}!')
-        delete_fits_and_xml_files(source_name_cleaned, method = "SNR")
+        #delete_fits_and_xml_files(source_name_cleaned, method = "SNR")
     else:
         print(f'Likelihood for SNR binneddata done for {source_name}!')
    
@@ -1374,7 +1374,7 @@ def process_line(line):
         source_maps(vars_lin, time_intervals=time_intervals)
         run_binned_likelihood(vars_lin, time_intervals=time_intervals, free_params="alpha")
         print(f'Likelihood linear binned done for {source_name}!')
-        delete_fits_and_xml_files(source_name_cleaned, method = "LIN")
+        #delete_fits_and_xml_files(source_name_cleaned, method = "LIN")
     else:
         print(f'Likelihood for linear binned data done for {source_name}!')
 
