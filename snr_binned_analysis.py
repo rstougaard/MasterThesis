@@ -484,7 +484,7 @@ def get_gti_bin(vars, snrratios=None, time_intervals=None):
             
 ##################################################################################
 ##################################################################################
-def modify_and_save(tree, source_name, method, loop_item):
+def modify_and_save(tree, source_name, method, loop_item, emin, emax):
     source_name_cleaned = source_name.replace(" ", "").replace(".", "dot").replace("+", "plus").replace("-", "minus")
     if method == "NONE":
         output_dir = f'./data/{source_name_cleaned}/{method}/models/'
@@ -520,8 +520,6 @@ def modify_and_save(tree, source_name, method, loop_item):
                 "free_alpha_beta": ["alpha", "beta"]
             }
 
-
-
             # Create a modified XML file for each case
             for suffix, params in modifications.items():
                 # Create a copy of the tree for modification
@@ -535,11 +533,11 @@ def modify_and_save(tree, source_name, method, loop_item):
 
                 # Save the modified tree to a new file
                 if method == "NONE":
-                    output_path = os.path.join(output_dir, f"input_model_{suffix}.xml")
+                    output_path = os.path.join(output_dir, f"input_model_{suffix}_{emin}_{emax}.xml")
                 elif method == "SNR":
-                    output_path = os.path.join(output_dir, f"input_model_snr{loop_item}_{suffix}.xml")
+                    output_path = os.path.join(output_dir, f"input_model_snr{loop_item}_{suffix}_{emin}_{emax}.xml")
                 elif method == "LIN":
-                   output_path = os.path.join(output_dir, f"input_model_{loop_item}_{suffix}.xml")
+                   output_path = os.path.join(output_dir, f"input_model_{loop_item}_{suffix}_{emin}_{emax}.xml")
 
                 modified_tree.write(output_path, encoding='utf-8', xml_declaration=True)
                 print(f"Modified file saved to: {output_path}")
@@ -678,8 +676,8 @@ def generate_files(vars, snrratios=None, time_intervals=None, number_of_bins=Non
                         print(f'{model} file exists!')
                     # Run the command using subprocess
                     
-                    #tree = ET.parse(f'{model}')
-                    #modify_and_save(tree, source_name, method, None)
+                    tree = ET.parse(f'{model}')
+                    modify_and_save(tree, source_name, method, None, emin, emax)
     else:
         for loop_item in loop_items:
             with open(f'{ebinfile_txt}', 'r') as file:
@@ -770,8 +768,8 @@ def generate_files(vars, snrratios=None, time_intervals=None, number_of_bins=Non
                         print(f'{model} file exists!')
                     # Run the command using subprocess
                     
-                    #tree = ET.parse(f'{model}')
-                    #modify_and_save(tree, source_name, method, loop_item)
+                    tree = ET.parse(f'{model}')
+                    modify_and_save(tree, source_name, method, loop_item, emin, emax)
 
     return
 
@@ -926,9 +924,9 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
                         writexml = general_path + f'{method}/fit_params/fit_{emin}_{emax}.xml'
                         results_output_file = f"{source_name_cleaned}_results.fits"
                     elif free_params == "alpha":
-                        input_model = general_path + f'{method}/models/input_model_free_alpha.xml'
-                        cspectra = general_path + f'{method}/CountsSpectra/cspectra_free_alpha.fits'
-                        writexml = general_path + f'{method}/fit_params/fit_free_alpha.xml'
+                        input_model = general_path + f'{method}/models/input_model_free_alpha_{emin}_{emax}.xml'
+                        cspectra = general_path + f'{method}/CountsSpectra/cspectra_free_alpha_{emin}_{emax}.fits'
+                        writexml = general_path + f'{method}/fit_params/fit_free_alpha_{emin}_{emax}.xml'
                         results_output_file = f"{source_name_cleaned}_free_alpha_results.fits"
                     elif free_params == "beta":
                         input_model = general_path + f'{method}/models/input_model_free_beta.xml'
