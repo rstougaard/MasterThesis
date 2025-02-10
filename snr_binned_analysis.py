@@ -48,7 +48,7 @@ def filtering(vars, snrratios=None, time_intervals=None):
     evc = 128
     convt = 3
     roi = 1.
-
+    
     #tmp_evlist = f'@./data/{source_name_cleaned}/events.list'
     tmp_gti = f'./data/{source_name_cleaned}/temp_git.fits'
     gtifilter = '(DATA_QUAL>0)&&(LAT_CONFIG==1)'
@@ -203,7 +203,7 @@ def filtering(vars, snrratios=None, time_intervals=None):
             tmp_gti_noflares = f'./data/{source_name_cleaned}/{method}/temp_git_{loop_item}.fits'
             gti_noflares = f'./data/{source_name_cleaned}/{method}/gti_noflares_{loop_item}.fits'                
 
-        if not os.path.exists(gti_noflares):
+        if not os.path.exists(gti_noflares and plot_file):
             ###### Here the BAD TIME intervals (flares) have to be found ######
             f_bin = fits.open(lc)
             bin_data = f_bin[1].data
@@ -257,7 +257,7 @@ def filtering(vars, snrratios=None, time_intervals=None):
             plt.figure(figsize=(10, 6))
 
             # Plot original data
-            plt.errorbar(X_bin, Y_bin, xerr=x_error_bin, yerr=y_error_bin, fmt='o', capsize=5, color=color, alpha=0.3, label=f'Unfiltered {lc}')
+            plt.errorbar(X_bin, Y_bin, xerr=x_error_bin, yerr=y_error_bin, fmt='o', capsize=5, color=color, alpha=0.3, label=f'Data')
 
             # Highlight removed points
             for i, (removed_x, removed_y) in enumerate(removed_points):
@@ -270,15 +270,18 @@ def filtering(vars, snrratios=None, time_intervals=None):
             plt.axhline(thresholds[-1], color='black', linestyle='-', linewidth=3, alpha=1, label=f'Threshold round {len(round_means)}')
 
             # Customize plot
-            plt.ylabel('photons/cm²/s')
-            plt.xlabel('Time')
-            plt.title(f'Lightcurve for {method}: {loop_item}')
+            plt.ylabel('Flux [photons/cm²/s]',fontsize=16)
+            plt.xlabel('Time [s]', fontsize=16)
+            plt.title(f'Lightcurve for {method}: {loop_item}', fontsize=18)
             plt.xscale('log')
             plt.yscale('log')
             plt.grid(True, which="both", linestyle="--", linewidth=0.5)
+            plt.xticks(fontsize=14)
+            plt.yticks(fontsize=14)
 
             # Move the legend outside the plot
             plt.legend(
+                fontsize=14,
                 ncol=1,  # Number of columns in the legend
                 loc='upper left',  # Position the legend to the left center of the bounding box
                 frameon=True,  # Add a box around the legend
@@ -1289,7 +1292,25 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
         print(f"Saved FITS file for method {method}: {output_fits_file}")
     return
                    
+def delete_fits_and_xml_files(source_name_cleaned, method):
+    # Define the folders and file types to delete
+    paths_to_delete = [
+        f'./data/{source_name_cleaned}/{method}/ltcube/*.fits',
+        f'./data/{source_name_cleaned}/{method}/ccube/*.fits',
+        f'./data/{source_name_cleaned}/{method}/expmap/*.fits',
+        f'./data/{source_name_cleaned}/{method}/srcmap/*.fits',
+        f'./data/{source_name_cleaned}/{method}/models/*.xml',
+    ]
 
+    # Iterate over each path pattern and delete all matching files
+    for path_pattern in paths_to_delete:
+        files = glob.glob(path_pattern)
+        for file in files:
+            try:
+                os.remove(file)
+                #print(f"Deleted: {file}")
+            except OSError as e:
+                print(f"Error deleting file {file}: {e}")
 ##################################################################################
 ##################################################################################
 
@@ -1326,81 +1347,47 @@ def process_line(line):
     vars_none = (source_name, ra, dec, "NONE", specin, None, None, 100, 1000000)
     vars_snr = (source_name, ra, dec, "SNR", specin, None, None, 100, 1000000)
     vars_lin = (source_name, ra, dec, "LIN", specin, None, None, 100, 1000000)
+    source_name_cleaned = source_name.replace(" ", "").replace(".", "dot").replace("+", "plus").replace("-", "minus")
+    if not os.path.exists(f"/fit_results/{source_name_cleaned}_fit_data_NONE.fits"):
+        get_gti_bin(vars_none)
+        generate_files(vars_none, number_of_bins=7)
+        source_maps(vars_none)
+        run_binned_likelihood(vars_none, free_params="alpha")
+        print(f'Likelihood for non-filtered data done for {source_name}!')
+        delete_fits_and_xml_files(source_name_cleaned, method = "NONE")
+    else:
+        print(f'Likelihood for non-filtered data done for {source_name}!')
 
-    filtering(vars_snr, snrratios=snrratios)
-    filtering(vars_lin, time_intervals=time_intervals)
-    print(f'Filtering done for {source_name}!')
-
-    get_gti_bin(vars_none)
-    get_gti_bin(vars_snr, snrratios=snrratios)
-    get_gti_bin(vars_lin, time_intervals=time_intervals)
-    print(f'GTI files per bin ready for {source_name}!')
-
-    generate_files(vars_none, number_of_bins=7)
-    source_maps(vars_none)
-
-    generate_files(vars_snr, snrratios=snrratios, number_of_bins=7)
-    source_maps(vars_snr, snrratios=snrratios)
-
-    generate_files(vars_lin, time_intervals=time_intervals, number_of_bins=7)
-    source_maps(vars_lin, time_intervals=time_intervals)
-    print(f'Generated all files for Likelihood for {source_name}!')
-
-    run_binned_likelihood(vars_none, free_params="None")
-    print(f'Likelihood for non-filtered data done for {source_name}!')
-
-    run_binned_likelihood(vars_snr, snrratios=snrratios, free_params="None")
-    print(f'Likelihood for SNR binned data done for {source_name}!')
-
-    run_binned_likelihood(vars_lin, time_intervals=time_intervals, free_params="None")
-    print(f'Likelihood linear binned done for {source_name}!')
+    if not os.path.exists(f"/fit_results/{source_name_cleaned}_fit_data_SNR.fits"):
+        filtering(vars_snr, snrratios=snrratios)
+        get_gti_bin(vars_snr, snrratios=snrratios)
+        generate_files(vars_snr, snrratios=snrratios, number_of_bins=7)
+        source_maps(vars_snr, snrratios=snrratios)
+        run_binned_likelihood(vars_snr, snrratios=snrratios, free_params="alpha")
+        print(f'Likelihood for SNR binned data done for {source_name}!')
+        delete_fits_and_xml_files(source_name_cleaned, method = "SNR")
+    else:
+        print(f'Likelihood for SNR binneddata done for {source_name}!')
+   
+    if not os.path.exists(f"/fit_results/{source_name_cleaned}_fit_data_LIN.fits"):
+        filtering(vars_lin, time_intervals=time_intervals)
+        get_gti_bin(vars_lin, time_intervals=time_intervals)
+        generate_files(vars_lin, time_intervals=time_intervals, number_of_bins=7)
+        source_maps(vars_lin, time_intervals=time_intervals)
+        run_binned_likelihood(vars_lin, time_intervals=time_intervals, free_params="alpha")
+        print(f'Likelihood linear binned done for {source_name}!')
+        delete_fits_and_xml_files(source_name_cleaned, method = "LIN")
+    else:
+        print(f'Likelihood for linear binned data done for {source_name}!')
 
 def run_analysis():
     """Main function to use multiprocessing"""
     with open(filename, "r") as file:
         lines = file.readlines()
-
+    num_workers = 5
     # Use multiprocessing Pool to process each line in parallel
-    with multiprocessing.Pool(processes=len(lines)) as pool:
+    with multiprocessing.Pool(processes=num_workers) as pool:
         pool.map(process_line, lines)
 
 if __name__ == "__main__":
     run_analysis()
-
-
-'''
-check_paths("4FGL J0319.8+4130", 'SNR', 7)
-check_paths("4FGL J0319.8+4130", 'LIN', 7)
-check_paths("4FGL J0319.8+4130", 'NONE', 7)
-vars_snr = ("4FGL J0319.8+4130", 49.9507, 41.5117,"SNR", 2.05, None, None,  100, 1000000)
-
-vars_lin = ("4FGL J0319.8+4130", 49.9507, 41.5117,"LIN", 2.05, None, None,  100, 1000000)
-
-vars_none= ("4FGL J0319.8+4130", 49.9507, 41.5117, "NONE", 2.05, None, None,  100, 1000000)
-
-filtering(vars_snr, snrratios=snrratios)
-filtering(vars_lin, time_intervals=time_intervals)
-print('Filtering done!')
-get_gti_bin(vars_none)
-get_gti_bin(vars_snr, snrratios=snrratios)
-get_gti_bin(vars_lin, time_intervals=time_intervals)
-print('gti files per bin ready!')
-generate_files(vars_none, number_of_bins=7)
-source_maps(vars_none)
-
-generate_files(vars_snr, snrratios=snrratios, number_of_bins=7)
-source_maps(vars_snr, snrratios=snrratios)
-
-generate_files(vars_lin, time_intervals=time_intervals, number_of_bins=7)
-source_maps(vars_lin, time_intervals=time_intervals)
-print('Generated all files for Likelihood!')
-
-run_binned_likelihood(vars_none, free_params = "None")
-print('Likelihood for non filtered data done!')
-
-run_binned_likelihood(vars_snr, snrratios=snrratios, free_params = "None")
-print('Likelihood for snr binned data done!')
-
-run_binned_likelihood(vars_lin, time_intervals=time_intervals, free_params = "None")
-print('Likelihood linear binned done!')
-'''
