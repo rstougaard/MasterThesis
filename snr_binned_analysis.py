@@ -1099,9 +1099,9 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
                             writexml = general_path + f'{method}/fit_params/fit_snr{loop_item}_{emin}_{emax}.xml'
                             results_output_file = f"{source_name_cleaned}_results_snr.fits"
                         elif free_params == "alpha":
-                            input_model = general_path + f'{method}/models/input_model_snr{loop_item}_free_alpha.xml' ## HER
-                            cspectra = general_path + f'{method}/CountsSpectra/cspectra_snr{loop_item}_free_alpha.fits'
-                            writexml = general_path + f'{method}/fit_params/fit_snr{loop_item}_free_alpha.xml'
+                            input_model = general_path + f'{method}/models/input_model_snr{loop_item}_free_alpha_{emin}_{emax}.xml' ## HER
+                            cspectra = general_path + f'{method}/CountsSpectra/cspectra_snr{loop_item}_free_alpha_{emin}_{emax}.fits'
+                            writexml = general_path + f'{method}/fit_params/fit_snr{loop_item}_free_alpha_{emin}_{emax}.xml'
                             results_output_file = f"{source_name_cleaned}_snr{loop_item}_free_alpha_results.fits"
                         elif free_params == "beta":
                             input_model = general_path + f'{method}/models/input_model_snr{loop_item}_free_beta.xml'
@@ -1124,9 +1124,9 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
                             writexml = general_path + f'{method}/fit_params/fit_{loop_item}_{emin}_{emax}.xml'
                             results_output_file = f"{source_name_cleaned}_results_lin.fits"
                         if free_params == "alpha":
-                            input_model = general_path + f'{method}/models/input_model_{loop_item}_free_alpha.xml' ## HER
-                            cspectra = general_path + f'{method}/CountsSpectra/cspectra_{loop_item}_free_alpha.fits'
-                            writexml = general_path + f'{method}/fit_params/fit_{loop_item}_free_alpha.xml'
+                            input_model = general_path + f'{method}/models/input_model_{loop_item}_free_alpha_{emin}_{emax}.xml' ## HER
+                            cspectra = general_path + f'{method}/CountsSpectra/cspectra_{loop_item}_free_alpha_{emin}_{emax}.fits'
+                            writexml = general_path + f'{method}/fit_params/fit_{loop_item}_free_alpha_{emin}_{emax}.xml'
                             results_output_file = f"{source_name_cleaned}_{loop_item}_free_alpha_results.fits"
                         elif free_params == "beta":
                             input_model = general_path + f'{method}/models/input_model_{loop_item}_free_beta.xml'
