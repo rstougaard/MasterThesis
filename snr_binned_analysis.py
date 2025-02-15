@@ -676,7 +676,16 @@ def generate_files(vars, snrratios=None, time_intervals=None, number_of_bins=Non
                                            write_directory=f'./data/{source_name_cleaned}/{method}/models/', 
                                            DR=4) 
                     source_list.make_model(free_radius=6,max_free_radius=8,sigma_to_free=25)
-                        
+
+                    spectrum_info={'model':'PowerLaw',
+                    'Prefactor':1e-11,'Prefactor_free':True,
+                    'Index':2,'Index_free':False,
+                    '"Scale"':1000,'Scale_free':False}
+
+                    source_list.add_point_source(source_name='NewSource',RA=ra,DEC=dec,
+                                    spectrum_model=spectrum_info,new_model_name='new.xml')
+                    print("Model with Powerlaw created!")   
+                    '''
                     source_list.add_point_source(source_name=source_name,
                              RA=ra,
                              DEC=dec,
@@ -684,8 +693,8 @@ def generate_files(vars, snrratios=None, time_intervals=None, number_of_bins=Non
                              new_model_name='new.xml',
                              update_reg=True,
                              new_reg_file='ROI_with_new.reg')
-                    print("Model with Powerlaw created!")
-                    '''
+                    
+                    
                     if not os.path.exists(model):
                         make4FGLxml_command = [f'make4FGLxml ./data/gll_psc_v32.xml --event_file {gti_noflares} -o {model} --free_radius 5.0 --norms_free_only True --sigma_to_free 25 --variable_free True']
                         subprocess.run(make4FGLxml_command, shell=True, check=True, executable='/bin/bash')
