@@ -679,7 +679,7 @@ def generate_files(vars, snrratios=None, time_intervals=None, number_of_bins=Non
 
                     spectrum_info={'model':'PowerLaw',
                     'Prefactor':1e-11,'Prefactor_free':True,
-                    'Index':2,'Index_free':False,
+                    'Index':2,'Index_free':True,
                     'Scale':1,'Scale_free':False}
 
                     source_list.add_point_source(source_name='NewSource',RA=ra,DEC=dec,
