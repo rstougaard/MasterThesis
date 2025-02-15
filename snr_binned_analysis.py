@@ -18,6 +18,7 @@ import pyLikelihood
 from BinnedAnalysis import *
 import multiprocessing
 import shlex
+from LATSourceModel import SourceList
 
 # Function to ensure paths exist
 def check_paths(source_name, method, number_of_bins):
@@ -203,99 +204,99 @@ def filtering(vars, snrratios=None, time_intervals=None):
             tmp_gti_noflares = f'./data/{source_name_cleaned}/{method}/temp_git_{loop_item}.fits'
             gti_noflares = f'./data/{source_name_cleaned}/{method}/gti_noflares_{loop_item}.fits'                
 
-        if not os.path.exists(gti_noflares and plot_file):
-            ###### Here the BAD TIME intervals (flares) have to be found ######
-            f_bin = fits.open(lc)
-            bin_data = f_bin[1].data
+        
+        ###### Here the BAD TIME intervals (flares) have to be found ######
+        f_bin = fits.open(lc)
+        bin_data = f_bin[1].data
 
-            # Extract data
-            X_bin = bin_data['TIME']
-            Y_bin = bin_data['COUNTS'] / bin_data['EXPOSURE']  # Flux in photons/cm²/s
-            time_intervals = bin_data['TIMEDEL']  # Duration of each time interval
-            x_error_bin = bin_data['TIMEDEL'] / 2
-            y_error_bin = bin_data['ERROR'] / bin_data['EXPOSURE']
+        # Extract data
+        X_bin = bin_data['TIME']
+        Y_bin = bin_data['COUNTS'] / bin_data['EXPOSURE']  # Flux in photons/cm²/s
+        time_intervals = bin_data['TIMEDEL']  # Duration of each time interval
+        x_error_bin = bin_data['TIMEDEL'] / 2
+        y_error_bin = bin_data['ERROR'] / bin_data['EXPOSURE']
 
-            # Initialize filtering
-            filtered_Y = Y_bin.copy()
-            filtered_mask = np.full(Y_bin.shape, True)
-            thresholds = []
-            round_means = []
-            removed_points = []
+        # Initialize filtering
+        filtered_Y = Y_bin.copy()
+        filtered_mask = np.full(Y_bin.shape, True)
+        thresholds = []
+        round_means = []
+        removed_points = []
 
-            while True:
-                mean = np.mean(filtered_Y[filtered_mask])
-                threshold = mean + 2 * np.std(filtered_Y[filtered_mask])
-                thresholds.append(threshold)
-                round_means.append(mean)
+        while True:
+            mean = np.mean(filtered_Y[filtered_mask])
+            threshold = mean + 2 * np.std(filtered_Y[filtered_mask])
+            thresholds.append(threshold)
+            round_means.append(mean)
 
-                round_removed_mask = filtered_Y > threshold
-                new_filtered_mask = filtered_mask & ~round_removed_mask
-                removed_points.append((X_bin[round_removed_mask], filtered_Y[round_removed_mask]))
+            round_removed_mask = filtered_Y > threshold
+            new_filtered_mask = filtered_mask & ~round_removed_mask
+            removed_points.append((X_bin[round_removed_mask], filtered_Y[round_removed_mask]))
 
-                if np.array_equal(new_filtered_mask, filtered_mask):
-                    break
+            if np.array_equal(new_filtered_mask, filtered_mask):
+                break
 
-                filtered_mask = new_filtered_mask
+            filtered_mask = new_filtered_mask
 
-            # Save final results for this file
-            initial_means.append(round_means[0])
-            final_means.append(round_means[-1])
-            final_thresholds.append(thresholds[-1])
-            valid_intervals_list.append(np.sum(filtered_mask))
-            invalid_intervals_list.append(len(filtered_mask) - np.sum(filtered_mask))
+        # Save final results for this file
+        initial_means.append(round_means[0])
+        final_means.append(round_means[-1])
+        final_thresholds.append(thresholds[-1])
+        valid_intervals_list.append(np.sum(filtered_mask))
+        invalid_intervals_list.append(len(filtered_mask) - np.sum(filtered_mask))
 
-            # Save flare intervals to a text file
-            flare_intervals_start = X_bin[~filtered_mask] - x_error_bin[~filtered_mask]
-            flare_intervals_stop = X_bin[~filtered_mask] + x_error_bin[~filtered_mask]
-            flare_intervals = np.column_stack((flare_intervals_start, flare_intervals_stop))
+        # Save flare intervals to a text file
+        flare_intervals_start = X_bin[~filtered_mask] - x_error_bin[~filtered_mask]
+        flare_intervals_stop = X_bin[~filtered_mask] + x_error_bin[~filtered_mask]
+        flare_intervals = np.column_stack((flare_intervals_start, flare_intervals_stop))
 
-            
-            np.savetxt(output_file_flares, flare_intervals, delimiter=' ')
-            print(f"File saved as: {output_file_flares}")
+        
+        np.savetxt(output_file_flares, flare_intervals, delimiter=' ')
+        print(f"File saved as: {output_file_flares}")
 
-                # Create a new figure for this file
-            plt.figure(figsize=(10, 6))
+            # Create a new figure for this file
+        plt.figure(figsize=(10, 6))
 
-            # Plot original data
-            plt.errorbar(X_bin, Y_bin, xerr=x_error_bin, yerr=y_error_bin, fmt='o', capsize=5, color=color, alpha=0.3, label=f'Data')
+        # Plot original data
+        plt.errorbar(X_bin, Y_bin, xerr=x_error_bin, yerr=y_error_bin, fmt='o', capsize=5, color=color, alpha=0.3, label=f'Data')
 
-            # Highlight removed points
-            for i, (removed_x, removed_y) in enumerate(removed_points):
-                plt.scatter(removed_x, removed_y, color='black', edgecolors='black')
+        # Highlight removed points
+        for i, (removed_x, removed_y) in enumerate(removed_points):
+            plt.scatter(removed_x, removed_y, color='black', edgecolors='black')
 
-            # Plot means and thresholds for each round
-            plt.axhline(round_means[0], color='grey', linestyle='--', linewidth=3, alpha=1, label=f'Mean unfiltered')
-            plt.axhline(thresholds[0], color='grey', linestyle='-', linewidth=3, alpha=1, label=f'Threshold unfiltered')
-            plt.axhline(round_means[-1], color='black', linestyle='--', linewidth=3, alpha=1, label=f'Mean round {len(round_means)}')
-            plt.axhline(thresholds[-1], color='black', linestyle='-', linewidth=3, alpha=1, label=f'Threshold round {len(round_means)}')
+        # Plot means and thresholds for each round
+        plt.axhline(round_means[0], color='grey', linestyle='--', linewidth=3, alpha=1, label=f'Mean unfiltered')
+        plt.axhline(thresholds[0], color='grey', linestyle='-', linewidth=3, alpha=1, label=f'Threshold unfiltered')
+        plt.axhline(round_means[-1], color='black', linestyle='--', linewidth=3, alpha=1, label=f'Mean round {len(round_means)}')
+        plt.axhline(thresholds[-1], color='black', linestyle='-', linewidth=3, alpha=1, label=f'Threshold round {len(round_means)}')
 
-            # Customize plot
-            plt.ylabel('Flux [photons/cm²/s]',fontsize=16)
-            plt.xlabel('Time [s]', fontsize=16)
-            plt.title(f'Lightcurve for {method}: {loop_item}', fontsize=18)
-            plt.xscale('log')
-            plt.yscale('log')
-            plt.grid(True, which="both", linestyle="--", linewidth=0.5)
-            plt.xticks(fontsize=14)
-            plt.yticks(fontsize=14)
+        # Customize plot
+        plt.ylabel('Flux [photons/cm²/s]',fontsize=16)
+        plt.xlabel('Time [s]', fontsize=16)
+        plt.title(f'Lightcurve for {method}: {loop_item}', fontsize=18)
+        plt.xscale('log')
+        plt.yscale('log')
+        plt.grid(True, which="both", linestyle="--", linewidth=0.5)
+        plt.xticks(fontsize=14)
+        plt.yticks(fontsize=14)
 
-            # Move the legend outside the plot
-            plt.legend(
-                fontsize=14,
-                ncol=1,  # Number of columns in the legend
-                loc='upper left',  # Position the legend to the left center of the bounding box
-                frameon=True,  # Add a box around the legend
-            )
+        # Move the legend outside the plot
+        plt.legend(
+            fontsize=14,
+            ncol=1,  # Number of columns in the legend
+            loc='upper left',  # Position the legend to the left center of the bounding box
+            frameon=True,  # Add a box around the legend
+        )
 
-            # Save the plot or display it
-            
-            plt.tight_layout()  # Adjust layout to prevent clipping
-            plt.savefig(plot_file, bbox_inches='tight', dpi=300)  # Save with adjusted bounding box
-            print(f"Plot saved as: {plot_file}")
+        # Save the plot or display it
+        
+        plt.tight_layout()  # Adjust layout to prevent clipping
+        plt.savefig(plot_file, bbox_inches='tight', dpi=300)  # Save with adjusted bounding box
+        print(f"Plot saved as: {plot_file}")
 
 
             ###### Here the BAD TIME intervals (flares) have to be removed from the original raw events ######
-            
+        if not os.path.exists(gti_noflares and plot_file):
             print( 'GTSELECT started!' )
             gt.filter['evclass'] = evc
             gt.filter['evtype']=convt
@@ -528,7 +529,7 @@ def modify_and_save(tree, source_name, method, loop_item, emin, emax):
                 # Modify the copied tree
                 for param in spectrum.findall('parameter'):
                     if param.get('name') in params:
-                        print(f"Setting 'free' attribute for {param.get('name')} in {suffix}")
+                        #print(f"Setting 'free' attribute for {param.get('name')} in {suffix}")
                         param.set('free', '1')  # Set 'free' attribute to '1'
 
                 # Save the modified tree to a new file
@@ -540,7 +541,7 @@ def modify_and_save(tree, source_name, method, loop_item, emin, emax):
                    output_path = os.path.join(output_dir, f"input_model_{loop_item}_{suffix}_{emin}_{emax}.xml")
 
                 modified_tree.write(output_path, encoding='utf-8', xml_declaration=True)
-                print(f"Modified file saved to: {output_path}")
+                #print(f"Modified file saved to: {output_path}")
 
         else:
             print("No 'spectrum' tag found in the source.")
@@ -669,6 +670,21 @@ def generate_files(vars, snrratios=None, time_intervals=None, number_of_bins=Non
                 
                     ####### Make model #######
                     ##### Run make4FGLxml Command #####
+                    #source_list=SourceList(catalog_file=f'/some/path/to/gll_psc_v31.fit', ROI={gti_noflares})
+                    source_list=SourceList(catalog_file='./data/gll_psc_v32.xml',[ra, dec, 15],
+                                           output_name='my_LAT_model.xml',
+                                            write_directory='./data/{source_name_cleaned}/{method}/models/')
+                    source_list.make_model(free_radius=6,max_free_radius=8,sigma_to_free=25)
+                        
+                    source_list.add_point_source(source_name=source_name,
+                             RA=ra,
+                             DEC=dec,
+                             spectrum_model='PowerLaw',
+                             new_model_name='new.xml',
+                             update_reg=True,
+                             new_reg_file='ROI_with_new.reg')
+                    print("Model with Powerlaw created!")
+                    '''
                     if not os.path.exists(model):
                         make4FGLxml_command = [f'make4FGLxml ./data/gll_psc_v32.xml --event_file {gti_noflares} -o {model} --free_radius 5.0 --norms_free_only True --sigma_to_free 25 --variable_free True']
                         subprocess.run(make4FGLxml_command, shell=True, check=True, executable='/bin/bash')
@@ -678,6 +694,7 @@ def generate_files(vars, snrratios=None, time_intervals=None, number_of_bins=Non
                     
                     tree = ET.parse(f'{model}')
                     modify_and_save(tree, source_name, method, None, emin, emax)
+                    '''
     else:
         for loop_item in loop_items:
             with open(f'{ebinfile_txt}', 'r') as file:
@@ -1350,7 +1367,7 @@ def process_line(line):
         get_gti_bin(vars_none)
         generate_files(vars_none, number_of_bins=7)
         source_maps(vars_none)
-        run_binned_likelihood(vars_none, free_params="alpha")
+        run_binned_likelihood(vars_none, free_params="None")
         print(f'Likelihood for non-filtered data done for {source_name}!')
         #delete_fits_and_xml_files(source_name_cleaned, method = "NONE")
     else:
@@ -1361,7 +1378,7 @@ def process_line(line):
         get_gti_bin(vars_snr, snrratios=snrratios)
         generate_files(vars_snr, snrratios=snrratios, number_of_bins=7)
         source_maps(vars_snr, snrratios=snrratios)
-        run_binned_likelihood(vars_snr, snrratios=snrratios, free_params="alpha")
+        run_binned_likelihood(vars_snr, snrratios=snrratios, free_params="None")
         print(f'Likelihood for SNR binned data done for {source_name}!')
         #delete_fits_and_xml_files(source_name_cleaned, method = "SNR")
     else:
@@ -1372,7 +1389,7 @@ def process_line(line):
         get_gti_bin(vars_lin, time_intervals=time_intervals)
         generate_files(vars_lin, time_intervals=time_intervals, number_of_bins=7)
         source_maps(vars_lin, time_intervals=time_intervals)
-        run_binned_likelihood(vars_lin, time_intervals=time_intervals, free_params="alpha")
+        run_binned_likelihood(vars_lin, time_intervals=time_intervals, free_params="None")
         print(f'Likelihood linear binned done for {source_name}!')
         #delete_fits_and_xml_files(source_name_cleaned, method = "LIN")
     else:
