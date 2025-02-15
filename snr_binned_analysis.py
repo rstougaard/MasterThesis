@@ -669,6 +669,7 @@ def generate_files(vars, snrratios=None, time_intervals=None, number_of_bins=Non
                         print(f'{binexpmap} file exists!')
                 
                     ####### Make model #######
+                    '''
                     ##### Run make4FGLxml Command #####
                     #source_list=SourceList(catalog_file=f'/some/path/to/gll_psc_v31.fit', ROI={gti_noflares})
                     source_list=SourceList(catalog_file='./data/gll_psc_v32.xml', 
@@ -685,7 +686,7 @@ def generate_files(vars, snrratios=None, time_intervals=None, number_of_bins=Non
                     source_list.add_point_source(source_name='NewSource',RA=ra,DEC=dec,
                                     spectrum_model=spectrum_info,new_model_name=model, overwrite=True)
                     #print("Model with Powerlaw created!")   
-                    '''
+                    
                     source_list.add_point_source(source_name=source_name,
                              RA=ra,
                              DEC=dec,
@@ -693,7 +694,7 @@ def generate_files(vars, snrratios=None, time_intervals=None, number_of_bins=Non
                              new_model_name='new.xml',
                              update_reg=True,
                              new_reg_file='ROI_with_new.reg')
-                    
+                    '''
                     
                     if not os.path.exists(model):
                         make4FGLxml_command = [f'make4FGLxml ./data/gll_psc_v32.xml --event_file {gti_noflares} -o {model} --free_radius 5.0 --norms_free_only True --sigma_to_free 25 --variable_free True']
@@ -702,9 +703,9 @@ def generate_files(vars, snrratios=None, time_intervals=None, number_of_bins=Non
                         print(f'{model} file exists!')
                     # Run the command using subprocess
                     
-                    tree = ET.parse(f'{model}')
-                    modify_and_save(tree, source_name, method, None, emin, emax)
-                    '''
+                    #tree = ET.parse(f'{model}')
+                    #modify_and_save(tree, source_name, method, None, emin, emax)
+                   
     else:
         for loop_item in loop_items:
             with open(f'{ebinfile_txt}', 'r') as file:
@@ -787,6 +788,7 @@ def generate_files(vars, snrratios=None, time_intervals=None, number_of_bins=Non
                         print(f'{binexpmap} file exists!')
                 
                     ####### Make model #######
+                    '''
                     source_list=SourceList(catalog_file='./data/gll_psc_v32.xml', 
                                            ROI=gti_noflares, output_name=f'my_LAT_model_{emin}_{emax}.xml', 
                                            write_directory=f'./data/{source_name_cleaned}/{method}/models/', 
@@ -810,9 +812,9 @@ def generate_files(vars, snrratios=None, time_intervals=None, number_of_bins=Non
                         print(f'{model} file exists!')
                     # Run the command using subprocess
                     
-                    tree = ET.parse(f'{model}')
-                    modify_and_save(tree, source_name, method, loop_item, emin, emax)
-                    '''
+                    #tree = ET.parse(f'{model}')
+                    #modify_and_save(tree, source_name, method, loop_item, emin, emax)
+                    
     return
 
 def source_maps(vars, snrratios=None, time_intervals=None):
@@ -987,7 +989,7 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
                         like = BinnedAnalysis(obs, input_model, optimizer='NewMinuit')
                         likeobj = pyLikelihood.NewMinuit(like.logLike)
                         like.fit(verbosity=0, covar=True, optObject=likeobj)
-                        TS = like.Ts(fit_model) #also include in output file
+                        TS = like.Ts(source_name) #also include in output file
                         convergence = likeobj.getRetCode()  #also include in output file
                         like.writeCountsSpectra(cspectra) 
                         like.logLike.writeXml(writexml)
@@ -997,8 +999,8 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
                         # Save successful bin details
                         successful_bins[(emin, emax)] = writexml
 
-                        flux_tot_value = like.flux(fit_model, emin=emin, emax=emax)
-                        flux_tot_error = like.fluxError(fit_model, emin=emin, emax=emax)
+                        flux_tot_value = like.flux(source_name, emin=emin, emax=emax)
+                        flux_tot_error = like.fluxError(source_name, emin=emin, emax=emax)
                        
                         E = (like.energies[:-1] + like.energies[1:]) / 2.
                         nobs = like.nobs
@@ -1045,13 +1047,13 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
                         like = BinnedAnalysis(obs, ref_model, optimizer='NewMinuit')
                         likeobj = pyLikelihood.NewMinuit(like.logLike)
                         like.fit(verbosity=0, covar=True, optObject=likeobj)
-                        TS = like.Ts(fit_model) #also include in output file
+                        TS = like.Ts(source_name) #also include in output file
                         convergence = likeobj.getRetCode()  #also include in output file
                         like.writeCountsSpectra(cspectra)
                         like.logLike.writeXml(writexml)
 
-                        flux_tot_value = like.flux(fit_model, emin=emin, emax=emax)
-                        flux_tot_error = like.fluxError(fit_model, emin=emin, emax=emax)
+                        flux_tot_value = like.flux(source_name, emin=emin, emax=emax)
+                        flux_tot_error = like.fluxError(source_name, emin=emin, emax=emax)
                         geometric_mean = (emin * emax) ** 0.5
                         nobs = like.nobs
 
@@ -1182,7 +1184,7 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
                         like = BinnedAnalysis(obs, input_model, optimizer='NewMinuit')
                         likeobj = pyLikelihood.NewMinuit(like.logLike)
                         like.fit(verbosity=0, covar=True, optObject=likeobj)
-                        TS = like.Ts(fit_model) #also include in output file
+                        TS = like.Ts(source_name) #also include in output file
                         convergence = likeobj.getRetCode()  #also include in output file
                         like.writeCountsSpectra(cspectra) 
                         like.logLike.writeXml(writexml)
@@ -1191,8 +1193,8 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
                         # Save successful bin details
                         successful_bins[(emin, emax)] = writexml
 
-                        flux_tot_value = like.flux(fit_model, emin=emin, emax=emax)
-                        flux_tot_error = like.fluxError(fit_model, emin=emin, emax=emax)
+                        flux_tot_value = like.flux(source_name, emin=emin, emax=emax)
+                        flux_tot_error = like.fluxError(source_name, emin=emin, emax=emax)
 
                         E = (like.energies[:-1] + like.energies[1:]) / 2.
                         nobs = like.nobs
@@ -1249,13 +1251,13 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
                             like = BinnedAnalysis(obs, ref_model, optimizer='NewMinuit')
                             likeobj = pyLikelihood.NewMinuit(like.logLike)
                             like.fit(verbosity=0, covar=True, optObject=likeobj)
-                            TS = like.Ts(fit_model) #also include in output file
+                            TS = like.Ts(source_name) #also include in output file
                             convergence = likeobj.getRetCode()  #also include in output file
                             like.writeCountsSpectra(cspectra)
                             like.logLike.writeXml(writexml)
 
-                            flux_tot_value = like.flux(fit_model, emin=emin, emax=emax)
-                            flux_tot_error = like.fluxError(fit_model, emin=emin, emax=emax)
+                            flux_tot_value = like.flux(source_name, emin=emin, emax=emax)
+                            flux_tot_error = like.fluxError(source_name, emin=emin, emax=emax)
                             geometric_mean = (emin * emax) ** 0.5
                             nobs = like.nobs
 
@@ -1323,13 +1325,14 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
                    
 def delete_fits_and_xml_files(source_name_cleaned, method):
     # Define the folders and file types to delete
-    paths_to_delete = [f'./data/{source_name_cleaned}/{method}/srcmap/*.fits'
+    paths_to_delete = [f'./data/{source_name_cleaned}/{method}/srcmap/*.fits',
+                       f'./data/{source_name_cleaned}/{method}/models/*.xml'
                         ]
     '''
     f'./data/{source_name_cleaned}/{method}/ltcube/*.fits',
         f'./data/{source_name_cleaned}/{method}/ccube/*.fits',
         f'./data/{source_name_cleaned}/{method}/expmap/*.fits',
-        f'./data/{source_name_cleaned}/{method}/models/*.xml',
+        
     '''
 
     # Iterate over each path pattern and delete all matching files
