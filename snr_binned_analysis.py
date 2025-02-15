@@ -931,6 +931,7 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
     source_name_cleaned = source_name.replace(" ", "").replace(".", "dot").replace("+", "plus").replace("-", "minus")
     ebinfile_txt = f'./energy_7bins_gtbindef.txt'
     general_path = f'./data/{source_name_cleaned}/'
+    fit_model = "NewSource"
     method_data = {}
     # Determine the loop items based on the method
     if method == "SNR":
@@ -986,7 +987,7 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
                         like = BinnedAnalysis(obs, input_model, optimizer='NewMinuit')
                         likeobj = pyLikelihood.NewMinuit(like.logLike)
                         like.fit(verbosity=0, covar=True, optObject=likeobj)
-                        TS = like.Ts(source_name) #also include in output file
+                        TS = like.Ts(fit_model) #also include in output file
                         convergence = likeobj.getRetCode()  #also include in output file
                         like.writeCountsSpectra(cspectra) 
                         like.logLike.writeXml(writexml)
@@ -996,15 +997,9 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
                         # Save successful bin details
                         successful_bins[(emin, emax)] = writexml
 
-                        flux_tot_value = like.flux(source_name, emin=emin, emax=emax)
-                        flux_tot_error = like.fluxError(source_name, emin=emin, emax=emax)
-                        alpha = like.model[source_name].funcs['Spectrum'].getParam('alpha').value()
-                        alpha_err = like.model[source_name].funcs['Spectrum'].getParam('alpha').error()
-                        beta = like.model[source_name].funcs['Spectrum'].getParam('beta').value()
-                        beta_err = like.model[source_name].funcs['Spectrum'].getParam('beta').error()
-                        Eb = like.model[source_name].funcs['Spectrum'].getParam('Eb').value()
-                        Eb_err = like.model[source_name].funcs['Spectrum'].getParam('Eb').error()
-
+                        flux_tot_value = like.flux(fit_model, emin=emin, emax=emax)
+                        flux_tot_error = like.fluxError(fit_model, emin=emin, emax=emax)
+                       
                         E = (like.energies[:-1] + like.energies[1:]) / 2.
                         nobs = like.nobs
                         geometric_mean = (emin*emax)**0.5
@@ -1050,13 +1045,13 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
                         like = BinnedAnalysis(obs, ref_model, optimizer='NewMinuit')
                         likeobj = pyLikelihood.NewMinuit(like.logLike)
                         like.fit(verbosity=0, covar=True, optObject=likeobj)
-                        TS = like.Ts(source_name) #also include in output file
+                        TS = like.Ts(fit_model) #also include in output file
                         convergence = likeobj.getRetCode()  #also include in output file
                         like.writeCountsSpectra(cspectra)
                         like.logLike.writeXml(writexml)
 
-                        flux_tot_value = like.flux(source_name, emin=emin, emax=emax)
-                        flux_tot_error = like.fluxError(source_name, emin=emin, emax=emax)
+                        flux_tot_value = like.flux(fit_model, emin=emin, emax=emax)
+                        flux_tot_error = like.fluxError(fit_model, emin=emin, emax=emax)
                         geometric_mean = (emin * emax) ** 0.5
                         nobs = like.nobs
 
@@ -1187,7 +1182,7 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
                         like = BinnedAnalysis(obs, input_model, optimizer='NewMinuit')
                         likeobj = pyLikelihood.NewMinuit(like.logLike)
                         like.fit(verbosity=0, covar=True, optObject=likeobj)
-                        TS = like.Ts(source_name) #also include in output file
+                        TS = like.Ts(fit_model) #also include in output file
                         convergence = likeobj.getRetCode()  #also include in output file
                         like.writeCountsSpectra(cspectra) 
                         like.logLike.writeXml(writexml)
@@ -1196,14 +1191,8 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
                         # Save successful bin details
                         successful_bins[(emin, emax)] = writexml
 
-                        flux_tot_value = like.flux(source_name, emin=emin, emax=emax)
-                        flux_tot_error = like.fluxError(source_name, emin=emin, emax=emax)
-                        alpha = like.model[source_name].funcs['Spectrum'].getParam('alpha').value()
-                        alpha_err = like.model[source_name].funcs['Spectrum'].getParam('alpha').error()
-                        beta = like.model[source_name].funcs['Spectrum'].getParam('beta').value()
-                        beta_err = like.model[source_name].funcs['Spectrum'].getParam('beta').error()
-                        Eb = like.model[source_name].funcs['Spectrum'].getParam('Eb').value()
-                        Eb_err = like.model[source_name].funcs['Spectrum'].getParam('Eb').error()
+                        flux_tot_value = like.flux(fit_model, emin=emin, emax=emax)
+                        flux_tot_error = like.fluxError(fit_model, emin=emin, emax=emax)
 
                         E = (like.energies[:-1] + like.energies[1:]) / 2.
                         nobs = like.nobs
@@ -1260,13 +1249,13 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
                             like = BinnedAnalysis(obs, ref_model, optimizer='NewMinuit')
                             likeobj = pyLikelihood.NewMinuit(like.logLike)
                             like.fit(verbosity=0, covar=True, optObject=likeobj)
-                            TS = like.Ts(source_name) #also include in output file
+                            TS = like.Ts(fit_model) #also include in output file
                             convergence = likeobj.getRetCode()  #also include in output file
                             like.writeCountsSpectra(cspectra)
                             like.logLike.writeXml(writexml)
 
-                            flux_tot_value = like.flux(source_name, emin=emin, emax=emax)
-                            flux_tot_error = like.fluxError(source_name, emin=emin, emax=emax)
+                            flux_tot_value = like.flux(fit_model, emin=emin, emax=emax)
+                            flux_tot_error = like.fluxError(fit_model, emin=emin, emax=emax)
                             geometric_mean = (emin * emax) ** 0.5
                             nobs = like.nobs
 
