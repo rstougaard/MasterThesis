@@ -683,7 +683,7 @@ def generate_files(vars, snrratios=None, time_intervals=None, number_of_bins=Non
                     '"Scale"':1000,'Scale_free':False}
 
                     source_list.add_point_source(source_name='NewSource',RA=ra,DEC=dec,
-                                    spectrum_model=spectrum_info,new_model_name='new.xml', overwite=True)
+                                    spectrum_model=spectrum_info,new_model_name='new.xml', overwrite=True)
                     print("Model with Powerlaw created!")   
                     '''
                     source_list.add_point_source(source_name=source_name,
