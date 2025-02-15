@@ -672,7 +672,7 @@ def generate_files(vars, snrratios=None, time_intervals=None, number_of_bins=Non
                     ##### Run make4FGLxml Command #####
                     #source_list=SourceList(catalog_file=f'/some/path/to/gll_psc_v31.fit', ROI={gti_noflares})
                     source_list=SourceList(catalog_file='./data/gll_psc_v32.xml', 
-                                           ROI={gti_noflares}, output_name='my_LAT_model.xml', 
+                                           ROI=gti_noflares, output_name='my_LAT_model.xml', 
                                            write_directory=f'./data/{source_name_cleaned}/{method}/models/', 
                                            DR=4) 
                     source_list.make_model(free_radius=6,max_free_radius=8,sigma_to_free=25)
