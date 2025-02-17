@@ -1295,10 +1295,10 @@ def delete_fits_and_xml_files(source_name_cleaned, method):
     paths_to_delete = [
         f'./data/{source_name_cleaned}/{method}/srcmap/*.fits',
         f'./data/{source_name_cleaned}/{method}/models/*.xml',
-    ]
-    '''f'./data/{source_name_cleaned}/{method}/ltcube/*.fits',
         f'./data/{source_name_cleaned}/{method}/ccube/*.fits',
-        f'./data/{source_name_cleaned}/{method}/expmap/*.fits','''
+        f'./data/{source_name_cleaned}/{method}/expmap/*.fits'
+    ]
+    '''f'./data/{source_name_cleaned}/{method}/ltcube/*.fits','''
     # Iterate over each path pattern and delete all matching files
     for path_pattern in paths_to_delete:
         files = glob.glob(path_pattern)
@@ -1313,7 +1313,7 @@ def delete_fits_and_xml_files(source_name_cleaned, method):
 
 #snrratios = [3, 5, 10]
 #time_intervals = ["week", "month"]
-filename = "Top5_Source_ra_dec_specin.txt"
+filename = "Source_ra_dec_specin.txt"
 snrratios = [10, 5, 3]
 time_intervals = ["week","month"]
 
@@ -1346,37 +1346,35 @@ def process_line(line):
     vars_lin = (source_name, ra, dec, "LIN", specin, None, None, 100, 1000000)
     source_name_cleaned = source_name.replace(" ", "").replace(".", "dot").replace("+", "plus").replace("-", "minus")
     if not os.path.exists(f"/fit_results/{source_name_cleaned}_fit_data_NONE.fits"):
-        delete_fits_and_xml_files(source_name_cleaned, method = "NONE")
         get_gti_bin(vars_none)
         generate_files(vars_none, number_of_bins=7)
         source_maps(vars_none)
         run_binned_likelihood(vars_none, free_params="None")
         print(f'Likelihood for non-filtered data done for {source_name}!')
-        
+        delete_fits_and_xml_files(source_name_cleaned, method = "NONE")
     else:
         print(f'Likelihood for non-filtered data done for {source_name}!')
 
     if not os.path.exists(f"/fit_results/{source_name_cleaned}_fit_data_SNR.fits"):
-        delete_fits_and_xml_files(source_name_cleaned, method = "SNR")
         filtering(vars_snr, snrratios=snrratios)
         get_gti_bin(vars_snr, snrratios=snrratios)
         generate_files(vars_snr, snrratios=snrratios, number_of_bins=7)
         source_maps(vars_snr, snrratios=snrratios)
         run_binned_likelihood(vars_snr, snrratios=snrratios, free_params="None")
         print(f'Likelihood for SNR binned data done for {source_name}!')
+        delete_fits_and_xml_files(source_name_cleaned, method = "SNR")
         
     else:
         print(f'Likelihood for SNR binneddata done for {source_name}!')
    
     if not os.path.exists(f"/fit_results/{source_name_cleaned}_fit_data_LIN.fits"):
-        delete_fits_and_xml_files(source_name_cleaned, method = "LIN")
         filtering(vars_lin, time_intervals=time_intervals)
         get_gti_bin(vars_lin, time_intervals=time_intervals)
         generate_files(vars_lin, time_intervals=time_intervals, number_of_bins=7)
         source_maps(vars_lin, time_intervals=time_intervals)
         run_binned_likelihood(vars_lin, time_intervals=time_intervals, free_params="None")
         print(f'Likelihood linear binned done for {source_name}!')
-        
+        delete_fits_and_xml_files(source_name_cleaned, method = "LIN")
     else:
         print(f'Likelihood for linear binned data done for {source_name}!')
 
@@ -1384,7 +1382,7 @@ def run_analysis():
     """Main function to use multiprocessing"""
     with open(filename, "r") as file:
         lines = file.readlines()
-    num_workers = 5
+    num_workers = 8
     # Use multiprocessing Pool to process each line in parallel
     with multiprocessing.Pool(processes=num_workers) as pool:
         pool.map(process_line, lines)
