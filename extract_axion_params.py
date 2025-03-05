@@ -323,9 +323,9 @@ with open(f'Top5_Source_ra_dec_specin.txt', 'r') as file:
                         .replace('"', '')  # Ensure no extra quotes remain
                     )
 
-                    f_bin = fits.open(f'./hpc_results/{source_name_cleaned}_fit_data_NONE.fits')
-                    f_bin_snr = fits.open(f'./hpc_results/{source_name_cleaned}_fit_data_SNR.fits')
-                    f_bin_lin = fits.open(f'./hpc_results/{source_name_cleaned}_fit_data_LIN.fits')
+                    f_bin = fits.open(f'./fit_results/{source_name_cleaned}_fit_data_NONE.fits')
+                    f_bin_snr = fits.open(f'./fit_results/{source_name_cleaned}_fit_data_SNR.fits')
+                    f_bin_lin = fits.open(f'./fit_results/{source_name_cleaned}_fit_data_LIN.fits')
                     bin_data = f_bin[1].data
                     bin_data_snr = f_bin_snr[1].data
                     bin_data_lin = f_bin_lin[1].data
