@@ -12,7 +12,7 @@ path_to_save_heatmap_Ec_p0 = "./fit_results/heatmaps_Ec_p0/"
 #p0_values = np.linspace(0, 1 / 3, 11)
 #E_c_values = np.logspace(1, 4, 61)  # MeV
 #k = 2.7
-axion_data = np.load('scan12.npy')
+axion_data = np.load('./denys/Rikke/Data/scan12.npy')
 ma_all = axion_data[:,0] #eV
 g_all = axion_data[:,1] # GeV**-1
 ec_all = axion_data[:,2]/1e6 #MeV
@@ -300,7 +300,7 @@ def plot_mean_delta_chi2_heatmap(all_results, dataset_labels, png_naming):
 all_results_none = {}
 all_results_snr = {}
 all_results_lin = {}
-with open(f'Top5_Source_ra_dec_specin_beta.txt', 'r') as file:
+with open(f'Top5_Source_ra_dec_specin.txt', 'r') as file:
                 for line in file:
                     parts = line.strip().split()
     
