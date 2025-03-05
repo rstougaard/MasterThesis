@@ -77,83 +77,86 @@ def Intersect1WithAll( fermi_gtis, tmin, tmax   ):
 
 
 
-def UpdateGTIs(fitsfile,textfile, method='in',times_in_mjd=True):
-        ''' Updates fits file with the GTIs from text file '''
-        ''' method=in(default) -- to use simple intersection of text and fits GTIs'''
-        ''' method=out -- to REMOVE text gtis from fits ones '''
+def UpdateGTIs(fitsfile, textfile, method='in', times_in_mjd=True):
+    ''' Updates fits file with the GTIs from text file '''
+    ''' method=in(default) -- to use simple intersection of text and fits GTIs'''
+    ''' method=out -- to REMOVE text gtis from fits ones '''
 
-        textgtis = []
-        fitsgtis = []
-        newgtis = []
-        #get text gtis
-        with open(textfile) as f:
-                for ss in f.readlines():
-                        ss = re.split(r'\ +',ss)
-                        tmin = float(ss[0]) 
-                        tmax = float(ss[1]) 
-                        
-                        if(times_in_mjd):
-                                tmin = MJD2Fermi( tmin )
-                                tmax = MJD2Fermi( tmax )
-                        textgtis.append([tmin,tmax])
-        #get fits gtis
-        with pyfits.open(fitsfile) as f:
-                fitsgtis1 = f[2].data.copy() #to save
-                fitsgtis = f[2].data.copy() # to work
+    textgtis = []
+    fitsgtis = []
+    newgtis = []
+    
+    # Get text GTIs
+    with open(textfile) as f:
+        lines = f.readlines()
+        # Check if the text file is empty
+        if not lines:
+            print("No GTIs in text file. Returning original FITS file.")
+            return  # Or return fitsfile if that's preferred
+        for ss in lines:
+            ss = re.split(r'\ +', ss.strip())
+            tmin = float(ss[0])
+            tmax = float(ss[1])
+            if times_in_mjd:
+                tmin = MJD2Fermi(tmin)
+                tmax = MJD2Fermi(tmax)
+            textgtis.append([tmin, tmax])
+    
+    # Get fits GTIs
+    with pyfits.open(fitsfile) as f:
+        fitsgtis1 = f[2].data.copy()  # To save original
+        fitsgtis = f[2].data.copy()   # To work with
 
-        #process gtis
-        if(method == 'in'):
-                new_starts = []
-                new_stops = []
-                for tt in range(len(textgtis)):
-                        #print '[',tstarts[tt],' , ' ,tstops[tt],']'
-                        t1, t2 = Intersect1WithAll( fitsgtis, textgtis[tt][0], textgtis[tt][1]   )
-                        new_starts = numpy.append(new_starts, t1)
-                        new_stops = numpy.append(new_stops, t2) 
-                for ii in range(len(new_starts)):
-                        newgtis.append( [ new_starts[ii], new_stops[ii] ] )
-                        
+    # Process GTIs based on the method
+    if method == 'in':
+        new_starts = []
+        new_stops = []
+        for gti in textgtis:
+            t1, t2 = Intersect1WithAll(fitsgtis, gti[0], gti[1])
+            new_starts = numpy.append(new_starts, t1)
+            new_stops = numpy.append(new_stops, t2)
+        for i in range(len(new_starts)):
+            newgtis.append([new_starts[i], new_stops[i]])
 
-        if(method=='out'):
-                tt = textgtis[0]
-                print( tt )
-                # cut-out first gti from fitsgti-s
-                for ff in fitsgtis:
-                                res = Cut2Segments(ff,tt) # cut tt from ff
-                                if(res[0]==2):
-                                        newgtis.append(res[1])
-                                        newgtis.append(res[2])
-                                if(res[0]==1):
-                                        newgtis.append(res[1])          
-                #cut-out the rest from what we got on the previous step:
-                for ii in range(1,len(textgtis)):
-                        tt = textgtis[ii]
-                        print( tt )
-                        newgtis1 = []
-                        for ff in newgtis:
-                                res = Cut2Segments(ff,tt) # cut tt from ff
-                                if(res[0]==2): 
-                                        newgtis1.append(res[1]) 
-                                        newgtis1.append(res[2]) 
-                                if(res[0]==1): 
-                                        newgtis1.append(res[1])
+    if method == 'out':
+        tt = textgtis[0]
+        print(tt)
+        # Cut-out first GTI from fits GTIs
+        for ff in fitsgtis:
+            res = Cut2Segments(ff, tt)
+            if res[0] == 2:
+                newgtis.append(res[1])
+                newgtis.append(res[2])
+            if res[0] == 1:
+                newgtis.append(res[1])
+        # Cut-out the rest from what we got in the previous step
+        for ii in range(1, len(textgtis)):
+            tt = textgtis[ii]
+            print(tt)
+            newgtis1 = []
+            for ff in newgtis:
+                res = Cut2Segments(ff, tt)
+                if res[0] == 2:
+                    newgtis1.append(res[1])
+                    newgtis1.append(res[2])
+                if res[0] == 1:
+                    newgtis1.append(res[1])
+            newgtis = newgtis1
 
-                        newgtis = newgtis1 
+    print('Text GTIs size:', len(textgtis))
+    print('Fits GTIs size:', fitsgtis.shape[0])
+    print('Resulted GTIs size:', len(newgtis))
 
+    fitsgtis1.resize(len(newgtis))
+    ontime = 0
+    for ii in range(len(newgtis)):
+        fitsgtis1[ii] = newgtis[ii]
+        ontime += newgtis[ii][1] - newgtis[ii][0]
 
-        print(( 'Text GTIs size: ', len(textgtis) ))
-        print(( 'Fits GTIs size: ',fitsgtis.shape[0] ))
-        print(('Resulted GTIs size: ',len(newgtis) ))
-
-        fitsgtis1.resize(len(newgtis))
-        ontime = 0
-        for ii in range(len(newgtis)):
-                fitsgtis1[ii] = newgtis[ii]
-                ontime += newgtis[ii][1]-newgtis[ii][0]
-        #replacing old fits gtis with the new ones
-        with pyfits.open(fitsfile,'update') as f:
-                f[2].data = fitsgtis1
-                f[2].header['ONTIME'] = ontime #replace sum of all gtis just in case...
+    # Replacing old fits GTIs with the new ones
+    with pyfits.open(fitsfile, 'update') as f:
+        f[2].data = fitsgtis1
+        f[2].header['ONTIME'] = ontime #replace sum of all gtis just in case...
 
 ##############################################
 #UpdateGTIs('test.fits','h.dat',method='out')
