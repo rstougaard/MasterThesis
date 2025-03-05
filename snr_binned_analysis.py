@@ -18,6 +18,7 @@ import pyLikelihood
 from BinnedAnalysis import *
 import multiprocessing
 import shlex
+import shutil
 
 # Function to ensure paths exist
 def check_paths(source_name, method, number_of_bins):
@@ -315,7 +316,30 @@ def filtering(vars, snrratios=None, time_intervals=None):
             # here apoastra was a text file with 2 columns -- start stop times. Only those intervals will be used to extract spectrum
             # you could use method='out' to exclude some intervals, i.e. extract spectrum from everything *except* these intervals
             # times in the file can be either in MJDs or in Fermi seconds (use times_in_mjds=False)
-        
+
+            # Check if the text file (with additional GTI intervals) is non-empty:
+            if os.path.exists(output_file_flares) and os.path.getsize(output_file_flares) > 0:
+                # Process the GTIs from the text file and update the FITS file
+                UpdateGTIs(tmp_gti_noflares, output_file_flares, method='out', times_in_mjd=False)
+                
+                ############### actual filtering according to updated GTIs ###############
+                print('GTMKTIME start')
+                gt.maketime['scfile'] = sc
+                gt.maketime['filter'] = gtifilter
+                gt.maketime['roicut'] = 'no'
+                gt.maketime['evfile'] = tmp_gti_noflares
+                gt.maketime['outfile'] = gti_noflares
+                gt.maketime.run()
+                
+                try:
+                    os.remove(tmp_gti_noflares)
+                except Exception as e:
+                    print(f"Error removing tmp_gti: {e}")
+                print('done!')
+            else:
+                # The text file is empty; flag this condition and simply use the temporary GTI file as the final file.
+                print(f'The text file {output_file_flares} is empty. Using tmp_gti_noflares as gti_noflares.')
+                shutil.copy(tmp_gti_noflares, gti_noflares)
 
             UpdateGTIs(tmp_gti_noflares, output_file_flares, method='out', times_in_mjd=False) #defined in operate_gtis.py, pls see also there
 
