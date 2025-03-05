@@ -341,23 +341,6 @@ def filtering(vars, snrratios=None, time_intervals=None):
                 print(f'The text file {output_file_flares} is empty. Using tmp_gti_noflares as gti_noflares.')
                 shutil.copy(tmp_gti_noflares, gti_noflares)
 
-            UpdateGTIs(tmp_gti_noflares, output_file_flares, method='out', times_in_mjd=False) #defined in operate_gtis.py, pls see also there
-
-            ############### actual filtering according to updated GTIs ###############
-            # just incase -- modified GTIs include old "standard GTIs" as well, so no need to do this twice
-            
-            print( 'GTMKTIME start' )
-            gt.maketime['scfile'] = sc
-            gt.maketime['filter'] = gtifilter
-            gt.maketime['roicut'] = 'no'
-            gt.maketime['evfile'] = tmp_gti_noflares
-            gt.maketime['outfile'] = gti_noflares
-            gt.maketime.run()
-            try:
-                os.remove(tmp_gti_noflares)
-            except Exception as e:
-                print(f"Error removing tmp_gti: {e}")
-            print('done!')
         else:
             print(f'{gti_noflares} file exists!')
 
