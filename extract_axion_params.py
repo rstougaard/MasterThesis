@@ -267,7 +267,7 @@ def plot_mean_delta_chi2_heatmap(all_results, dataset_labels, png_naming):
         plt.xticks(fontsize=15)
         plt.yticks(fontsize=15)
         plt.tight_layout()
-        plt.savefig(f'{path_to_save_heatmap_m_g}{png_naming}_{filter_label}_ec_p0.png', dpi=300)
+        plt.savefig(f'{path_to_save_heatmap_Ec_p0}{png_naming}_{filter_label}_ec_p0.png', dpi=300)
         plt.close()
 
         ### Plot 2: (mₐ, gₐ₍γ₎) heatmap ###
@@ -294,7 +294,7 @@ def plot_mean_delta_chi2_heatmap(all_results, dataset_labels, png_naming):
         plt.xticks(fontsize=15)
         plt.yticks(fontsize=15)
         plt.tight_layout()
-        plt.savefig(f'snr/heatmaps/mean/{png_naming}_{filter_label}_ma_ga.png', dpi=300)
+        plt.savefig(f'{path_to_save_heatmap_m_g}{png_naming}_{filter_label}_ma_ga.png', dpi=300)
         plt.close()
 
 all_results_none = {}
