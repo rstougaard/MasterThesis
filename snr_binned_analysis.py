@@ -470,8 +470,11 @@ def get_gti_bin(vars, snrratios=None, time_intervals=None):
                         gt.filter['outfile'] = temp_gti_noflares_bin
                         gt.filter.run() #run GTSELECT
                         print( 'GTSELCT finished!' )
-
-                        UpdateGTIs(temp_gti_noflares_bin, output_file_flares, method='out', times_in_mjd=False)
+                        if os.path.exists(output_file_flares) and os.path.getsize(output_file_flares) > 0:
+                            UpdateGTIs(temp_gti_noflares_bin, output_file_flares, method='out', times_in_mjd=False)
+                        else:
+                            # The text file is empty; flag this condition and simply use the temporary GTI file as the final file.
+                            print(f'The text file {output_file_flares} is empty. No UpdateGTI needed.')
 
                         print( 'GTMKTIME start' )
                         gt.maketime['scfile'] = sc
