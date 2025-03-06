@@ -606,11 +606,11 @@ def plot_mean_delta_chi2_heatmap3(all_results, dataset_labels, png_naming):
         Ec_filtered = Ec_scatter[mask]
         delta_filtered = delta_scatter[mask]
 
-        sc2 = ax_right.scatter(Ec_filtered, p0_filtered, c=delta_filtered, cmap='viridis',
+        sc2 = ax_right.scatter(Ec_scatter, p0_scatter, c=delta_scatter, cmap='viridis',
                             s=30, edgecolor='k')
         ax_right.set_xlabel('E_c (MeV)')
         ax_right.set_ylabel('p0')
-        ax_right.set_title('(p0, E_c) Space\n(Only points with Δχ² < 0)')
+        ax_right.set_title('(p0, E_c) Space')
         ax_right.set_ylim(0, 1)  # p0 goes from 0 to 1
         cbar2 = plt.colorbar(sc2, ax=ax_right)
         cbar2.set_label('Δχ²')
