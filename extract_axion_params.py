@@ -588,7 +588,7 @@ def plot_mean_delta_chi2_heatmap3(all_results, dataset_labels, png_naming):
         # ============================================================================
         fig, (ax_left, ax_right) = plt.subplots(1, 2, figsize=(14, 6))
 
-        # Left panel: (m_a, g) space (log-log axes).
+        # Left panel: (m_a, g) space (all points, log-log scale).
         sc1 = ax_left.scatter(m_a_scatter, g_scatter, c=delta_scatter, cmap='viridis',
                             s=30, edgecolor='k')
         ax_left.set_xscale('log')
@@ -600,34 +600,20 @@ def plot_mean_delta_chi2_heatmap3(all_results, dataset_labels, png_naming):
         cbar1.set_label('Δχ²')
 
         # Right panel: (p0, Ec) space.
-        sc2 = ax_right.scatter(p0_scatter, Ec_scatter, c=delta_scatter, cmap='viridis',
+        # Filter to only include points with negative Δχ².
+        mask = delta_scatter < 0
+        p0_filtered = p0_scatter[mask]
+        Ec_filtered = Ec_scatter[mask]
+        delta_filtered = delta_scatter[mask]
+
+        sc2 = ax_right.scatter(Ec_filtered, p0_filtered, c=delta_filtered, cmap='viridis',
                             s=30, edgecolor='k')
-        ax_right.set_xlabel('p0')
-        ax_right.set_ylabel('E_c (MeV)')
-        ax_right.set_title('(p0, E_c) Space\nColor-coded by Δχ²')
+        ax_right.set_xlabel('E_c (MeV)')
+        ax_right.set_ylabel('p0')
+        ax_right.set_title('(p0, E_c) Space\n(Only points with Δχ² < 0)')
+        ax_right.set_ylim(0, 1)  # p0 goes from 0 to 1
         cbar2 = plt.colorbar(sc2, ax=ax_right)
         cbar2.set_label('Δχ²')
-
-        # ============================================================================
-        # Optionally, draw connecting lines for a subset of points
-        # ============================================================================
-        # We'll link every 100th point to avoid clutter.
-        transFigure = fig.transFigure.inverted()
-        N = p0_scatter.size
-        for i in range(0, N, 100):
-            # Left panel point: (m_a, g)
-            x1, y1 = m_a_scatter[i], g_scatter[i]
-            # Right panel point: (p0, Ec)
-            x2, y2 = p0_scatter[i], Ec_scatter[i]
-            
-            # Transform data coordinates to figure coordinates.
-            coord1 = transFigure.transform(ax_left.transData.transform([x1, y1]))
-            coord2 = transFigure.transform(ax_right.transData.transform([x2, y2]))
-            
-            # Draw a connecting gray line.
-            line = plt.Line2D((coord1[0], coord2[0]), (coord1[1], coord2[1]),
-                            transform=fig.transFigure, color="gray", alpha=0.5)
-            fig.lines.append(line)
 
         plt.tight_layout()
         plt.savefig(f"{path_to_save_heatmap_m_g}{png_naming}_{filter_label}_linked_scatter_color_coded.png", dpi=300)
