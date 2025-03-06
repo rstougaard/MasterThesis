@@ -698,6 +698,7 @@ def plot_mean_delta_chi2_heatmap2(all_results, dataset_labels, png_naming):
         plt.xlabel(r'$E_c$ [MeV]', fontsize=15)
         plt.ylabel('p0', fontsize=15)
         plt.ylim(0.0, 1/3)
+
         plt.title(f'Mean $\Delta \chi^2$ Heatmap for {filter_label} in (E_c, p0) Space', fontsize=15)
         plt.xscale('log')
         plt.xticks(fontsize=15)
@@ -728,6 +729,7 @@ def plot_mean_delta_chi2_heatmap2(all_results, dataset_labels, png_naming):
         plt.yticks(fontsize=15)
         plt.xscale('log')
         plt.yscale('log')
+        plt.xlim(1e-1, 1e3)
         plt.tight_layout()
         plt.savefig(f'{path_to_save_heatmap_m_g}{png_naming}_{filter_label}_ma_ga.png', dpi=300)
         plt.close()
