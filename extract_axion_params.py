@@ -400,7 +400,7 @@ def plot_mean_delta_chi2_heatmap2(all_results, dataset_labels, png_naming):
         cbar.set_label(r'$\langle \Delta \chi^2 \rangle$', fontsize=15)
         plt.xlabel(r'$E_c$ [MeV]', fontsize=15)
         plt.ylabel('p0', fontsize=15)
-        plt.ylim(0.0, 1/3)
+        #plt.ylim(0.0, 1/3)
         plt.title(f'Mean $\Delta \chi^2$ Heatmap for {filter_label} in (E_c, p0) Space', fontsize=15)
         plt.xscale('log')
         plt.xticks(fontsize=15)
@@ -419,8 +419,9 @@ def plot_mean_delta_chi2_heatmap2(all_results, dataset_labels, png_naming):
         heatmap = plt.pcolormesh(ma_mesh/1e-9, g_mesh, mean_delta_chi2_grid,
                                  cmap=cmap, norm=norm, shading='auto')
         if np.any(mean_delta_chi2_grid <= -6.2):
-            plt.contour(ma_mesh, g_mesh, mean_delta_chi2_grid,
+            plt.contour(ma_mesh/1e-9, g_mesh, mean_delta_chi2_grid,
                         levels=[-6.2], colors='red', linewidths=2)
+
         cbar = plt.colorbar(heatmap, ticks=np.linspace(vmin, vmax, 11))
         cbar.set_label(r'$\langle \Delta \chi^2 \rangle$', fontsize=15)
         plt.xlabel(r'$m_a$ [neV]', fontsize=15)
