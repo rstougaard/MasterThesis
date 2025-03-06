@@ -612,6 +612,7 @@ def plot_mean_delta_chi2_heatmap3(all_results, dataset_labels, png_naming):
         ax_right.set_ylabel('p0')
         ax_right.set_title('(p0, E_c) Space')
         ax_right.set_ylim(0, 1)  # p0 goes from 0 to 1
+        ax_right.set_xlim(0, 4e8)
         cbar2 = plt.colorbar(sc2, ax=ax_right)
         cbar2.set_label('Δχ²')
 
