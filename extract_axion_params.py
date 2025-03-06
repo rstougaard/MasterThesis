@@ -471,12 +471,12 @@ with open(f'Top5_Source_ra_dec_specin.txt', 'r') as file:
                     '''
 
 # For LIN filtering ("week" and "month")
-plot_mean_delta_chi2_heatmap(all_results_none, list(all_results_none.keys()), "mean")
+plot_mean_delta_chi2_heatmap_paired(all_results_none, list(all_results_none.keys()), "mean")
 # For LIN filtering ("week" and "month")
-plot_mean_delta_chi2_heatmap(all_results_lin, list(all_results_lin.keys()), "mean_lin")
+plot_mean_delta_chi2_heatmap_paired(all_results_lin, list(all_results_lin.keys()), "mean_lin")
 
 # For SNR filtering ("snr_3", "snr_5", "snr_10")
-plot_mean_delta_chi2_heatmap(all_results_snr, list(all_results_snr.keys()), "mean_snr")
+plot_mean_delta_chi2_heatmap_paired(all_results_snr, list(all_results_snr.keys()), "mean_snr")
 '''
 plot_delta_chi2_heatmap_m_g(results, dataset_label="No_Filtering")
 plot_delta_chi2_heatmap_m_g(results_snr, dataset_label="snr_3")
