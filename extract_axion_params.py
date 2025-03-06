@@ -315,382 +315,85 @@ def plot_mean_delta_chi2_heatmap(all_results, dataset_labels, png_naming):
         plt.savefig(f'{path_to_save_heatmap_m_g}{png_naming}_{filter_label}_ma_ga.png', dpi=300)
         plt.close()
 
-def plot_mean_delta_chi2_heatmap_paired(all_results, dataset_labels, png_naming):
-    """
-    Plots heatmaps for (E_c, p0) and (mₐ, gₐ) spaces using paired data.
-    Assumes that the global arrays p0_all, ec_all, ma_all, and g_all contain the 
-    parameter pairs in the correct order.
-    """
-    # Assume these global arrays are defined:
-    global p0_all, ec_all, ma_all, g_all
-    n_points = len(p0_all)
-    
-    # Average Δχ² for each paired point (over datasets and filtering categories)
-    delta_sum = np.zeros(n_points)
-    delta_count = np.zeros(n_points)
-    
-    for source in dataset_labels:
-        if source not in all_results:
-            continue
-        # Loop over each filtering category for this source
-        for filter_label in all_results[source]:
-            for result in all_results[source][filter_label]:
-                # Identify the paired index using the p0 value
-                idx = p0_all.tolist().index(result["p0"])
-                delta_sum[idx] += result["fit_result"]["DeltaChi2"]
-                delta_count[idx] += 1
-
-            # Compute the mean Δχ² (taking care of division by zero if necessary)
-            mean_delta = delta_sum / delta_count
-            
-            # Set colormap properties
-            vmin, vmax = -10, 25
-            num_colors = 30
-            boundaries = np.linspace(vmin, vmax, num_colors + 1)
-            cmap = plt.get_cmap('gnuplot2_r', num_colors)
-            norm = mcolors.BoundaryNorm(boundaries=boundaries, ncolors=num_colors, clip=True)
-            
-            ### Plot for (E_c, p0) space ###
-            plt.figure(figsize=(10, 6))
-            sc = plt.scatter(ec_all, p0_all, c=mean_delta, cmap=cmap, norm=norm, s=100)
-            
-            # Optionally, mark points where Δχ² ≤ -6.2 with a red circle edge
-            for i, val in enumerate(mean_delta):
-                if val <= -6.2:
-                    plt.plot(ec_all[i], p0_all[i], marker='o', markerfacecolor='none',
-                            markeredgecolor='red', markersize=12, linewidth=2)
-            
-            cbar = plt.colorbar(sc, label=r'$\langle \Delta \chi^2 \rangle$', 
-                                ticks=np.linspace(vmin, vmax, 11))
-            cbar.ax.tick_params(labelsize=15)
-            cbar.set_label(r'$\langle \Delta \chi^2 \rangle$', fontsize=15)
-            plt.xlabel(r'$E_c$ [MeV]', fontsize=15)
-            plt.ylabel('p0', fontsize=15)
-            plt.ylim(0.0, 1/3)
-            plt.title(f'Mean $\Delta \chi^2$ Heatmap (Paired) in (E_c, p0) Space', fontsize=15)
-            plt.xscale('log')
-            plt.xticks(fontsize=15)
-            plt.yticks(fontsize=15)
-            plt.tight_layout()
-            plt.savefig(f'{path_to_save_heatmap_Ec_p0}{png_naming}_ec_p0_paired.png', dpi=300)
-            plt.close()
-            
-            ### Plot for (mₐ, gₐ) space ###
-            plt.figure(figsize=(10, 6))
-            sc2 = plt.scatter(ma_all, g_all, c=mean_delta, cmap=cmap, norm=norm, s=100)
-            
-            for i, val in enumerate(mean_delta):
-                if val <= -6.2:
-                    plt.plot(ma_all[i], g_all[i], marker='o', markerfacecolor='none',
-                            markeredgecolor='red', markersize=12, linewidth=2)
-            
-            cbar2 = plt.colorbar(sc2, label=r'$\langle \Delta \chi^2 \rangle$', 
-                                ticks=np.linspace(vmin, vmax, 11))
-            cbar2.ax.tick_params(labelsize=15)
-            cbar2.set_label(r'$\langle \Delta \chi^2 \rangle$', fontsize=15)
-            plt.xlabel(r'$m_a$ [eV]', fontsize=15)
-            plt.ylabel(r'$g_{a\gamma}$ [GeV$^{-1}$]', fontsize=15)
-            plt.title(f'Mean $\Delta \chi^2$ Heatmap (Paired) in ($m_a$, $g_{{a\gamma}}$) Space', fontsize=15)
-            plt.xscale('log')
-            plt.xticks(fontsize=15)
-            plt.yticks(fontsize=15)
-            plt.tight_layout()
-            plt.savefig(f'{path_to_save_heatmap_m_g}{png_naming}_ma_ga_paired.png', dpi=300)
-            plt.close()
-def _interpolate_and_plot_2d(
-    x_data, y_data, z_data,
-    x_label, y_label,
-    x_scale='log', y_scale='log',
-    contour_level=-6.2,
-    vmin=-10, vmax=25,
-    num_grid_points=200,
-    title='Mean Δχ² Heatmap',
-    out_filename='heatmap.png'
-):
-    """
-    Helper function:
-      - Interpolates scattered data (x_data, y_data, z_data) onto a 2D grid.
-      - Creates a filled contour (contourf) plot with an optional contour
-        at z = contour_level.
-    """
-
-    # Convert to numpy arrays
-    x = np.array(x_data)
-    y = np.array(y_data)
-    z = np.array(z_data)
-
-    # Filter out points where count = 0 or z = NaN (if any)
-    mask = np.isfinite(z)
-    x, y, z = x[mask], y[mask], z[mask]
-    if len(x) == 0:
-        print(f'Warning: No valid data to plot for {out_filename}')
-        return
-
-    # Build a grid for interpolation
-    # 1) Determine axis limits in log or linear scale
-    if x_scale == 'log':
-        x_log_min, x_log_max = np.log10([x.min(), x.max()])
-        xi = np.logspace(x_log_min, x_log_max, num_grid_points)
-    else:
-        xi = np.linspace(x.min(), x.max(), num_grid_points)
-
-    if y_scale == 'log':
-        y_log_min, y_log_max = np.log10([y.min(), y.max()])
-        yi = np.logspace(y_log_min, y_log_max, num_grid_points)
-    else:
-        yi = np.linspace(y.min(), y.max(), num_grid_points)
-
-    X, Y = np.meshgrid(xi, yi)
-
-    # 2) Interpolate z_data (DeltaChi2) onto the grid
-    #    Options: method='linear', 'cubic', 'nearest'
-    Z = griddata((x, y), z, (X, Y), method='linear')
-
-    # 3) Set up colormap and normalization
-    boundaries = np.linspace(vmin, vmax, 31)
-    cmap = plt.get_cmap('gnuplot2_r', 30)
-    norm = mcolors.BoundaryNorm(boundaries=boundaries, ncolors=30, clip=True)
-
-    # 4) Create the filled contour plot
-    plt.figure(figsize=(8, 6))
-    contf = plt.contourf(X, Y, Z, levels=boundaries, cmap=cmap, norm=norm)
-    cbar = plt.colorbar(contf, ticks=np.linspace(vmin, vmax, 11))
-    cbar.set_label(r'$\langle \Delta \chi^2 \rangle$', fontsize=14)
-
-    # 5) (Optional) overlay contour at Δχ² = contour_level
-    if np.any(z <= contour_level) and np.any(z >= contour_level):
-        cs = plt.contour(X, Y, Z, levels=[contour_level],
-                         colors='red', linewidths=2)
-        plt.clabel(cs, inline=True, fmt=f'Δχ²={contour_level}')
-
-    # 6) Axis scales, labels, etc.
-    if x_scale == 'log':
-        plt.xscale('log')
-    if y_scale == 'log':
-        plt.yscale('log')
-
-    plt.xlabel(x_label, fontsize=14)
-    plt.ylabel(y_label, fontsize=14)
-    plt.title(title, fontsize=14)
-    plt.tight_layout()
-    plt.savefig(out_filename, dpi=300)
-    plt.close()
-
-
-def plot_mean_delta_chi2_heatmap_paired_interpolated(
-    all_results,  # dict: {source_name -> {filter_label -> [list_of_results]}}
-    dataset_labels,  # list of source_names to consider
-    png_naming):
-    """
-    For each filtering category, sum (and average) Δχ² across all sources
-    for each data point (indexed by i in the global arrays).
-    Then produce two heatmaps (Ec-p0 and ma-g) with interpolation and
-    an optional contour at Δχ² = -6.2.
-
-    Requirements:
-      - p0_all, ec_all, ma_all, g_all must be globally defined and
-        aligned so that index i in each array is a consistent set
-        of parameters.
-    """
-
-    global p0_all, ec_all, ma_all, g_all
-
-    # Identify the filter labels from the first source that actually has data
-    # (Assumes all sources share the same set of filter labels.)
-    for src in dataset_labels:
-        if src in all_results and len(all_results[src]) > 0:
-            filtering_methods = list(all_results[src].keys())
-            break
-    else:
-        print("No valid sources found in all_results. Exiting.")
-        return
-
-    # We will produce a separate plot for each filter label
-    for filter_label in filtering_methods:
-        n_points = len(p0_all)
-        sum_chi2 = np.zeros(n_points)
-        count_chi2 = np.zeros(n_points)
-
-        # Loop over all sources
-        for source_name in dataset_labels:
-            if (source_name not in all_results or
-                filter_label not in all_results[source_name]):
-                continue
-
-            # Each entry in all_results[source_name][filter_label] is a dict
-            # with keys "p0", "E_c", "fit_result" => "DeltaChi2"
-            for result in all_results[source_name][filter_label]:
-                p0_val = result["p0"]
-                E_c_val = result["E_c"]
-                DeltaChi2 = result["fit_result"]["DeltaChi2"]
-
-                # Identify which index i in the global arrays matches (p0, E_c)
-                # Because p0_all, ec_all are paired by index, we find i s.t.
-                # p0_all[i] == p0_val and ec_all[i] == E_c_val
-                # (Assuming an exact match is possible)
-                matches = np.where((p0_all == p0_val) & (ec_all == E_c_val))[0]
-                if len(matches) == 1:
-                    i = matches[0]
-                    sum_chi2[i] += DeltaChi2
-                    count_chi2[i] += 1
-                else:
-                    # If no match or multiple matches, skip or handle differently
-                    pass
-
-        # Compute mean Δχ²
-        with np.errstate(divide='ignore', invalid='ignore'):
-            mean_delta_chi2 = np.where(
-                count_chi2 != 0,
-                sum_chi2 / count_chi2,
-                np.nan  # if count=0, set to NaN
-            )
-
-        # ------------------------------------------------------
-        # 1) Interpolate & plot for (E_c, p0)
-        # ------------------------------------------------------
-        out_ec_p0 = (f"{path_to_save_heatmap_Ec_p0}"
-                     f"{png_naming}_{filter_label}_ec_p0_interpolated.png")
-
-        _interpolate_and_plot_2d(
-            x_data=ec_all,
-            y_data=p0_all,
-            z_data=mean_delta_chi2,
-            x_label=r"$E_c$ [MeV]",
-            y_label="p0",
-            x_scale="log",   # typical for E_c
-            y_scale="linear",
-            contour_level=-6.2,
-            vmin=-10,
-            vmax=25,
-            num_grid_points=200,
-            title=f"Mean Δχ² Heatmap for {filter_label} (E_c, p0)",
-            out_filename=out_ec_p0
-        )
-
-        # ------------------------------------------------------
-        # 2) Interpolate & plot for (m_a, g_{aγ})
-        # ------------------------------------------------------
-        out_ma_ga = (f"{path_to_save_heatmap_m_g}"
-                     f"{png_naming}_{filter_label}_ma_ga_interpolated.png")
-
-        _interpolate_and_plot_2d(
-            x_data=ma_all,
-            y_data=g_all,
-            z_data=mean_delta_chi2,
-            x_label=r"$m_a$ [eV]",
-            y_label=r"$g_{a\gamma}$ [GeV$^{-1}$]",
-            x_scale="log",  # typical for m_a
-            y_scale="log",  # typical for g_{aγ}
-            contour_level=-6.2,
-            vmin=-10,
-            vmax=25,
-            num_grid_points=200,
-            title=f"Mean Δχ² Heatmap for {filter_label} (m_a, g_{{aγ}})",
-            out_filename=out_ma_ga
-        )
-
-        print(f"Done plotting for filter_label = {filter_label}")
-
 def plot_mean_delta_chi2_heatmap2(all_results, dataset_labels, png_naming):
     """
     Generates mean Δχ² heatmaps for each filtering category in two spaces:
       (E_c, p₀) and (mₐ, gₐ).
     
-    It assumes that the data were generated as a nested loop over masses and g-values,
-    so that:
-      - The full E_c and p₀ arrays (from axion_data) are reshaped into (n_mass, n_g) grids.
-      - The unique g values come from the first n_g rows.
-      - The unique mₐ values come from every n_g-th row.
+    The function assumes that the data were generated in a nested loop over masses
+    and g-values so that:
+      - ec_all_full and p0_all_full (reshaped from axion_data) have shape (n_mass, n_g).
+      - g_unique comes from the first n_g rows and mass_unique from every n_g-th row.
     
-    The function uses a lookup dictionary (built from the (p₀, E_c) grid) so that each
-    result (which saves a pair [p₀, E_c]) is placed in its correct grid cell.
+    It uses tolerance-based matching (via np.isclose) to place each result (which stores
+    a pair [p₀, E_c]) into its proper grid cell.
     """
-    # Use globals defined above:
     global axion_data, ec_all_full, p0_all_full, mass_unique, g_unique, n_mass, n_g
     
-    # =========================================================================
-    # Build a lookup dictionary from (p₀, E_c) values (from the full grid) to grid indices.
-    # =========================================================================
-    grid_map = {}  # keys: (p0, ec) from the grid; value: (i, j)
-    for i in range(n_mass):
-        for j in range(n_g):
-            # Using the exact stored values as keys.
-            key = (p0_all_full[i, j], ec_all_full[i, j])
-            grid_map[key] = (i, j)
-    
-    # =========================================================================
-    # Loop over filtering categories.
-    # =========================================================================
+    # Get filtering methods from the first source in all_results.
     first_source = next(iter(all_results.values()))
     filtering_methods = list(first_source.keys())
-
+    
+    # Helper function to compute cell edges from centers.
+    def edges_from_centers(centers):
+        d = np.diff(centers)
+        left = centers[0] - d[0] / 2 if len(d) > 0 else centers[0] - 0.5
+        right = centers[-1] + d[-1] / 2 if len(d) > 0 else centers[-1] + 0.5
+        internal = centers[:-1] + d / 2
+        return np.concatenate(([left], internal, [right]))
+    
     for filter_label in filtering_methods:
         # Initialize grids for summing Δχ² and counting entries.
         sum_grid = np.zeros((n_mass, n_g))
         count_grid = np.zeros((n_mass, n_g))
         
-        # Loop over all sources for this filtering category.
+        # Loop over all sources for this filter.
         for source_name in dataset_labels:
             if source_name not in all_results or filter_label not in all_results[source_name]:
                 print(f"Warning: Missing data for {filter_label} in {source_name}. Skipping.")
                 continue
-
             dataset_results = all_results[source_name][filter_label]
             for result in dataset_results:
-                # Each result stores a p0 and E_c (exactly as computed when generating the scan)
-                key = (result["p0"], result["E_c"])
-                if key in grid_map:
-                    i, j = grid_map[key]
+                p0_val = result["p0"]
+                ec_val = result["E_c"]
+                # Use np.isclose to locate the index in the grid:
+                matches = np.where(np.isclose(p0_all_full, p0_val) & np.isclose(ec_all_full, ec_val))
+                if matches[0].size == 1:
+                    i = matches[0][0]
+                    j = matches[1][0]
                     DeltaChi2 = result["fit_result"]["DeltaChi2"]
                     sum_grid[i, j] += DeltaChi2
                     count_grid[i, j] += 1
                 else:
-                    # If an exact match isn't found (due to float precision) you could add tolerance matching.
+                    # No unique match found (could be due to floating point differences)
                     continue
         
-        # Compute the mean Δχ² for each grid cell.
+        # Compute the mean Δχ² for each cell.
         with np.errstate(divide='ignore', invalid='ignore'):
             mean_delta_chi2_grid = np.where(count_grid != 0, sum_grid / count_grid, np.nan)
         
-        # =========================================================================
-        # Set up colormap parameters (common to both plots)
-        # =========================================================================
+        # Set up colormap properties.
         vmin, vmax = -10, 25
         num_colors = 30
         boundaries = np.linspace(vmin, vmax, num_colors + 1)
         cmap = plt.get_cmap('gnuplot2_r', num_colors)
         norm = mcolors.BoundaryNorm(boundaries=boundaries, ncolors=num_colors, clip=True)
         
-        # =========================================================================
-        # For a coarse (non-smoothed) heatmap we need cell edges.
-        # For (E_c, p₀) plot, we assume that along the "g" direction the centers 
-        # can be taken from the first row, and along the "mass" direction the centers 
-        # are taken from the first column.
-        def edges_from_centers(centers):
-            d = np.diff(centers)
-            # For boundaries, extrapolate half the difference at the edges.
-            left = centers[0] - d[0]/2 if len(d)>0 else centers[0]-0.5
-            right = centers[-1] + d[-1]/2 if len(d)>0 else centers[-1]+0.5
-            # Internal edges
-            internal = centers[:-1] + d/2
-            return np.concatenate(([left], internal, [right]))
-        
-        # For the (E_c, p₀) space, assume that along columns the E_c values are nearly the same for all masses.
+        # ===== Plot 1: (E_c, p₀) heatmap =====
+        # For this plot, we compute cell edges using the centers from the grid.
+        # Assume that along columns, the E_c values (from the first row) represent centers;
+        # along rows, the p₀ values (from the first column) represent centers.
         ec_centers = ec_all_full[0, :]  # length n_g
         p0_centers = p0_all_full[:, 0]   # length n_mass
         ec_edges = edges_from_centers(ec_centers)
         p0_edges = edges_from_centers(p0_centers)
-        # Build the 2D grid of edges.
         E_c_mesh_edges, p0_mesh_edges = np.meshgrid(ec_edges, p0_edges)
         
-        # =========================================================================
-        # Plot 1: (E_c, p₀) heatmap using pcolormesh with explicit cell edges.
-        # =========================================================================
         plt.figure(figsize=(10, 6))
         heatmap = plt.pcolormesh(E_c_mesh_edges, p0_mesh_edges, mean_delta_chi2_grid,
                                  cmap=cmap, norm=norm, shading='flat')
-        # Overlay contour at Δχ² = -6.2 if present.
-        if np.any(mean_delta_chi2_grid <= -6.2):
+        # Overlay red contour if any cell has Δχ² <= -6.2.
+        if np.nanmin(mean_delta_chi2_grid) <= -6.2:
             plt.contour(ec_all_full, p0_all_full, mean_delta_chi2_grid,
                         levels=[-6.2], colors='red', linewidths=2)
         cbar = plt.colorbar(heatmap, ticks=np.linspace(vmin, vmax, 11))
@@ -698,7 +401,6 @@ def plot_mean_delta_chi2_heatmap2(all_results, dataset_labels, png_naming):
         plt.xlabel(r'$E_c$ [MeV]', fontsize=15)
         plt.ylabel('p0', fontsize=15)
         plt.ylim(0.0, 1/3)
-
         plt.title(f'Mean $\Delta \chi^2$ Heatmap for {filter_label} in (E_c, p0) Space', fontsize=15)
         plt.xscale('log')
         plt.xticks(fontsize=15)
@@ -828,10 +530,10 @@ with open(f'Top5_Source_ra_dec_specin.txt', 'r') as file:
 # For LIN filtering ("week" and "month")
 plot_mean_delta_chi2_heatmap2(all_results_none, list(all_results_none.keys()), "mean")
 # For LIN filtering ("week" and "month")
-plot_mean_delta_chi2_heatmap2(all_results_lin, list(all_results_lin.keys()), "mean_lin")
+plot_mean_delta_chi2_heatmap2(all_results_lin, list(all_results_lin.keys()), "mean_")
 
 # For SNR filtering ("snr_3", "snr_5", "snr_10")
-plot_mean_delta_chi2_heatmap2(all_results_snr, list(all_results_snr.keys()), "mean_snr")
+plot_mean_delta_chi2_heatmap2(all_results_snr, list(all_results_snr.keys()), "mean_")
 '''
 plot_delta_chi2_heatmap_m_g(results, dataset_label="No_Filtering")
 plot_delta_chi2_heatmap_m_g(results_snr, dataset_label="snr_3")
