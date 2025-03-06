@@ -297,8 +297,7 @@ def plot_mean_delta_chi2_heatmap(all_results, dataset_labels, png_naming):
         plt.savefig(f'{path_to_save_heatmap_m_g}{png_naming}_{filter_label}_ma_ga.png', dpi=300)
         plt.close()
 
-def plot_mean_delta_chi2_heatmap_paired(all_results, dataset_labels, png_naming,
-                                        path_to_save_heatmap_Ec_p0, path_to_save_heatmap_m_g):
+def plot_mean_delta_chi2_heatmap_paired(all_results, dataset_labels, png_naming):
     """
     Plots heatmaps for (E_c, p0) and (mₐ, gₐ) spaces using paired data.
     Assumes that the global arrays p0_all, ec_all, ma_all, and g_all contain the 
