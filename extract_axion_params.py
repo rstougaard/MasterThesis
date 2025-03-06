@@ -297,6 +297,90 @@ def plot_mean_delta_chi2_heatmap(all_results, dataset_labels, png_naming):
         plt.savefig(f'{path_to_save_heatmap_m_g}{png_naming}_{filter_label}_ma_ga.png', dpi=300)
         plt.close()
 
+def plot_mean_delta_chi2_heatmap_paired(all_results, dataset_labels, png_naming,
+                                        path_to_save_heatmap_Ec_p0, path_to_save_heatmap_m_g):
+    """
+    Plots heatmaps for (E_c, p0) and (mₐ, gₐ) spaces using paired data.
+    Assumes that the global arrays p0_all, ec_all, ma_all, and g_all contain the 
+    parameter pairs in the correct order.
+    """
+    # Assume these global arrays are defined:
+    global p0_all, ec_all, ma_all, g_all
+    n_points = len(p0_all)
+    
+    # Average Δχ² for each paired point (over datasets and filtering categories)
+    delta_sum = np.zeros(n_points)
+    delta_count = np.zeros(n_points)
+    
+    for source in dataset_labels:
+        if source not in all_results:
+            continue
+        # Loop over each filtering category for this source
+        for filter_label in all_results[source]:
+            for result in all_results[source][filter_label]:
+                # Identify the paired index using the p0 value
+                idx = p0_all.tolist().index(result["p0"])
+                delta_sum[idx] += result["fit_result"]["DeltaChi2"]
+                delta_count[idx] += 1
+
+    # Compute the mean Δχ² (taking care of division by zero if necessary)
+    mean_delta = delta_sum / delta_count
+    
+    # Set colormap properties
+    vmin, vmax = -10, 25
+    num_colors = 30
+    boundaries = np.linspace(vmin, vmax, num_colors + 1)
+    cmap = plt.get_cmap('gnuplot2_r', num_colors)
+    norm = mcolors.BoundaryNorm(boundaries=boundaries, ncolors=num_colors, clip=True)
+    
+    ### Plot for (E_c, p0) space ###
+    plt.figure(figsize=(10, 6))
+    sc = plt.scatter(ec_all, p0_all, c=mean_delta, cmap=cmap, norm=norm, s=100)
+    
+    # Optionally, mark points where Δχ² ≤ -6.2 with a red circle edge
+    for i, val in enumerate(mean_delta):
+        if val <= -6.2:
+            plt.plot(ec_all[i], p0_all[i], marker='o', markerfacecolor='none',
+                     markeredgecolor='red', markersize=12, linewidth=2)
+    
+    cbar = plt.colorbar(sc, label=r'$\langle \Delta \chi^2 \rangle$', 
+                        ticks=np.linspace(vmin, vmax, 11))
+    cbar.ax.tick_params(labelsize=15)
+    cbar.set_label(r'$\langle \Delta \chi^2 \rangle$', fontsize=15)
+    plt.xlabel(r'$E_c$ [MeV]', fontsize=15)
+    plt.ylabel('p0', fontsize=15)
+    plt.ylim(0.0, 1/3)
+    plt.title(f'Mean $\Delta \chi^2$ Heatmap (Paired) in (E_c, p0) Space', fontsize=15)
+    plt.xscale('log')
+    plt.xticks(fontsize=15)
+    plt.yticks(fontsize=15)
+    plt.tight_layout()
+    plt.savefig(f'{path_to_save_heatmap_Ec_p0}{png_naming}_ec_p0_paired.png', dpi=300)
+    plt.close()
+    
+    ### Plot for (mₐ, gₐ) space ###
+    plt.figure(figsize=(10, 6))
+    sc2 = plt.scatter(ma_all, g_all, c=mean_delta, cmap=cmap, norm=norm, s=100)
+    
+    for i, val in enumerate(mean_delta):
+        if val <= -6.2:
+            plt.plot(ma_all[i], g_all[i], marker='o', markerfacecolor='none',
+                     markeredgecolor='red', markersize=12, linewidth=2)
+    
+    cbar2 = plt.colorbar(sc2, label=r'$\langle \Delta \chi^2 \rangle$', 
+                         ticks=np.linspace(vmin, vmax, 11))
+    cbar2.ax.tick_params(labelsize=15)
+    cbar2.set_label(r'$\langle \Delta \chi^2 \rangle$', fontsize=15)
+    plt.xlabel(r'$m_a$ [eV]', fontsize=15)
+    plt.ylabel(r'$g_{a\gamma}$ [GeV$^{-1}$]', fontsize=15)
+    plt.title(f'Mean $\Delta \chi^2$ Heatmap (Paired) in ($m_a$, $g_{{a\gamma}}$) Space', fontsize=15)
+    plt.xscale('log')
+    plt.xticks(fontsize=15)
+    plt.yticks(fontsize=15)
+    plt.tight_layout()
+    plt.savefig(f'{path_to_save_heatmap_m_g}{png_naming}_ma_ga_paired.png', dpi=300)
+    plt.close()
+
 all_results_none = {}
 all_results_snr = {}
 all_results_lin = {}
@@ -364,7 +448,7 @@ with open(f'Top5_Source_ra_dec_specin.txt', 'r') as file:
                                     f"snr_10": (sorted_data_snr10['geometric_mean'], sorted_data_snr10['flux_tot_value']/bin_size, sorted_data_snr10['flux_tot_error']/bin_size)}
                     datasets_lin = {f"week": (sorted_data_lin_week['geometric_mean'], sorted_data_lin_week['flux_tot_value']/bin_size, sorted_data_lin_week['flux_tot_error']/bin_size),
                                     f"month": (sorted_data_lin_month['geometric_mean'], sorted_data_lin_month['flux_tot_value']/bin_size, sorted_data_lin_month['flux_tot_error']/bin_size)}
-                    #print(source_name)
+                    print(source_name)
 
                     results = nested_fits(datasets)
                     results_snr = nested_fits(datasets_snr)
