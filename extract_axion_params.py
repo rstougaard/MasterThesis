@@ -13,11 +13,11 @@ path_to_save_heatmap_Ec_p0 = "./fit_results/heatmaps_Ec_p0/"
 #E_c_values = np.logspace(1, 4, 61)  # MeV
 #k = 2.7
 axion_data = np.load('./denys/Rikke/Data/scan12.npy')
-ma_all = axion_data[:40,0] #eV
-g_all = axion_data[:40,1] # GeV**-1
-ec_all = axion_data[:40,2]/1e6 #MeV
-p0_all = axion_data[:40,3]
-k_all = axion_data[:40,4]
+ma_all = axion_data[:,0] #eV
+g_all = axion_data[:,1] # GeV**-1
+ec_all = axion_data[:,2]/1e6 #MeV
+p0_all = axion_data[:,3]
+k_all = axion_data[:,4]
 k = np.mean(k_all)
     
 # Function 1: LogPar
