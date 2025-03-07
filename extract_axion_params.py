@@ -21,6 +21,18 @@ p0_all = axion_data[:,3]
 k_all = axion_data[:,4]
 k = np.mean(k_all)
 
+mdiff = np.abs( ma_all - 1e-9 )
+gdiff = np.abs( g_all - 2e-12 )
+    
+ma0 = ma_all[ np.argmin(mdiff) ]
+ga0 = g_all[ np.argmin(gdiff) ]
+    
+print(f'Closest ma, ga = {ma0:.2e} ; {ga0:.2e}')
+
+
+idx = (ma_all==ma0)&(g_all==ga0)
+print(f'Closest p0, Ec = {p0_all[idx]:.2e} ; {ec_all[idx]:.2e}')
+
 # In your nested-loop scan, for each mass there are 40 g values.
 n_g = 40
 n_total = axion_data.shape[0]
@@ -545,8 +557,8 @@ def plot_mean_delta_chi2_heatmap3(all_results, dataset_labels, png_naming):
             for j in range(n_g):
                 if not np.isnan(mean_delta_chi2_grid[i, j]) and mean_delta_chi2_grid[i, j] <= threshold:
                     # Compute the cell center in (mₐ, gₐ) space.
-                    x = mass_unique[i] / 1e-9   # convert m_a to neV for plotting
-                    y = g_unique[j]
+                    x = mass_unique[idx] / 1e-9   # convert m_a to neV for plotting
+                    y = g_unique[idx]
                     plt.plot(x, y, marker='*', markersize=12, color='red')
                     # Annotate with the corresponding p0 and E_c.
                     annotation = f"p0={p0_all_full[i, j]:.3f}\nEc={ec_all_full[i, j]:.2f}"
