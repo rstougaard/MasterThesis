@@ -54,7 +54,7 @@ mass_unique = axion_data[::n_g, 0]     # length = n_mass
 
     
 # Function 1: LogPar
-def LogPar(x, Norm, alpha_, beta_):
+def logpar_base(x, Norm, alpha_, beta_):
     E_b = 1000  # Fixed E_b value
     return Norm * (x / E_b) ** (-(alpha_ + beta_ * np.log(x / E_b)))
 
@@ -78,18 +78,23 @@ def fit_data(x, y, y_err, p0, E_c, k, source_name, useEBL=True):
 
     y_err_eff = np.array(y_err_eff)
 
-    if(useEBL):
+    if useEBL:
         with fits.open('table-4LAC-DR3-h.fits') as f:
             data1 = f[1].data
-            idx = ( data1['Source_Name'] == source_name )
-            z = data1['Redshift'][idx][0]
-            ebl = EblAbsorptionModel(z).transmission(x_filtered*u.MeV)
-            self.ebl=ebl
-           
-            def LogPar(x, Norm, alpha_, beta_):
-                return LogPar(x, Norm, alpha_, beta_) * self.ebl
+        idx = (data1['Source_Name'] == source_name)
+        z = data1['Redshift'][idx][0]
+        # Compute the EBL transmission at the energy array (x_filtered)
+        self.ebl = EblAbsorptionModel(z).transmission(x_filtered * u.MeV)
+
+        # Define the EBL-modified LogPar function
+        def LogPar(x, Norm, alpha_, beta_):
+            return logpar_base(x, Norm, alpha_, beta_) * self.ebl
+
+        # Optionally, assign it as an attribute:
+        self.LogPar = LogPar
     else:
-        print('No EBL accounted for in fit.')
+        # No EBL correction: use the base model directly
+        self.LogPar = logpar_base
 
 
     # Define bounds for LogPar parameters [Norm, alpha_, beta_]
