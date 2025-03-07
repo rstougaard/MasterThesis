@@ -718,9 +718,9 @@ with open(f'Top5_Source_ra_dec_specin.txt', 'r') as file:
                                     f"month": (sorted_data_lin_month['geometric_mean'], sorted_data_lin_month['flux_tot_value']/bin_size, sorted_data_lin_month['flux_tot_error']/bin_size)}
                     print(source_name)
 
-                    results = nested_fits(datasets, source_name, useEBL=True)
-                    results_snr = nested_fits(datasets_snr, source_name, useEBL=True)
-                    results_lin = nested_fits(datasets_lin, source_name, useEBL=True)
+                    results = nested_fits(datasets, source_name, useEBL=False)
+                    results_snr = nested_fits(datasets_snr, source_name, useEBL=False)
+                    results_lin = nested_fits(datasets_lin, source_name, useEBL=False)
 
                     all_results_none[source_name] = results
                     all_results_snr[source_name] = results_snr
