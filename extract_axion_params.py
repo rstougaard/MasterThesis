@@ -84,7 +84,7 @@ def fit_data(x, y, y_err, p0, E_c, k, source_name, useEBL=True):
             idx = ( data1['Source_Name'] == source_name )
             z = data1['Redshift'][idx][0]
             ebl = EblAbsorptionModel(z).transmission(x_filtered*u.MeV)
-            print(ebl)
+            print(ebl.self)
            
             def LogPar(x, Norm, alpha_, beta_):
                 return LogPar(x, Norm, alpha_, beta_) * ebl
