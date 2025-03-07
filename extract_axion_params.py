@@ -31,7 +31,7 @@ print(f'Closest ma, ga = {ma0:.2e} ; {ga0:.2e}')
 
 
 idx = (ma_all==ma0)&(g_all==ga0)
-print(f'Closest p0, Ec = {p0_all[idx]:.2e} ; {ec_all[idx]:.2e}')
+print(f'Closest p0, Ec = {p0_all[idx][0]:.2e} ; {ec_all[idx][0]:.2e}')
 
 # In your nested-loop scan, for each mass there are 40 g values.
 n_g = 40
@@ -551,24 +551,17 @@ def plot_mean_delta_chi2_heatmap3(all_results, dataset_labels, png_naming):
                         levels=[-6.2], colors='red', linewidths=2)
         
         # Additionally, mark ONE cell (the first found) that meets Δχ²<= -6.2.
-        threshold = -6.2
-        marked = False
-        for i in range(n_mass):
-            for j in range(n_g):
-                if not np.isnan(mean_delta_chi2_grid[i, j]) and mean_delta_chi2_grid[i, j] <= threshold:
-                    # Compute the cell center in (mₐ, gₐ) space.
-                    x = mass_unique[idx] / 1e-9   # convert m_a to neV for plotting
-                    y = g_unique[idx]
-                    plt.plot(x, y, marker='*', markersize=12, color='red')
-                    # Annotate with the corresponding p0 and E_c.
-                    annotation = f"p0={p0_all_full[i, j]:.3f}\nEc={ec_all_full[i, j]:.2f}"
-                    plt.text(x, y, annotation, color='black', fontsize=9,
-                             ha='center', va='bottom',
-                             bbox=dict(facecolor='white', alpha=0.7, edgecolor='none'))
-                    marked = True
-                    break
-            if marked:
-                break
+                
+        # Compute the cell center in (mₐ, gₐ) space.
+        x = ma_all[idx][0] / 1e-9   # convert m_a to neV for plotting
+        y = g_all[idx][0]
+        plt.plot(x, y, marker='*', markersize=12, color='red')
+        # Annotate with the corresponding p0 and E_c.
+        annotation = f"p0={p0_all[idx][0]:.3f}\nEc={ec_all[idx][0]:.2f}"
+        plt.text(x, y, annotation, color='black', fontsize=9,
+                    ha='center', va='bottom',
+                    bbox=dict(facecolor='white', alpha=0.7, edgecolor='none'))
+               
         
         cbar = plt.colorbar(heatmap, ticks=np.linspace(vmin, vmax, 11))
         cbar.set_label(r'$\langle \Delta \chi^2 \rangle$', fontsize=15)
