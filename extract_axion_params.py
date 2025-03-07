@@ -7,8 +7,11 @@ from matplotlib.patches import Ellipse
 import shlex
 from scipy.spatial import KDTree
 from scipy.interpolate import griddata
+from naima.models import EblAbsorptionModel
+import astropy.units as u
 path_to_save_heatmap_m_g = "./fit_results/heatmaps_m_g/"
 path_to_save_heatmap_Ec_p0 = "./fit_results/heatmaps_Ec_p0/"
+
 
 #p0_values = np.linspace(0, 1 / 3, 11)
 #E_c_values = np.logspace(1, 4, 61)  # MeV
@@ -61,8 +64,8 @@ def reduced_chi_square(y_obs, y_fit, y_err, num_params):
     dof = len(y_obs) - num_params  # Degrees of freedom
     return chi2 , dof
 
-def fit_data(x, y, y_err, p0, E_c, k):
-# Filter out points where y is zero
+def fit_data(x, y, y_err, p0, E_c, k, source_name, useEBL=True):
+    # Filter out points where y is zero
     mask = y != 0
     x_filtered, y_filtered, y_err_filtered = x[mask], y[mask], y_err[mask]
     # Check if the last point was filtered out
@@ -74,6 +77,20 @@ def fit_data(x, y, y_err, p0, E_c, k):
         y_err_eff = np.append(y_err_eff0, y_err_eff1)
 
     y_err_eff = np.array(y_err_eff)
+
+    if(useEBL):
+        with fits.open('table-4LAC-DR3-h.fits') as f:
+            data1 = f[1].data
+            idx = ( data1['Source_Name'] == source_name )
+            z = data1['Redshift'][idx][0]
+            ebl = EblAbsorptionModel(z).transmission(x_filtered*u.MeV)
+           
+            def LogPar(x, Norm, alpha_, beta_):
+                return LogPar(x, Norm, alpha_, beta_) * ebl
+    else:
+        print('No EBL accounted for in fit.')
+
+
     # Define bounds for LogPar parameters [Norm, alpha_, beta_]
     bounds_logpar = ([1e-13, -1.0, -2.0], [1e-9, 5.0, 2.0])  # Lower and upper bounds
     p0_logpar = [1e-11, 2.0, 0.1]  # Initial guesses
@@ -87,8 +104,8 @@ def fit_data(x, y, y_err, p0, E_c, k):
     perr_logpar = np.sqrt(np.diag(pcov_logpar))
 
     # Define bounds for axion_func parameters [Norm, alpha_, beta_]
-    def LogPar_axion_func(E, Norm, alpha_, beta_):
-        return LogPar(E, Norm, alpha_, beta_) * (1 - p0 / (1 + (E_c / E) ** k))
+    def LogPar_axion_func(E, Norm, alpha_, beta_, w):
+        return LogPar(E, Norm, alpha_, beta_) * (1 - p0 / (1 + (E_c / E) ** k) * (1+0.2*np.tanh(w)))
     
     popt_axion, pcov_axion = curve_fit(
         LogPar_axion_func, x_filtered, y_filtered, sigma=y_err_eff, p0=p0_logpar, bounds=bounds_logpar, absolute_sigma=True
@@ -121,7 +138,7 @@ def fit_data(x, y, y_err, p0, E_c, k):
         "y_fit_Axion": y_fit_axion,
     }
 
-def nested_fits(datasets):
+def nested_fits(datasets, source_name, useEBL=True):
     results = {}
 
     for dataset_label, (x, y, y_err) in datasets.items():
@@ -130,7 +147,7 @@ def nested_fits(datasets):
         # Loop over paired values in p0_all and ec_all
         for p0, E_c in zip(p0_all, ec_all):
             # Perform the fit
-            fit_result = fit_data(x=np.array(x), y=np.array(y), y_err=np.array(y_err), p0=p0, E_c=E_c, k=k)
+            fit_result = fit_data(x=np.array(x), y=np.array(y), y_err=np.array(y_err), p0=p0, E_c=E_c, k=k, source_name=source_name, useEBL=useEBL)
 
             # Store the fit results with metadata
             dataset_results.append({
@@ -553,14 +570,14 @@ def plot_mean_delta_chi2_heatmap3(all_results, dataset_labels, png_naming):
         # Additionally, mark ONE cell (the first found) that meets Δχ²<= -6.2.
                 
         # Compute the cell center in (mₐ, gₐ) space.
-        x = ma_all[idx][0] / 1e-9   # convert m_a to neV for plotting
-        y = g_all[idx][0]
-        plt.plot(x, y, marker='*', markersize=12, color='red')
+        #x = ma_all[idx][0] / 1e-9   # convert m_a to neV for plotting
+        #y = g_all[idx][0]
+        #plt.plot(x, y, marker='*', markersize=12, color='red')
         # Annotate with the corresponding p0 and E_c.
-        annotation = f"p0={p0_all[idx][0]:.3f}\nEc={ec_all[idx][0]:.2f}"
-        plt.text(x, y, annotation, color='black', fontsize=9,
-                    ha='center', va='bottom',
-                    bbox=dict(facecolor='white', alpha=0.7, edgecolor='none'))
+        #annotation = f"p0={p0_all[idx][0]:.3f}\nEc={ec_all[idx][0]:.2f}"
+        #plt.text(x, y, annotation, color='black', fontsize=9,
+                    #ha='center', va='bottom',
+                    #bbox=dict(facecolor='white', alpha=0.7, edgecolor='none'))
                
         
         cbar = plt.colorbar(heatmap, ticks=np.linspace(vmin, vmax, 11))
@@ -697,9 +714,9 @@ with open(f'Top5_Source_ra_dec_specin.txt', 'r') as file:
                                     f"month": (sorted_data_lin_month['geometric_mean'], sorted_data_lin_month['flux_tot_value']/bin_size, sorted_data_lin_month['flux_tot_error']/bin_size)}
                     print(source_name)
 
-                    results = nested_fits(datasets)
-                    results_snr = nested_fits(datasets_snr)
-                    results_lin = nested_fits(datasets_lin)
+                    results = nested_fits(datasets, source_name, useEBL=True)
+                    results_snr = nested_fits(datasets_snr, source_name, useEBL=True)
+                    results_lin = nested_fits(datasets_lin, source_name, useEBL=True)
 
                     all_results_none[source_name] = results
                     all_results_snr[source_name] = results_snr
