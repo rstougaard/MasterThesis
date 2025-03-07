@@ -83,18 +83,15 @@ def fit_data(x, y, y_err, p0, E_c, k, source_name, useEBL=True):
             data1 = f[1].data
         idx = (data1['Source_Name'] == source_name)
         z = data1['Redshift'][idx][0]
-        # Compute the EBL transmission at the energy array (x_filtered)
-        self.ebl = EblAbsorptionModel(z).transmission(x_filtered * u.MeV)
+        ebl = EblAbsorptionModel(z).transmission(x_filtered * u.MeV)
+        
+        def LogPar_EBL(x, Norm, alpha_, beta_):
+            return logpar_base(x, Norm, alpha_, beta_) * ebl
 
-        # Define the EBL-modified LogPar function
-        def LogPar(x, Norm, alpha_, beta_):
-            return logpar_base(x, Norm, alpha_, beta_) * self.ebl
-
-        # Optionally, assign it as an attribute:
-        self.LogPar = LogPar
+        LogPar= LogPar_EBL
     else:
-        # No EBL correction: use the base model directly
-        self.LogPar = logpar_base
+        LogPar = logpar_base
+        print('No EBL accounted for in fit.')
 
 
     # Define bounds for LogPar parameters [Norm, alpha_, beta_]
