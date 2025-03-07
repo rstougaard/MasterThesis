@@ -112,7 +112,7 @@ def fit_data(x, y, y_err, p0, E_c, k, source_name, useEBL=True):
     bounds_alp = ([1e-13, -1.0, -2.0, -0.2], [1e-9, 5.0, 2.0, 0.2])  # Lower and upper bounds
     p0_alp= [1e-11, 2.0, 0.1, 0.0]  # Initial guesses
     popt_axion, pcov_axion = curve_fit(
-        LogPar_axion_func, x_filtered, y_filtered, sigma=y_err_eff, p0=p0_logpar, bounds=bounds_logpar, absolute_sigma=True
+        LogPar_axion_func, x_filtered, y_filtered, sigma=y_err_eff, p0=p0_alp, bounds=bounds_alp, absolute_sigma=True
     )
     y_fit_axion = LogPar_axion_func(x_filtered, *popt_axion)
     chi2_axion, dof_axion = reduced_chi_square(y_filtered, y_fit_axion, y_err_eff, len(popt_axion))
