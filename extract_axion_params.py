@@ -109,8 +109,8 @@ def fit_data(x, y, y_err, p0, E_c, k, source_name, useEBL=True):
     # Define bounds for axion_func parameters [Norm, alpha_, beta_]
     def LogPar_axion_func(E, Norm, alpha_, beta_, w):
         return LogPar(E, Norm, alpha_, beta_) * (1 - p0 / (1 + (E_c / E) ** k) * (1+0.2*np.tanh(w)))
-    bounds_alp = ([1e-13, -1.0, -2.0, 0.8], [1e-9, 5.0, 2.0, 1.2])  # Lower and upper bounds
-    p0_alp= [1e-11, 2.0, 0.1, 1.0]  # Initial guesses
+    bounds_alp = ([1e-13, -1.0, -2.0, 0.0], [1e-9, 5.0, 2.0, 2.0*np.pi])  # Lower and upper bounds
+    p0_alp= [1e-11, 2.0, 0.1, np.pi]  # Initial guesses
     popt_axion, pcov_axion = curve_fit(
         LogPar_axion_func, x_filtered, y_filtered, sigma=y_err_eff, p0=p0_alp, bounds=bounds_alp, absolute_sigma=True
     )
