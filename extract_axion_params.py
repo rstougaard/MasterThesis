@@ -12,7 +12,10 @@ from iminuit import Minuit
 path_to_save_heatmap_m_g = "./fit_results/heatmaps_m_g/"
 path_to_save_heatmap_Ec_p0 = "./fit_results/heatmaps_Ec_p0/"
 
-
+start_mass = 3e-8
+stop_mass = 1e-8 
+start_g =  5e-13
+stop_g = 1e-11
 #p0_values = np.linspace(0, 1 / 3, 11)
 #E_c_values = np.logspace(1, 4, 61)  # MeV
 #k = 2.7
@@ -23,18 +26,6 @@ ec_all = axion_data[:,2]/1e6 #MeV
 p0_all = axion_data[:,3]
 k_all = axion_data[:,4]
 k = np.mean(k_all)
-
-mdiff = np.abs( ma_all - 1e-9 )
-gdiff = np.abs( g_all - 2e-12 )
-    
-ma0 = ma_all[ np.argmin(mdiff) ]
-ga0 = g_all[ np.argmin(gdiff) ]
-    
-print(f'Closest ma, ga = {ma0:.2e} ; {ga0:.2e}')
-
-
-idx = (ma_all==ma0)&(g_all==ga0)
-print(f'Closest p0, Ec = {p0_all[idx][0]:.2e} ; {ec_all[idx][0]:.2e}')
 
 # In your nested-loop scan, for each mass there are 40 g values.
 n_g = 40
@@ -51,6 +42,36 @@ p0_all_full = axion_data[:, 3].reshape(n_mass, n_g)
 g_unique = axion_data[:n_g, 1]       # length = n_g
 # mₐ is taken from every 40th row (i.e. each new mass in the outer loop)
 mass_unique = axion_data[::n_g, 0]     # length = n_mass
+
+mdiff0 = np.abs( mass_unique - start_mass )
+gdiff0 = np.abs( g_unique - start_g )
+mdiff1 = np.abs( mass_unique - stop_mass )
+gdiff1 = np.abs( g_unique - stop_g )
+
+ma0 = mass_unique[ np.argmin(mdiff0) ]
+ga0 = g_unique[ np.argmin(gdiff0) ]
+ma1 = mass_unique[ np.argmin(mdiff1) ]
+ga1 = g_unique[ np.argmin(gdiff1) ]
+
+# Get the index for the mass value (row index)
+row_start = np.argmin(np.abs(mass_unique - start_mass))
+row_stop  = np.argmin(np.abs(mass_unique - stop_mass))
+
+# Get the index for the g value (column index)
+col_start = np.argmin(np.abs(g_unique - start_g))
+col_stop  = np.argmin(np.abs(g_unique - stop_g))
+
+ec_masked = ec_all_full[row_start:row_stop+1, col_start:col_stop+1]
+p0_masked = p0_all_full[row_start:row_stop+1, col_start:col_stop+1]
+
+m_masked = mass_unique[row_start:row_stop+1, col_start:col_stop+1]
+g_masked = g_unique[row_start:row_stop+1, col_start:col_stop+1]
+    
+print(f'Closest start ma, ga = {ma0:.2e} ; {ga0:.2e}')
+print(f'Closest stop ma, ga = {ma1:.2e} ; {ga1:.2e}')
+
+print(f'Closest start p0, Ec = {p0_masked[0,0]:.2e} ; {ec_masked[0,0]:.2e}')
+print(f'Closest stop p0, Ec = {p0_masked[-1, -1]:.2e} ; {ec_masked[-1, -1]:.2e}')
 
     
 # Function 1: LogPar
@@ -223,7 +244,7 @@ def nested_fits(datasets, source_name, useEBL=True):
         dataset_results = []
 
         # Loop over paired values in p0_all and ec_all
-        for p0, E_c in zip(p0_all, ec_all):
+        for p0, E_c in zip(p0_masked, ec_masked):
             # Perform the fit
             fit_result = fit_data(x=np.array(x), y=np.array(y), y_err=np.array(y_err), p0=p0, E_c=E_c, k=k, source_name=source_name, useEBL=useEBL)
 
@@ -558,7 +579,7 @@ def plot_mean_delta_chi2_heatmap3(all_results, dataset_labels, png_naming):
     Uses tolerance-based matching (via np.isclose) to assign each result (with a pair [p₀, E_c])
     into its proper grid cell.
     """
-    global axion_data, ec_all_full, p0_all_full, mass_unique, g_unique, n_mass, n_g
+    global axion_data, ec_masked, p0_masked, m_masked, g_masked, n_mass, n_g
     
     # Get filtering methods from the first source.
     first_source = next(iter(all_results.values()))
@@ -574,8 +595,8 @@ def plot_mean_delta_chi2_heatmap3(all_results, dataset_labels, png_naming):
     
     for filter_label in filtering_methods:
         # Initialize grids to sum Δχ² and count entries.
-        sum_grid = np.zeros((n_mass, n_g))
-        count_grid = np.zeros((n_mass, n_g))
+        sum_grid = np.zeros((ec_masked.shape[0], ec_masked.shape[1]))
+        count_grid = np.zeros((ec_masked.shape[0], ec_masked.shape[1]))
         
         # Loop over all sources for this filter.
         for source_name in dataset_labels:
@@ -587,7 +608,7 @@ def plot_mean_delta_chi2_heatmap3(all_results, dataset_labels, png_naming):
                 p0_val = result["p0"]
                 ec_val = result["E_c"]
                 # Use tolerance-based matching to locate the cell.
-                matches = np.where(np.isclose(p0_all_full, p0_val) & np.isclose(ec_all_full, ec_val))
+                matches = np.where(np.isclose(p0_masked, p0_val) & np.isclose(ec_masked, ec_val))
                 if matches[0].size == 1:
                     i = matches[0][0]
                     j = matches[1][0]
@@ -608,56 +629,20 @@ def plot_mean_delta_chi2_heatmap3(all_results, dataset_labels, png_naming):
         cmap = plt.get_cmap('gnuplot2_r', num_colors)
         norm = mcolors.BoundaryNorm(boundaries=boundaries, ncolors=num_colors, clip=True)
         
-        # ===== Plot 1: (E_c, p₀) heatmap =====
-        # Compute cell edges using centers from the grid.
-        ec_centers = ec_all_full[0, :]  # use first row (length n_g)
-        p0_centers = p0_all_full[:, 0]   # use first column (length n_mass)
-        ec_edges = edges_from_centers(ec_centers)
-        p0_edges = edges_from_centers(p0_centers)
-        E_c_mesh_edges, p0_mesh_edges = np.meshgrid(ec_edges, p0_edges)
         
-        plt.figure(figsize=(10, 6))
-        heatmap = plt.pcolormesh(E_c_mesh_edges, p0_mesh_edges, mean_delta_chi2_grid,
-                                 cmap=cmap, norm=norm, shading='flat')
-        # Draw red contour at Δχ² = -6.2.
-        if np.nanmin(mean_delta_chi2_grid) <= -6.2:
-            plt.contour(ec_all_full, p0_all_full, mean_delta_chi2_grid,
-                        levels=[-6.2], colors='red', linewidths=2)
-        cbar = plt.colorbar(heatmap, ticks=np.linspace(vmin, vmax, 11))
-        cbar.set_label(r'$\langle \Delta \chi^2 \rangle$', fontsize=15)
-        plt.xlabel(r'$E_c$ [MeV]', fontsize=15)
-        plt.ylabel('p0', fontsize=15)
-        plt.title(f'Mean $\Delta \chi^2$ Heatmap for {filter_label} in (E_c, p0) Space', fontsize=15)
-        plt.xscale('log')
-        plt.xticks(fontsize=15)
-        plt.yticks(fontsize=15)
-        plt.tight_layout()
-        plt.savefig(f'{path_to_save_heatmap_Ec_p0}{png_naming}_{filter_label}_ec_p0.png', dpi=300)
-        plt.close()
-        
-        # ===== Plot 2: (mₐ, gₐ) heatmap =====
-        # Build meshgrid from unique mass and g values.
-        ma_mesh, g_mesh = np.meshgrid(mass_unique, g_unique, indexing='ij')
+        ma_mesh, g_mesh = np.meshgrid(m_masked, g_masked, indexing='ij')
         plt.figure(figsize=(10, 6))
         heatmap = plt.pcolormesh(ma_mesh / 1e-9, g_mesh, mean_delta_chi2_grid,
                                  cmap=cmap, norm=norm, shading='auto')
+        
         if np.any(mean_delta_chi2_grid <= -6.2):
             plt.contour(ma_mesh / 1e-9, g_mesh, mean_delta_chi2_grid,
                         levels=[-6.2], colors='red', linewidths=2)
-        
-        # Additionally, mark ONE cell (the first found) that meets Δχ²<= -6.2.
+            
+        if np.any(mean_delta_chi2_grid >= 6.2):
+            plt.contour(ma_mesh / 1e-9, g_mesh, mean_delta_chi2_grid,
+                        levels=[6.2], colors='green', linewidths=2)
                 
-        # Compute the cell center in (mₐ, gₐ) space.
-        #x = ma_all[idx][0] / 1e-9   # convert m_a to neV for plotting
-        #y = g_all[idx][0]
-        #plt.plot(x, y, marker='*', markersize=12, color='red')
-        # Annotate with the corresponding p0 and E_c.
-        #annotation = f"p0={p0_all[idx][0]:.3f}\nEc={ec_all[idx][0]:.2f}"
-        #plt.text(x, y, annotation, color='black', fontsize=9,
-                    #ha='center', va='bottom',
-                    #bbox=dict(facecolor='white', alpha=0.7, edgecolor='none'))
-               
-        
         cbar = plt.colorbar(heatmap, ticks=np.linspace(vmin, vmax, 11))
         cbar.set_label(r'$\langle \Delta \chi^2 \rangle$', fontsize=15)
         plt.xlabel(r'$m_a$ [neV]', fontsize=15)
@@ -667,19 +652,20 @@ def plot_mean_delta_chi2_heatmap3(all_results, dataset_labels, png_naming):
         plt.yscale('log')
         plt.xticks(fontsize=15)
         plt.yticks(fontsize=15)
-        plt.xlim(1e-1, 1e3)
+        plt.xlim(start_mass/1e-9, stop_mass/1e-9)
+        plt.ylim(start_g, stop_g)
         plt.tight_layout()
         plt.savefig(f'{path_to_save_heatmap_m_g}{png_naming}_{filter_label}_ma_ga.png', dpi=300)
         plt.close()
 
         # Prepare scatter plot data by flattening the grids.
         # For (p0, Ec) scatter:
-        p0_scatter = p0_all_full.flatten()
-        Ec_scatter = ec_all_full.flatten()
+        p0_scatter = p0_masked.flatten()
+        Ec_scatter = ec_masked.flatten()
         delta_scatter = mean_delta_chi2_grid.flatten()
 
         # For (m_a, g) scatter: create a full grid from the unique values.
-        m_a_grid, g_grid = np.meshgrid(mass_unique, g_unique, indexing='ij')
+        m_a_grid, g_grid = np.meshgrid(m_masked, g_masked, indexing='ij')
         m_a_scatter = m_a_grid.flatten()
         g_scatter = g_grid.flatten()
 
@@ -701,11 +687,6 @@ def plot_mean_delta_chi2_heatmap3(all_results, dataset_labels, png_naming):
 
         # Right panel: (p0, Ec) space.
         # Filter to only include points with negative Δχ².
-        mask = delta_scatter < 0
-        p0_filtered = p0_scatter[mask]
-        Ec_filtered = Ec_scatter[mask]
-        delta_filtered = delta_scatter[mask]
-
         sc2 = ax_right.scatter(Ec_scatter, p0_scatter, c=delta_scatter, cmap='viridis',
                             s=30, edgecolor='k')
         ax_right.set_xlabel('E_c (MeV)')
