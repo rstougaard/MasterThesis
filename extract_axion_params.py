@@ -114,7 +114,7 @@ def fit_data(x, y, y_err, p0, E_c, k, source_name, useEBL=True):
     # Extract results
     popt_logpar = [m_logpar.values[p] for p in m_logpar.parameters]
     perr_logpar = [m_logpar.errors[p] for p in m_logpar.parameters]
-    y_fit_logpar = LogPar(x, *popt_logpar)
+    y_fit_logpar = LogPar(x_filtered, *popt_logpar)
     chi2_logpar, dof_logpar = reduced_chi_square(y_filtered, y_fit_logpar, y_err_eff, len(p0_logpar))
 
     def LogPar_axion_func(x, Norm, alpha_, beta_, w):
