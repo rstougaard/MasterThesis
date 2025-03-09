@@ -126,7 +126,7 @@ def fit_data(x, y, y_err, p0, E_c, k, source_name, useEBL=True):
     bounds_axion = [(1e-13, 1e-9), (1.0, 5.0), (-2.0, 2.0), (0, 2*np.pi)]
 
     # Minuit fit for Axion
-    m_axion = Minuit(least_squares_axion, Norm=p0_axion[0], alpha_=p0_axion[1], beta_=p0_axion[2], w=p0_axion[5])
+    m_axion = Minuit(least_squares_axion, Norm=p0_axion[0], alpha_=p0_axion[1], beta_=p0_axion[2], w=p0_axion[3])
 
     # Set parameter limits
     for param, bound in zip(m_axion.parameters, bounds_axion):
