@@ -42,40 +42,33 @@ g_unique = axion_data[:n_g, 1]       # length = n_g
 # mₐ is taken from every 40th row (i.e. each new mass in the outer loop)
 mass_unique = axion_data[::n_g, 0]     # length = n_mass
 
-mass_start = 2e-10
-mass_stop = 1e-8
-g_start = 5e-13
-g_stop = 1e-11
+# Define your desired start and stop values
+m_start_val = 2e-10
+g_start_val = 5e-13
+m_stop_val  = 1e-8
+g_stop_val  = 1e-11
 
-mdiff0 = np.abs( mass_unique - mass_start )
-gdiff0 = np.abs( g_unique - g_start )
-mdiff1 = np.abs( mass_unique - mass_stop )
-gdiff1 = np.abs( g_unique - g_stop )
+# Find the row (mass) and column (g) indices closest to the desired start values.
+row_start = np.argmin(np.abs(mass_unique - m_start_val))
+col_start = np.argmin(np.abs(g_unique - g_start_val))
 
-ma0 = mass_unique[ np.argmin(mdiff0) ]
-ga0 = g_unique[ np.argmin(gdiff0) ]
-ma1 = mass_unique[ np.argmin(mdiff1) ]
-ga1 = g_unique[ np.argmin(gdiff1) ]
+# Similarly, find the indices closest to the desired stop values.
+row_stop  = np.argmin(np.abs(mass_unique - m_stop_val))
+col_stop  = np.argmin(np.abs(g_unique - g_stop_val))
 
-# Get the index for the mass value (row index)
-row_start = np.argmin(np.abs(mass_unique - mass_start))
-row_stop  = np.argmin(np.abs(mass_unique - mass_stop))
+# For clarity, you can print out the selected values:
+print("Selected mass start:", mass_unique[row_start])
+print("Selected g start:", g_unique[col_start])
+print("Selected mass stop:", mass_unique[row_stop])
+print("Selected g stop:", g_unique[col_stop])
 
-# Get the index for the g value (column index)
-col_start = np.argmin(np.abs(g_unique - g_start))
-col_stop  = np.argmin(np.abs(g_unique - g_stop))
+# Now filter the full grid arrays.
+ec_filtered = ec_all_full[row_start:row_stop+1, col_start:col_stop+1]
+p0_filtered = p0_all_full[row_start:row_stop+1, col_start:col_stop+1]
 
-ec_masked = ec_all_full[row_start:row_stop+1, col_start:col_stop+1]
-p0_masked = p0_all_full[row_start:row_stop+1, col_start:col_stop+1]
-
+# Also filter the unique arrays.
 mass_filtered = mass_unique[row_start:row_stop+1]
 g_filtered    = g_unique[col_start:col_stop+1]
-    
-print(f'Closest start ma, ga = {ma0:.2e} ; {ga0:.2e}')
-print(f'Closest stop ma, ga = {ma1:.2e} ; {ga1:.2e}')
-
-print(f'Closest start p0, Ec = {p0_masked[0,0]:.2e} ; {ec_masked[0,0]:.2e}')
-print(f'Closest stop p0, Ec = {p0_masked[-1, -1]:.2e} ; {ec_masked[-1, -1]:.2e}')
 
     
 # Function 1: LogPar
