@@ -63,12 +63,12 @@ print("Selected mass stop:", mass_unique[row_stop])
 print("Selected g stop:", g_unique[col_stop])
 
 # Now filter the full grid arrays.
-ec_filtered = ec_all_full[row_start:row_stop+1, col_start:col_stop+1]
-p0_filtered = p0_all_full[row_start:row_stop+1, col_start:col_stop+1]
+ec_masked = ec_all_full[row_start:row_stop+1, col_start:col_stop+1]
+p0_masked = p0_all_full[row_start:row_stop+1, col_start:col_stop+1]
 
 # Also filter the unique arrays.
-mass_filtered = mass_unique[row_start:row_stop+1]
-g_filtered    = g_unique[col_start:col_stop+1]
+m_masked = mass_unique[row_start:row_stop+1]
+g_masked    = g_unique[col_start:col_stop+1]
 
     
 # Function 1: LogPar
