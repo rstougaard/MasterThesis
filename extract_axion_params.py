@@ -236,24 +236,36 @@ def fit_data(x, y, y_err, p0, E_c, k, source_name, useEBL=True):
 
 def nested_fits(datasets, source_name, useEBL=True):
     results = {}
-
+    # Here we assume p0_masked and ec_masked are defined globally (or accessible in this scope)
+    # and have the same shape (n_mass_masked, n_g_masked) corresponding to your m, g grid.
     for dataset_label, (x, y, y_err) in datasets.items():
         dataset_results = []
-
-        # Loop over paired values in p0_all and ec_all
-        for p0, E_c in zip(p0_masked, ec_masked):
-            # Perform the fit
-            fit_result = fit_data(x=np.array(x), y=np.array(y), y_err=np.array(y_err), p0=p0, E_c=E_c, k=k, source_name=source_name, useEBL=useEBL)
-
-            # Store the fit results with metadata
-            dataset_results.append({
-                "p0": p0,
-                "E_c": E_c,
-                "fit_result": fit_result
-            })
-
+        # Loop over the mass dimension (rows)
+        for i in range(p0_masked.shape[0]):
+            row_results = []
+            # Loop over the g dimension (columns)
+            for j in range(p0_masked.shape[1]):
+                p0_val = p0_masked[i, j]
+                ec_val = ec_masked[i, j]
+                # Perform the fit for this (m, g) pair
+                fit_result = fit_data(
+                    x=np.array(x),
+                    y=np.array(y),
+                    y_err=np.array(y_err),
+                    p0=p0_val,
+                    E_c=ec_val,
+                    k=k,  # Ensure k is defined in your scope
+                    source_name=source_name,
+                    useEBL=useEBL
+                )
+                row_results.append({
+                    "p0": p0_val,
+                    "E_c": ec_val,
+                    "fit_result": fit_result
+                })
+            # Append the row (corresponding to a mass value) to the dataset results
+            dataset_results.append(row_results)
         results[dataset_label] = dataset_results
-
     return results
 
 
