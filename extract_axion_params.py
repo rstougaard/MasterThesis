@@ -42,30 +42,31 @@ p0_all_full = axion_data[:, 3].reshape(n_mass, n_g)
 g_unique = axion_data[:n_g, 1]       # length = n_g
 # mₐ is taken from every 40th row (i.e. each new mass in the outer loop)
 mass_unique = axion_data[::n_g, 0]     # length = n_mass
+mdiff0 = np.abs(mass_unique - 2e-10)
+gdiff0 = np.abs(g_unique - 5e-13)
+mdiff1 = np.abs(mass_unique - 1e-8)
+gdiff1 = np.abs(g_unique - 1e-11)
 
-mdiff0 = np.abs( mass_unique - start_mass )
-gdiff0 = np.abs( g_unique - start_g )
-mdiff1 = np.abs( mass_unique - stop_mass )
-gdiff1 = np.abs( g_unique - stop_g )
+# Find the indices for start and stop.
+row_start = np.argmin(mdiff0)  # mass index for start (ma0)
+col_start = np.argmin(gdiff0)  # g index for start (ga0)
+row_stop  = np.argmin(mdiff1)  # mass index for stop (ma1)
+col_stop  = np.argmin(gdiff1)  # g index for stop (ga1)
 
+# Now filter the grid arrays.
+ec_filtered = ec_all_full[row_start:row_stop+1, col_start:col_stop+1]
+p0_filtered = p0_all_full[row_start:row_stop+1, col_start:col_stop+1]
+
+# Also filter the unique arrays.
+mass_filtered = mass_unique[row_start:row_stop+1]
+g_filtered    = g_unique[col_start:col_stop+1]
 ma0 = mass_unique[ np.argmin(mdiff0) ]
 ga0 = g_unique[ np.argmin(gdiff0) ]
 ma1 = mass_unique[ np.argmin(mdiff1) ]
 ga1 = g_unique[ np.argmin(gdiff1) ]
 
-# Get the index for the mass value (row index)
-row_start = np.argmin(np.abs(mass_unique - start_mass))
-row_stop  = np.argmin(np.abs(mass_unique - stop_mass))
-
-# Get the index for the g value (column index)
-col_start = np.argmin(np.abs(g_unique - start_g))
-col_stop  = np.argmin(np.abs(g_unique - stop_g))
-
 ec_masked = ec_all_full[row_start:row_stop+1, col_start:col_stop+1]
 p0_masked = p0_all_full[row_start:row_stop+1, col_start:col_stop+1]
-
-mass_filtered = mass_unique[row_start:row_stop+1]
-g_filtered    = g_unique[col_start:col_stop+1]
     
 print(f'Closest start ma, ga = {ma0:.2e} ; {ga0:.2e}')
 print(f'Closest stop ma, ga = {ma1:.2e} ; {ga1:.2e}')
