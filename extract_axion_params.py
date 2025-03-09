@@ -94,7 +94,7 @@ def fit_data(x, y, y_err, p0, E_c, k, source_name, useEBL=True):
         #print('No EBL accounted for in fit.')
     
     # Least Squares for LogPar
-    least_squares_logpar = LeastSquares(x, y, y_err_eff, LogPar)
+    least_squares_logpar = LeastSquares(x_filtered, y_filtered, y_err_eff, LogPar)
     p0_logpar = [1e-11, 2.0, 0.1]
     bounds_logpar = [(1e-13, 1e-9), (-1.0, 5.0), (-2.0, 2.0)]
 
@@ -115,13 +115,13 @@ def fit_data(x, y, y_err, p0, E_c, k, source_name, useEBL=True):
     popt_logpar = [m_logpar.values[p] for p in m_logpar.parameters]
     perr_logpar = [m_logpar.errors[p] for p in m_logpar.parameters]
     y_fit_logpar = LogPar(x, *popt_logpar)
-    chi2_logpar, dof_logpar = reduced_chi_square(y, y_fit_logpar, y_err_eff, len(p0_logpar))
+    chi2_logpar, dof_logpar = reduced_chi_square(y_filtered, y_fit_logpar, y_err_eff, len(p0_logpar))
 
     def LogPar_axion_func(x, Norm, alpha_, beta_, w):
         return LogPar(x, Norm, alpha_, beta_) * (1 - p0 / (1 + (E_c / x) ** k) * (1+0.2*np.tanh(w)))
 
     # Least Squares for Axion
-    least_squares_axion = LeastSquares(x, y, y_err_eff, LogPar_axion_func)
+    least_squares_axion = LeastSquares(x_filtered, y_filtered, y_err_eff, LogPar_axion_func)
     p0_axion = [1e-11, 2.0, 0.1, np.pi]
     bounds_axion = [(1e-13, 1e-9), (1.0, 5.0), (-2.0, 2.0), (0, 2*np.pi)]
 
@@ -141,8 +141,8 @@ def fit_data(x, y, y_err, p0, E_c, k, source_name, useEBL=True):
     # Extract results
     popt_axion = [m_axion.values[p] for p in m_axion.parameters]
     perr_axion = [m_axion.errors[p] for p in m_axion.parameters]
-    y_fit_axion = LogPar_axion_func(x, *popt_axion)
-    chi2_axion, dof_axion = reduced_chi_square(y, y_fit_axion, y_err_eff, len(p0_axion))
+    y_fit_axion = LogPar_axion_func(x_filtered, *popt_axion)
+    chi2_axion, dof_axion = reduced_chi_square(y_filtered, y_fit_axion, y_err_eff, len(p0_axion))
 
     # Compute Δχ²
     delta_chi2 = chi2_axion - chi2_logpar
