@@ -70,8 +70,8 @@ g_masked = g_unique[col_start:col_stop+1]
 print(f'Closest start ma, ga = {ma0:.2e} ; {ga0:.2e}')
 print(f'Closest stop ma, ga = {ma1:.2e} ; {ga1:.2e}')
 
-print(p0_masked)
-print(ec_masked)
+print(m_masked)
+print(g_masked)
 
 print(f'Closest start p0, Ec = {p0_masked[0,0]:.2e} ; {ec_masked[0,0]:.2e}')
 print(f'Closest stop p0, Ec = {p0_masked[-1, -1]:.2e} ; {ec_masked[-1, -1]:.2e}')
