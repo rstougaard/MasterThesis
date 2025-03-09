@@ -3,12 +3,12 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 import numpy as np
 from scipy.optimize import curve_fit
-from matplotlib.patches import Ellipse
 import shlex
-from scipy.spatial import KDTree
-from scipy.interpolate import griddata
 from naima.models import EblAbsorptionModel
 import astropy.units as u
+from iminuit.cost import LeastSquares
+from iminuit import Minuit
+
 path_to_save_heatmap_m_g = "./fit_results/heatmaps_m_g/"
 path_to_save_heatmap_Ec_p0 = "./fit_results/heatmaps_Ec_p0/"
 
@@ -64,6 +64,87 @@ def reduced_chi_square(y_obs, y_fit, y_err, num_params):
     dof = len(y_obs) - num_params  # Degrees of freedom
     return chi2 , dof
 
+def iminuit_fit_data(x, y, y_err):
+    
+    # Define LogPar model function
+    def LogPar_model(x, Norm, alpha_, beta_):
+        return LogPar(x, Norm, alpha_, beta_)
+
+    # Define Axion model function
+    def Axion_model(x, Norm, alpha_, beta_, p0, E_c):
+        return axion_func(x, Norm, alpha_, beta_, p0, E_c)
+
+    # Least Squares for LogPar
+    least_squares_logpar = LeastSquares(x, y, y_err, LogPar_model)
+    p0_logpar = [1e-11, 2.0, 0.1]
+    bounds_logpar = [(1e-13, 1e-9), (-1.0, 5.0), (-2.0, 2.0)]
+
+    # Minuit fit for LogPar
+    m_logpar = Minuit(least_squares_logpar, Norm=p0_logpar[0], alpha_=p0_logpar[1], beta_=p0_logpar[2])
+
+    # Set parameter limits
+    for param, bound in zip(m_logpar.parameters, bounds_logpar):
+        m_logpar.limits[param] = bound
+
+    print("\n=== LogPar Fit with iminuit ===")
+    m_logpar.simplex() 
+    m_logpar.migrad()  # Minimize
+    m_logpar.hesse()   # Compute uncertainties
+    print(m_logpar)
+
+    # Extract results
+    popt_logpar = [m_logpar.values[p] for p in m_logpar.parameters]
+    perr_logpar = [m_logpar.errors[p] for p in m_logpar.parameters]
+    y_fit_logpar = LogPar(x, *popt_logpar)
+    chi2_logpar, dof_logpar = reduced_chi_square(y, y_fit_logpar, y_err, len(p0_logpar))
+
+    # Least Squares for Axion
+    least_squares_axion = LeastSquares(x, y, y_err, Axion_model)
+    p0_axion = [1e-11, 2.0, 0.1, 0.20, 1700]
+    bounds_axion = [(1e-13, 1e-9), (1.0, 5.0), (-2.0, 2.0), (0.0, 1/3), (800, 1000000)]
+
+    # Minuit fit for Axion
+    m_axion = Minuit(least_squares_axion, Norm=p0_axion[0], alpha_=p0_axion[1], beta_=p0_axion[2], 
+                     p0=p0_axion[3], E_c=p0_axion[4])
+
+    # Set parameter limits
+    for param, bound in zip(m_axion.parameters, bounds_axion):
+        m_axion.limits[param] = bound
+
+    print("\n=== Axion Fit with iminuit ===")
+    m_axion.simplex() 
+    m_axion.migrad()  # Minimize
+    m_axion.hesse()   # Compute uncertainties
+    print(m_axion)
+
+    # Extract results
+    popt_axion = [m_axion.values[p] for p in m_axion.parameters]
+    perr_axion = [m_axion.errors[p] for p in m_axion.parameters]
+    y_fit_axion = axion_func(x, *popt_axion)
+    chi2_axion, dof_axion = reduced_chi_square(y, y_fit_axion, y_err, len(p0_axion))
+
+    # Compute Δχ²
+    delta_chi2 = chi2_axion - chi2_logpar
+
+    # Return fit results
+    return {
+        "LogPar": {
+            "params": popt_logpar,
+            "errors": perr_logpar,
+            "chi2": chi2_logpar,
+            "dof": dof_logpar
+        },
+        "Axion": {
+            "params": popt_axion,
+            "errors": perr_axion,
+            "chi2": chi2_axion,
+            "dof": dof_axion
+        },
+        "DeltaChi2": delta_chi2,
+        "y_fit_LogPar": y_fit_logpar,
+        "y_fit_Axion": y_fit_axion,
+    }
+
 def fit_data(x, y, y_err, p0, E_c, k, source_name, useEBL=True):
     # Filter out points where y is zero
     mask = y != 0
@@ -91,9 +172,83 @@ def fit_data(x, y, y_err, p0, E_c, k, source_name, useEBL=True):
         LogPar= LogPar_EBL
     else:
         LogPar = logpar_base
-        print('No EBL accounted for in fit.')
+        #print('No EBL accounted for in fit.')
+    
+    # Least Squares for LogPar
+    least_squares_logpar = LeastSquares(x, y, y_err, LogPar)
+    p0_logpar = [1e-11, 2.0, 0.1]
+    bounds_logpar = [(1e-13, 1e-9), (-1.0, 5.0), (-2.0, 2.0)]
 
+    # Minuit fit for LogPar
+    m_logpar = Minuit(least_squares_logpar, Norm=p0_logpar[0], alpha_=p0_logpar[1], beta_=p0_logpar[2])
 
+    # Set parameter limits
+    for param, bound in zip(m_logpar.parameters, bounds_logpar):
+        m_logpar.limits[param] = bound
+
+    print("\n=== LogPar Fit with iminuit ===")
+    m_logpar.simplex() 
+    m_logpar.migrad()  # Minimize
+    m_logpar.hesse()   # Compute uncertainties
+    print(m_logpar)
+
+    # Extract results
+    popt_logpar = [m_logpar.values[p] for p in m_logpar.parameters]
+    perr_logpar = [m_logpar.errors[p] for p in m_logpar.parameters]
+    y_fit_logpar = LogPar(x, *popt_logpar)
+    chi2_logpar, dof_logpar = reduced_chi_square(y, y_fit_logpar, y_err, len(p0_logpar))
+
+    def LogPar_axion_func(E, Norm, alpha_, beta_, w):
+        return LogPar(E, Norm, alpha_, beta_) * (1 - p0 / (1 + (E_c / E) ** k) * (1+0.2*np.tanh(w)))
+
+    # Least Squares for Axion
+    least_squares_axion = LeastSquares(x, y, y_err, LogPar_axion_func)
+    p0_axion = [1e-11, 2.0, 0.1, 0.20, 1700, np.pi]
+    bounds_axion = [(1e-13, 1e-9), (1.0, 5.0), (-2.0, 2.0), (0.0, 1/3), (800, 1000000), (0, 2*np.pi)]
+
+    # Minuit fit for Axion
+    m_axion = Minuit(least_squares_axion, Norm=p0_axion[0], alpha_=p0_axion[1], beta_=p0_axion[2], 
+                     p0=p0_axion[3], E_c=p0_axion[4], w=p0_axion[5])
+
+    # Set parameter limits
+    for param, bound in zip(m_axion.parameters, bounds_axion):
+        m_axion.limits[param] = bound
+
+    print("\n=== Axion Fit with iminuit ===")
+    m_axion.simplex() 
+    m_axion.migrad()  # Minimize
+    m_axion.hesse()   # Compute uncertainties
+    #print(m_axion)
+
+    # Extract results
+    popt_axion = [m_axion.values[p] for p in m_axion.parameters]
+    perr_axion = [m_axion.errors[p] for p in m_axion.parameters]
+    y_fit_axion = LogPar_axion_func(x, *popt_axion)
+    chi2_axion, dof_axion = reduced_chi_square(y, y_fit_axion, y_err, len(p0_axion))
+
+    # Compute Δχ²
+    delta_chi2 = chi2_axion - chi2_logpar
+
+    # Return fit results
+    return {
+        "LogPar": {
+            "params": popt_logpar,
+            "errors": perr_logpar,
+            "chi2": chi2_logpar,
+            "dof": dof_logpar
+        },
+        "Axion": {
+            "params": popt_axion,
+            "errors": perr_axion,
+            "chi2": chi2_axion,
+            "dof": dof_axion
+        },
+        "DeltaChi2": delta_chi2,
+        "y_fit_LogPar": y_fit_logpar,
+        "y_fit_Axion": y_fit_axion,
+    }
+
+'''
     # Define bounds for LogPar parameters [Norm, alpha_, beta_]
     bounds_logpar = ([1e-13, -1.0, -2.0], [1e-9, 5.0, 2.0])  # Lower and upper bounds
     p0_logpar = [1e-11, 2.0, 0.1]  # Initial guesses
@@ -141,6 +296,7 @@ def fit_data(x, y, y_err, p0, E_c, k, source_name, useEBL=True):
         "y_fit_LogPar": y_fit_logpar,
         "y_fit_Axion": y_fit_axion,
     }
+'''
 
 def nested_fits(datasets, source_name, useEBL=True):
     results = {}
