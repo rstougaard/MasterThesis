@@ -64,8 +64,8 @@ col_stop  = np.argmin(np.abs(g_unique - stop_g))
 ec_masked = ec_all_full[row_start:row_stop+1, col_start:col_stop+1]
 p0_masked = p0_all_full[row_start:row_stop+1, col_start:col_stop+1]
 
-m_masked = mass_unique[row_start:row_stop+1, col_start:col_stop+1]
-g_masked = g_unique[row_start:row_stop+1, col_start:col_stop+1]
+m_masked = mass_unique[row_start:row_stop+1]
+g_masked = g_unique[col_start:col_stop+1]
     
 print(f'Closest start ma, ga = {ma0:.2e} ; {ga0:.2e}')
 print(f'Closest stop ma, ga = {ma1:.2e} ; {ga1:.2e}')
