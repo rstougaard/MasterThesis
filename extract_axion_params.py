@@ -12,10 +12,6 @@ from iminuit import Minuit
 path_to_save_heatmap_m_g = "./fit_results/heatmaps_m_g/"
 path_to_save_heatmap_Ec_p0 = "./fit_results/heatmaps_Ec_p0/"
 
-start_mass = 3e-8
-stop_mass = 1e-8 
-start_g =  5e-13
-stop_g = 1e-11
 #p0_values = np.linspace(0, 1 / 3, 11)
 #E_c_values = np.logspace(1, 4, 61)  # MeV
 #k = 2.7
@@ -45,7 +41,7 @@ mass_unique = axion_data[::n_g, 0]     # length = n_mass
 # Define your desired start and stop values
 m_start_val = 2e-10
 g_start_val = 5e-13
-m_stop_val  = 1e-8
+m_stop_val  = 2e-8
 g_stop_val  = 1e-11
 
 # Find the row (mass) and column (g) indices closest to the desired start values.
