@@ -643,6 +643,7 @@ def plot_mean_delta_chi2_heatmap3(all_results, dataset_labels, png_naming, no_fi
         )
 
         print(np.min(mean_delta_chi2_grid))
+        print(np.max(mean_delta_chi2_grid))
         # Set up colormap.
         vmin, vmax = -10, 25
         num_colors = 30
