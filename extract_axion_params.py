@@ -613,19 +613,20 @@ def plot_mean_delta_chi2_heatmap3(all_results, dataset_labels, png_naming):
                 print(f"Warning: Missing data for {filter_label} in {source_name}. Skipping.")
                 continue
             dataset_results = all_results[source_name][filter_label]
-            for result in dataset_results:
-                p0_val = result["p0"]
-                ec_val = result["E_c"]
-                # Use tolerance-based matching to locate the cell.
-                matches = np.where(np.isclose(p0_masked, p0_val) & np.isclose(ec_masked, ec_val))
-                if matches[0].size == 1:
-                    i = matches[0][0]
-                    j = matches[1][0]
-                    DeltaChi2 = result["fit_result"]["DeltaChi2"]
-                    sum_grid[i, j] += DeltaChi2
-                    count_grid[i, j] += 1
-                else:
-                    continue
+            for row in dataset_results:              # Each row is a list of dictionaries
+                for result in row:
+                    p0_val = result["p0"]
+                    ec_val = result["E_c"]
+                    # Use tolerance-based matching to locate the cell.
+                    matches = np.where(np.isclose(p0_masked, p0_val) & np.isclose(ec_masked, ec_val))
+                    if matches[0].size == 1:
+                        i = matches[0][0]
+                        j = matches[1][0]
+                        DeltaChi2 = result["fit_result"]["DeltaChi2"]
+                        sum_grid[i, j] += DeltaChi2
+                        count_grid[i, j] += 1
+                    else:
+                        continue
         
         # Compute mean Δχ² for each cell.
         with np.errstate(divide='ignore', invalid='ignore'):
