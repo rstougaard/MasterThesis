@@ -39,7 +39,7 @@ g_unique = axion_data[:n_g, 1]       # length = n_g
 mass_unique = axion_data[::n_g, 0]     # length = n_mass
 
 # Define your desired start and stop values
-m_start_val = 2e-10
+m_start_val = 3e-10
 g_start_val = 5e-13
 m_stop_val  = 2e-8
 g_stop_val  = 1e-11
@@ -661,11 +661,11 @@ def plot_mean_delta_chi2_heatmap3(all_results, dataset_labels, png_naming, no_fi
         if (no_filtering_grid is not None) and (filter_label != "No_Filtering"):
             if np.any(no_filtering_grid <= -6.2):
                 plt.contour(ma_mesh / 1e-9, g_mesh, no_filtering_grid,
-                            levels=[-6.2], colors='orange', linewidths=2)
+                            levels=[-6.2], colors='#f16913', linewidths=2)
         
         if np.any(mean_delta_chi2_grid <= -6.2):
             plt.contour(ma_mesh / 1e-9, g_mesh, mean_delta_chi2_grid,
-                        levels=[-6.2], colors='green', linewidths=2)
+                        levels=[-6.2], colors='#78c679', linewidths=2)
             
         if np.any(mean_delta_chi2_grid >= 6.2):
             plt.contour(ma_mesh / 1e-9, g_mesh, mean_delta_chi2_grid,
@@ -685,7 +685,7 @@ def plot_mean_delta_chi2_heatmap3(all_results, dataset_labels, png_naming, no_fi
         plt.tight_layout()
         plt.savefig(f'{path_to_save_heatmap_m_g}{png_naming}_{filter_label}_ma_ga.png', dpi=300)
         plt.close()
-
+        '''
         # Prepare scatter plot data by flattening the grids.
         # For (p0, Ec) scatter:
         p0_scatter = p0_masked.flatten()
@@ -727,7 +727,7 @@ def plot_mean_delta_chi2_heatmap3(all_results, dataset_labels, png_naming, no_fi
 
         plt.tight_layout()
         plt.savefig(f"{path_to_save_heatmap_m_g}{png_naming}_{filter_label}_linked_scatter_color_coded.png", dpi=300)
-
+        '''
         
         print(f"Finished plotting for filter: {filter_label}")
 
