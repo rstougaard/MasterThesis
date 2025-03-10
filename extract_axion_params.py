@@ -298,7 +298,7 @@ def nested_fits(datasets, source_name, useEBL=True):
     results = {}
     # Here we assume p0_masked and ec_masked are defined globally (or accessible in this scope)
     # and have the same shape (n_mass_masked, n_g_masked) corresponding to your m, g grid.
-    for dataset_label, (x, y, y_err) in datasets.items():
+    for dataset_label, (x, y, y_err, emin, emax) in datasets.items():
         dataset_results = []
         # Loop over the mass dimension (rows)
         for i in range(p0_masked.shape[0]):
@@ -312,6 +312,8 @@ def nested_fits(datasets, source_name, useEBL=True):
                     x=np.array(x),
                     y=np.array(y),
                     y_err=np.array(y_err),
+                    emin=np.array(emin),
+                    emax=np.array(emax),
                     p0=p0_val,
                     E_c=ec_val,
                     k=k,  # Ensure k is defined in your scope
@@ -864,12 +866,12 @@ with PdfPages('./fit_results/fitplots.pdf') as pdf:
                         bin_size = np.array(sorted_data_none['emax'])-np.array(sorted_data_none['emin'])
                         e_lowers = sorted_data_none['geometric_mean'] - sorted_data_none['emin']
                         e_uppers = sorted_data_none['emax'] - sorted_data_none['geometric_mean']
-                        datasets = {f"No_Filtering": (sorted_data_none['geometric_mean'], sorted_data_none['flux_tot_value']/bin_size, sorted_data_none['flux_tot_error']/bin_size)}
-                        datasets_snr = {f"snr_3": (sorted_data_snr3['geometric_mean'], sorted_data_snr3['flux_tot_value']/bin_size, sorted_data_snr3['flux_tot_error']/bin_size),
-                                        f"snr_5": (sorted_data_snr5['geometric_mean'], sorted_data_snr5['flux_tot_value']/bin_size, sorted_data_snr5['flux_tot_error']/bin_size),
-                                        f"snr_10": (sorted_data_snr10['geometric_mean'], sorted_data_snr10['flux_tot_value']/bin_size, sorted_data_snr10['flux_tot_error']/bin_size)}
-                        datasets_lin = {f"week": (sorted_data_lin_week['geometric_mean'], sorted_data_lin_week['flux_tot_value']/bin_size, sorted_data_lin_week['flux_tot_error']/bin_size),
-                                        f"month": (sorted_data_lin_month['geometric_mean'], sorted_data_lin_month['flux_tot_value']/bin_size, sorted_data_lin_month['flux_tot_error']/bin_size)}
+                        datasets = {f"No_Filtering": (sorted_data_none['geometric_mean'], sorted_data_none['flux_tot_value']/bin_size, sorted_data_none['flux_tot_error']/bin_size, sorted_data_none['emin'], sorted_data_none['emax'] )}
+                        datasets_snr = {f"snr_3": (sorted_data_snr3['geometric_mean'], sorted_data_snr3['flux_tot_value']/bin_size, sorted_data_snr3['flux_tot_error']/bin_size, sorted_data_snr3['emin'], sorted_data_snr3['emax'] ),
+                                        f"snr_5": (sorted_data_snr5['geometric_mean'], sorted_data_snr5['flux_tot_value']/bin_size, sorted_data_snr5['flux_tot_error']/bin_size, sorted_data_snr5['emin'], sorted_data_snr5['emax'] ),
+                                        f"snr_10": (sorted_data_snr10['geometric_mean'], sorted_data_snr10['flux_tot_value']/bin_size, sorted_data_snr10['flux_tot_error']/bin_size, sorted_data_snr10['emin'], sorted_data_snr10['emax'] )}
+                        datasets_lin = {f"week": (sorted_data_lin_week['geometric_mean'], sorted_data_lin_week['flux_tot_value']/bin_size, sorted_data_lin_week['flux_tot_error']/bin_size, sorted_data_lin_week['emin'], sorted_data_lin_week['emax'] ),
+                                        f"month": (sorted_data_lin_month['geometric_mean'], sorted_data_lin_month['flux_tot_value']/bin_size, sorted_data_lin_month['flux_tot_error']/bin_size, sorted_data_lin_month['emin'], sorted_data_lin_month['emax'] )}
                         print(i, source_name)
 
                         results, fig_none = nested_fits(datasets, source_name, useEBL=True)
