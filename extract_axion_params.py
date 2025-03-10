@@ -627,12 +627,12 @@ def plot_mean_delta_chi2_heatmap3(all_results, dataset_labels, png_naming):
         # Compute mean Δχ² for each cell.
         with np.errstate(divide='ignore', invalid='ignore'):
             mean_delta_chi2_grid = np.where(count_grid != 0, sum_grid / count_grid, np.nan)
-        
+        print(np.min(mean_delta_chi2_grid))
         # Set up colormap.
         vmin, vmax = -10, 25
         num_colors = 30
         boundaries = np.linspace(vmin, vmax, num_colors + 1)
-        cmap = plt.get_cmap('gnuplot2_r', num_colors)
+        cmap = plt.get_cmap('gnuplot2', num_colors)
         norm = mcolors.BoundaryNorm(boundaries=boundaries, ncolors=num_colors, clip=True)
         
         
@@ -643,11 +643,11 @@ def plot_mean_delta_chi2_heatmap3(all_results, dataset_labels, png_naming):
         
         if np.any(mean_delta_chi2_grid <= -6.2):
             plt.contour(ma_mesh / 1e-9, g_mesh, mean_delta_chi2_grid,
-                        levels=[-6.2], colors='red', linewidths=2)
+                        levels=[-6.2], colors='green', linewidths=2)
             
         if np.any(mean_delta_chi2_grid >= 6.2):
             plt.contour(ma_mesh / 1e-9, g_mesh, mean_delta_chi2_grid,
-                        levels=[6.2], colors='green', linewidths=2)
+                        levels=[6.2], colors='red', linewidths=2)
                 
         cbar = plt.colorbar(heatmap, ticks=np.linspace(vmin, vmax, 11))
         cbar.set_label(r'$\langle \Delta \chi^2 \rangle$', fontsize=15)
@@ -779,9 +779,9 @@ with open(f'Top5_Source_ra_dec_specin.txt', 'r') as file:
                                     f"month": (sorted_data_lin_month['geometric_mean'], sorted_data_lin_month['flux_tot_value']/bin_size, sorted_data_lin_month['flux_tot_error']/bin_size)}
                     print(source_name)
 
-                    results = nested_fits(datasets, source_name, useEBL=False)
-                    results_snr = nested_fits(datasets_snr, source_name, useEBL=False)
-                    results_lin = nested_fits(datasets_lin, source_name, useEBL=False)
+                    results = nested_fits(datasets, source_name, useEBL=True)
+                    results_snr = nested_fits(datasets_snr, source_name, useEBL=True)
+                    results_lin = nested_fits(datasets_lin, source_name, useEBL=True)
 
                     all_results_none[source_name] = results
                     all_results_snr[source_name] = results_snr
