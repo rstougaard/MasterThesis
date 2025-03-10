@@ -9,6 +9,7 @@ import astropy.units as u
 from iminuit.cost import LeastSquares
 from iminuit import Minuit
 from tqdm import tqdm
+from matplotlib.backends.backend_pdf import PdfPages
 
 path_to_save_heatmap_m_g = "./fit_results/heatmaps_m_g/"
 path_to_save_heatmap_Ec_p0 = "./fit_results/heatmaps_Ec_p0/"
@@ -79,10 +80,13 @@ def reduced_chi_square(y_obs, y_fit, y_err, num_params):
     dof = len(y_obs) - num_params  # Degrees of freedom
     return chi2 , dof
 
-def fit_data(x, y, y_err, p0, E_c, k, source_name, useEBL=True):
+def fit_data(x, y, y_err, emin, emax, p0, E_c, k, source_name, dataset_label, useEBL=True):
     # Filter out points where y is zero
     mask = y != 0
-    x_filtered, y_filtered, y_err_filtered = x[mask], y[mask], y_err[mask]
+    x_filtered, y_filtered, y_err_filtered, emin_f, emax_f  = x[mask], y[mask], y_err[mask], emin[mask], emax[mask]
+
+    e_lowers = x_filtered - emin_f
+    e_uppers = emax_f - x_filtered
     # Check if the last point was filtered out
     if not mask[-1]:  # If the last point was removed (y[-1] == 0)
         y_err_eff = y_err_filtered + 0.03 * y_filtered  # Only add 3% to errors
@@ -161,6 +165,65 @@ def fit_data(x, y, y_err, p0, E_c, k, source_name, useEBL=True):
 
     # Compute Δχ²
     delta_chi2 = chi2_axion - chi2_logpar
+    residuals_logpar = (y_filtered - y_fit_logpar) / y_err_eff
+    residuals_axion = (y_filtered - y_fit_axion) / y_err_eff
+    residual_colors = {"LogPar": "red", "Axion": "blue"}
+    # Create figure
+    fig, axs = plt.subplots(2, 1, figsize=(10, 8), sharex=True, gridspec_kw={'height_ratios': [3, 1]})
+    x_range = np.linspace(50, 1e6, int(1e4))
+    x_removed = x[~mask]
+    y_removed = y[~mask]
+    y_err_removed = y_err[~mask]
+    e_lowers_removed = e_lowers[~mask]
+    e_uppers_removed = e_uppers[~mask]
+    # Top plot: Data and fits
+    axs[0].errorbar(x_filtered, y_filtered, xerr = [e_lowers, e_uppers],yerr=y_err_eff, fmt='o', label="Data", color='black')
+    axs[0].plot(x_filtered, y_fit_logpar, label="LogPar Fit", linestyle='-', color=residual_colors["LogPar"])
+    axs[0].plot(x_filtered, y_fit_axion, label="Axion Fit", linestyle='--', color=residual_colors["Axion"])
+    #axs[0].plot(x_range, axion_func(x_range, *params_axion), label="axion_func(E)", linestyle='-', color='orange')
+    #axs[0].plot(x_range, LogPar(x_range, *params_logpar), label="LogPar(E)", linestyle='-', color='green')
+    axs[0].errorbar(x_removed, y_removed, xerr=[e_lowers_removed, e_uppers_removed], yerr=y_err_removed, fmt='o', 
+            color='grey', alpha=0.5, label="Removed Data")
+    axs[0].set_ylabel("dN/dE [ photons/cm²/s/MeV ]")
+    axs[0].set_title(f"Fits for {source_name}:{dataset_label}")
+    axs[0].set_xscale('log')
+    axs[0].set_yscale('log')
+    #axs[0].set_ylim(1e-30, 1e-10)
+    axs[0].legend()
+    axs[0].grid(True, which="both", linestyle="--", linewidth=0.5)
+
+    # Add parameter box
+    textstr = "LogPar:\n"
+    for param, value, error in zip(["Norm", "alpha_", "beta_"], popt_logpar, perr_logpar):
+        textstr += f"  {param}: {value:.2e} ± {error:.2e}\n"
+    textstr += f"  $\chi^2$ / dof: {chi2_logpar:.2f} / {dof_logpar}\n\n"
+
+    textstr += "Axion:\n"
+    for param, value, error in zip(["Norm", "alpha_", "beta_", "w"], popt_axion, perr_axion):
+        textstr += f"  {param}: {value:.2e} ± {error:.2e}\n"
+    textstr += f"  $\chi^2$ / dof: {chi2_axion:.2f} / {dof_axion}\n\n"
+
+    textstr += f"Δχ² (Axion - LogPar): {delta_chi2:.2f}"
+
+    axs[0].text(0.02, 0.56, textstr, transform=axs[0].transAxes, fontsize=10,
+                verticalalignment='top', bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
+
+    # Bottom plot: Residuals
+    axs[1].scatter(x_filtered, residuals_logpar, label="LogPar Residuals", color=residual_colors["LogPar"], marker='o')
+    axs[1].scatter(x_filtered, residuals_axion, label="Axion Residuals", color=residual_colors["Axion"], marker='x')
+    axs[1].axhline(0, color='black', linestyle='--', linewidth=0.8)
+    axs[1].axhline(1, color='green', linestyle='--', linewidth=0.8, label='+1σ')
+    axs[1].axhline(-1, color='green', linestyle='--', linewidth=0.8)
+    axs[1].axhline(2, color='orange', linestyle='--', linewidth=0.8, label='+2σ')
+    axs[1].axhline(-2, color='orange', linestyle='--', linewidth=0.8)
+    axs[1].set_ylim(-4, 4)
+    axs[1].set_xlabel("Energy [ MeV ]")
+    axs[1].set_ylabel("Normalized Residual")
+    axs[1].legend(ncol=2, loc='upper right')
+    axs[1].grid(True, which="both", linestyle="--", linewidth=0.5)
+
+    # Adjust layout
+    plt.tight_layout()
 
     # Return fit results
     return {
@@ -179,7 +242,7 @@ def fit_data(x, y, y_err, p0, E_c, k, source_name, useEBL=True):
         "DeltaChi2": delta_chi2,
         "y_fit_LogPar": y_fit_logpar,
         "y_fit_Axion": y_fit_axion,
-    }
+    }, fig
 
 '''
     # Define bounds for LogPar parameters [Norm, alpha_, beta_]
@@ -238,14 +301,14 @@ def nested_fits(datasets, source_name, useEBL=True):
     for dataset_label, (x, y, y_err) in datasets.items():
         dataset_results = []
         # Loop over the mass dimension (rows)
-        for i in tqdm(range(p0_masked.shape[0])):
+        for i in range(p0_masked.shape[0]):
             row_results = []
             # Loop over the g dimension (columns)
             for j in range(p0_masked.shape[1]):
                 p0_val = p0_masked[i, j]
                 ec_val = ec_masked[i, j]
                 # Perform the fit for this (m, g) pair
-                fit_result = fit_data(
+                fit_result, fig = fit_data(
                     x=np.array(x),
                     y=np.array(y),
                     y_err=np.array(y_err),
@@ -253,6 +316,7 @@ def nested_fits(datasets, source_name, useEBL=True):
                     E_c=ec_val,
                     k=k,  # Ensure k is defined in your scope
                     source_name=source_name,
+                    dataset_label=dataset_label,
                     useEBL=useEBL
                 )
                 row_results.append({
@@ -263,7 +327,7 @@ def nested_fits(datasets, source_name, useEBL=True):
             # Append the row (corresponding to a mass value) to the dataset results
             dataset_results.append(row_results)
         results[dataset_label] = dataset_results
-    return results
+    return results, fig
 
 
 def plot_delta_chi2_heatmap(results, dataset_label, png_naming):
@@ -609,6 +673,8 @@ def compute_mean_delta_chi2_grid(all_results, dataset_labels, filter_label,
         mean_delta_chi2_grid = np.where(count_grid != 0,
                                         sum_grid / count_grid,
                                         np.nan)
+    print("Minimum mean Δχ²:", np.nanmin(mean_delta_chi2_grid))
+    print("Maximum mean Δχ²:", np.nanmax(mean_delta_chi2_grid))
     return mean_delta_chi2_grid
 
 
@@ -736,95 +802,104 @@ def plot_mean_delta_chi2_heatmap3(all_results, dataset_labels, png_naming, no_fi
 all_results_none = {}
 all_results_snr = {}
 all_results_lin = {}
-with open(f'Source_ra_dec_specin.txt', 'r') as file:
-                #for line in file:
-                for i, line in enumerate(file):
-                    if i >= 15:
-                        break
-                    parts = line.strip().split()
-    
-                    # Properly split handling quotes
-                    parts = shlex.split(line)
+with PdfPages('./fit_results/fitplots.pdf') as pdf:
+    with open(f'Source_ra_dec_specin.txt', 'r') as file:
+                    #for line in file:
+                    for i, line in enumerate(file):
+                        if i >= 15:
+                            break
+                        parts = line.strip().split()
+        
+                        # Properly split handling quotes
+                        parts = shlex.split(line)
 
-                    # Extract the source name (already properly split)
-                    source_name = parts[0]  # No need to strip quotes, shlex handles it
+                        # Extract the source name (already properly split)
+                        source_name = parts[0]  # No need to strip quotes, shlex handles it
 
-                    ra = float(parts[1])    # Second part: RA
-                    dec = float(parts[2])   # Third part: Dec
-                    specin = float(parts[3])  # Fourth part: spectral index
-                    #beta = float(parts[4])
-                    
-                    source_name_cleaned = (
-                        source_name.replace(" ", "")
-                        .replace(".", "dot")
-                        .replace("+", "plus")
-                        .replace("-", "minus")
-                        .replace('"', '')  # Ensure no extra quotes remain
-                    )
+                        ra = float(parts[1])    # Second part: RA
+                        dec = float(parts[2])   # Third part: Dec
+                        specin = float(parts[3])  # Fourth part: spectral index
+                        #beta = float(parts[4])
+                        
+                        source_name_cleaned = (
+                            source_name.replace(" ", "")
+                            .replace(".", "dot")
+                            .replace("+", "plus")
+                            .replace("-", "minus")
+                            .replace('"', '')  # Ensure no extra quotes remain
+                        )
 
-                    f_bin = fits.open(f'./fit_results/{source_name_cleaned}_fit_data_NONE.fits')
-                    f_bin_snr = fits.open(f'./fit_results/{source_name_cleaned}_fit_data_SNR.fits')
-                    f_bin_lin = fits.open(f'./fit_results/{source_name_cleaned}_fit_data_LIN.fits')
-                    bin_data = f_bin[1].data
-                    bin_data_snr = f_bin_snr[1].data
-                    bin_data_lin = f_bin_lin[1].data
+                        f_bin = fits.open(f'./fit_results/{source_name_cleaned}_fit_data_NONE.fits')
+                        f_bin_snr = fits.open(f'./fit_results/{source_name_cleaned}_fit_data_SNR.fits')
+                        f_bin_lin = fits.open(f'./fit_results/{source_name_cleaned}_fit_data_LIN.fits')
+                        bin_data = f_bin[1].data
+                        bin_data_snr = f_bin_snr[1].data
+                        bin_data_lin = f_bin_lin[1].data
 
-                    # Sort the data by the 'emin' column
-                    sorted_indices = np.argsort(bin_data['emin'])  # Get sorted indices
-                    sorted_data_none = bin_data[sorted_indices]  # Reorder the data using sorted indices
+                        # Sort the data by the 'emin' column
+                        sorted_indices = np.argsort(bin_data['emin'])  # Get sorted indices
+                        sorted_data_none = bin_data[sorted_indices]  # Reorder the data using sorted indices
 
-                    snr3 = bin_data_snr[bin_data_snr['loop_item'] == '3']
-                    sorted_indices_snr3 = np.argsort(snr3['emin'])  # Get sorted indices
-                    sorted_data_snr3 = snr3[sorted_indices_snr3]
+                        snr3 = bin_data_snr[bin_data_snr['loop_item'] == '3']
+                        sorted_indices_snr3 = np.argsort(snr3['emin'])  # Get sorted indices
+                        sorted_data_snr3 = snr3[sorted_indices_snr3]
 
-                    snr5 = bin_data_snr[bin_data_snr['loop_item'] == '5']
-                    sorted_indices_snr5 = np.argsort(snr5['emin'])  # Get sorted indices
-                    sorted_data_snr5 = snr5[sorted_indices_snr5]
+                        snr5 = bin_data_snr[bin_data_snr['loop_item'] == '5']
+                        sorted_indices_snr5 = np.argsort(snr5['emin'])  # Get sorted indices
+                        sorted_data_snr5 = snr5[sorted_indices_snr5]
 
-                    snr10 = bin_data_snr[bin_data_snr['loop_item'] == '10']
-                    sorted_indices_snr10 = np.argsort(snr10['emin'])  # Get sorted indices
-                    sorted_data_snr10 = snr10[sorted_indices_snr10]
+                        snr10 = bin_data_snr[bin_data_snr['loop_item'] == '10']
+                        sorted_indices_snr10 = np.argsort(snr10['emin'])  # Get sorted indices
+                        sorted_data_snr10 = snr10[sorted_indices_snr10]
 
-                    week = bin_data_lin[bin_data_lin['loop_item'] == 'week']
-                    sorted_indices_lin_week = np.argsort(week['emin'])  # Get sorted indices
-                    sorted_data_lin_week = week[sorted_indices_lin_week]
-                    month = bin_data_lin[bin_data_lin['loop_item'] == 'month']
-                    sorted_indices_lin_month = np.argsort(month['emin'])  # Get sorted indices
-                    sorted_data_lin_month = month[sorted_indices_lin_month]
+                        week = bin_data_lin[bin_data_lin['loop_item'] == 'week']
+                        sorted_indices_lin_week = np.argsort(week['emin'])  # Get sorted indices
+                        sorted_data_lin_week = week[sorted_indices_lin_week]
+                        month = bin_data_lin[bin_data_lin['loop_item'] == 'month']
+                        sorted_indices_lin_month = np.argsort(month['emin'])  # Get sorted indices
+                        sorted_data_lin_month = month[sorted_indices_lin_month]
 
-                    colors_snr = ['blue', 'orange', 'green']
-                    colors_lin = ['purple', 'brown']
-                    bin_size = np.array(sorted_data_none['emax'])-np.array(sorted_data_none['emin'])
-                    e_lowers = sorted_data_none['geometric_mean'] - sorted_data_none['emin']
-                    e_uppers = sorted_data_none['emax'] - sorted_data_none['geometric_mean']
-                    datasets = {f"No_Filtering": (sorted_data_none['geometric_mean'], sorted_data_none['flux_tot_value']/bin_size, sorted_data_none['flux_tot_error']/bin_size)}
-                    datasets_snr = {f"snr_3": (sorted_data_snr3['geometric_mean'], sorted_data_snr3['flux_tot_value']/bin_size, sorted_data_snr3['flux_tot_error']/bin_size),
-                                    f"snr_5": (sorted_data_snr5['geometric_mean'], sorted_data_snr5['flux_tot_value']/bin_size, sorted_data_snr5['flux_tot_error']/bin_size),
-                                    f"snr_10": (sorted_data_snr10['geometric_mean'], sorted_data_snr10['flux_tot_value']/bin_size, sorted_data_snr10['flux_tot_error']/bin_size)}
-                    datasets_lin = {f"week": (sorted_data_lin_week['geometric_mean'], sorted_data_lin_week['flux_tot_value']/bin_size, sorted_data_lin_week['flux_tot_error']/bin_size),
-                                    f"month": (sorted_data_lin_month['geometric_mean'], sorted_data_lin_month['flux_tot_value']/bin_size, sorted_data_lin_month['flux_tot_error']/bin_size)}
-                    print(source_name)
+                        colors_snr = ['blue', 'orange', 'green']
+                        colors_lin = ['purple', 'brown']
+                        bin_size = np.array(sorted_data_none['emax'])-np.array(sorted_data_none['emin'])
+                        e_lowers = sorted_data_none['geometric_mean'] - sorted_data_none['emin']
+                        e_uppers = sorted_data_none['emax'] - sorted_data_none['geometric_mean']
+                        datasets = {f"No_Filtering": (sorted_data_none['geometric_mean'], sorted_data_none['flux_tot_value']/bin_size, sorted_data_none['flux_tot_error']/bin_size)}
+                        datasets_snr = {f"snr_3": (sorted_data_snr3['geometric_mean'], sorted_data_snr3['flux_tot_value']/bin_size, sorted_data_snr3['flux_tot_error']/bin_size),
+                                        f"snr_5": (sorted_data_snr5['geometric_mean'], sorted_data_snr5['flux_tot_value']/bin_size, sorted_data_snr5['flux_tot_error']/bin_size),
+                                        f"snr_10": (sorted_data_snr10['geometric_mean'], sorted_data_snr10['flux_tot_value']/bin_size, sorted_data_snr10['flux_tot_error']/bin_size)}
+                        datasets_lin = {f"week": (sorted_data_lin_week['geometric_mean'], sorted_data_lin_week['flux_tot_value']/bin_size, sorted_data_lin_week['flux_tot_error']/bin_size),
+                                        f"month": (sorted_data_lin_month['geometric_mean'], sorted_data_lin_month['flux_tot_value']/bin_size, sorted_data_lin_month['flux_tot_error']/bin_size)}
+                        print(i, source_name)
 
-                    results = nested_fits(datasets, source_name, useEBL=True)
-                    results_snr = nested_fits(datasets_snr, source_name, useEBL=True)
-                    results_lin = nested_fits(datasets_lin, source_name, useEBL=True)
+                        results, fig_none = nested_fits(datasets, source_name, useEBL=True)
+                        results_snr, fig_snr = nested_fits(datasets_snr, source_name, useEBL=True)
+                        results_lin, fig_lin= nested_fits(datasets_lin, source_name, useEBL=True)
 
-                    all_results_none[source_name] = results
-                    all_results_snr[source_name] = results_snr
-                    all_results_lin[source_name] = results_lin
+                        all_results_none[source_name] = results
+                        all_results_snr[source_name] = results_snr
+                        all_results_lin[source_name] = results_lin
 
-                    '''
-                    plot_delta_chi2_heatmap(results, dataset_label="No_Filtering", png_naming =f"{source_name_cleaned}")
-                    
-                    plot_delta_chi2_heatmap(results_snr, dataset_label="snr_3", png_naming =f"{source_name_cleaned}")
-                    plot_delta_chi2_heatmap(results_snr, dataset_label="snr_5", png_naming =f"{source_name_cleaned}")
-                    plot_delta_chi2_heatmap(results_snr, dataset_label="snr_10", png_naming =f"{source_name_cleaned}")
-                    
-                    plot_delta_chi2_heatmap(results_lin, dataset_label="week", png_naming =f"{source_name_cleaned}")
-                    plot_delta_chi2_heatmap(results_lin, dataset_label="month", png_naming =f"{source_name_cleaned}")
-                    print("(p0, Ec) Heatmaps done!")
-                    '''
+                        pdf.savefig(fig_none)
+                        plt.close(fig_none)
+                        pdf.savefig(fig_snr)
+                        plt.close(fig_snr)
+                        pdf.savefig(fig_lin)
+                        plt.close(fig_lin)
 
+                        '''
+                        plot_delta_chi2_heatmap(results, dataset_label="No_Filtering", png_naming =f"{source_name_cleaned}")
+                        
+                        plot_delta_chi2_heatmap(results_snr, dataset_label="snr_3", png_naming =f"{source_name_cleaned}")
+                        plot_delta_chi2_heatmap(results_snr, dataset_label="snr_5", png_naming =f"{source_name_cleaned}")
+                        plot_delta_chi2_heatmap(results_snr, dataset_label="snr_10", png_naming =f"{source_name_cleaned}")
+                        
+                        plot_delta_chi2_heatmap(results_lin, dataset_label="week", png_naming =f"{source_name_cleaned}")
+                        plot_delta_chi2_heatmap(results_lin, dataset_label="month", png_naming =f"{source_name_cleaned}")
+                        print("(p0, Ec) Heatmaps done!")
+                        '''
+
+print('Plotting mean chi-squared heatmap!')
 no_filtering_sources = list(all_results_none.keys())  # e.g. ["No_Filtering"] or sometimes multiple sources
 
 no_filtering_grid = compute_mean_delta_chi2_grid(
