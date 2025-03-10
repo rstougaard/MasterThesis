@@ -123,7 +123,7 @@ def fit_data(x, y, y_err, p0, E_c, k, source_name, useEBL=True):
     m_logpar.simplex() 
     m_logpar.migrad()  # Minimize
     m_logpar.hesse()   # Compute uncertainties
-    print(m_logpar)
+    #print(m_logpar)
 
     # Extract results
     popt_logpar = [m_logpar.values[p] for p in m_logpar.parameters]
@@ -735,8 +735,11 @@ def plot_mean_delta_chi2_heatmap3(all_results, dataset_labels, png_naming, no_fi
 all_results_none = {}
 all_results_snr = {}
 all_results_lin = {}
-with open(f'Top5_Source_ra_dec_specin.txt', 'r') as file:
-                for line in file:
+with open(f'Source_ra_dec_specin.txt', 'r') as file:
+                #for line in file:
+                for i, line in enumerate(file):
+                    if i >= 15:
+                        break
                     parts = line.strip().split()
     
                     # Properly split handling quotes
