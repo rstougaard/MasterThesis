@@ -572,7 +572,46 @@ def plot_mean_delta_chi2_heatmap2(all_results, dataset_labels, png_naming):
         
         print(f"Finished plotting for filter: {filter_label}")
 
-def plot_mean_delta_chi2_heatmap3(all_results, dataset_labels, png_naming):
+def compute_mean_delta_chi2_grid(all_results, dataset_labels, filter_label,
+                                 p0_masked, ec_masked):
+    """
+    all_results: e.g. all_results_none or all_results_snr
+    dataset_labels: list of keys in that dictionary
+    filter_label: which key to look for in all_results[source][filter_label]
+    p0_masked, ec_masked: your global grids
+    Returns: mean Δχ² grid
+    """
+    sum_grid = np.zeros((ec_masked.shape[0], ec_masked.shape[1]))
+    count_grid = np.zeros((ec_masked.shape[0], ec_masked.shape[1]))
+    
+    for source_name in dataset_labels:
+        if (source_name not in all_results) or (filter_label not in all_results[source_name]):
+            continue
+        dataset_results = all_results[source_name][filter_label]
+        for row in dataset_results:  # each row is a list of dicts
+            for result in row:
+                p0_val = result["p0"]
+                ec_val = result["E_c"]
+                DeltaChi2 = result["fit_result"]["DeltaChi2"]
+                
+                matches = np.where(
+                    np.isclose(p0_masked, p0_val) &
+                    np.isclose(ec_masked, ec_val)
+                )
+                if matches[0].size == 1:
+                    i = matches[0][0]
+                    j = matches[1][0]
+                    sum_grid[i, j] += DeltaChi2
+                    count_grid[i, j] += 1
+    
+    with np.errstate(divide='ignore', invalid='ignore'):
+        mean_delta_chi2_grid = np.where(count_grid != 0,
+                                        sum_grid / count_grid,
+                                        np.nan)
+    return mean_delta_chi2_grid
+
+
+def plot_mean_delta_chi2_heatmap3(all_results, dataset_labels, png_naming, no_filtering_grid=None):
     """
     Generates mean Δχ² heatmaps for each filtering category in two spaces:
       (E_c, p₀) and (mₐ, gₐ).
@@ -586,47 +625,23 @@ def plot_mean_delta_chi2_heatmap3(all_results, dataset_labels, png_naming):
     """
     global axion_data, ec_masked, p0_masked, m_masked, g_masked, n_mass, n_g
     
-    # Get filtering methods from the first source.
+     # Extract all filter labels from the first source
     first_source = next(iter(all_results.values()))
-    filtering_methods = list(first_source.keys())
+    filtering_methods = list(first_source.keys())  # e.g. ["snr_3", "snr_5", "snr_10"] or ["week", "month"]
     
-    # Helper: compute cell edges from center values.
-    def edges_from_centers(centers):
-        d = np.diff(centers)
-        left = centers[0] - d[0] / 2 if len(d) > 0 else centers[0] - 0.5
-        right = centers[-1] + d[-1] / 2 if len(d) > 0 else centers[-1] + 0.5
-        internal = centers[:-1] + d / 2
-        return np.concatenate(([left], internal, [right]))
+    # Build the (m_a, g_a) mesh
+    ma_mesh, g_mesh = np.meshgrid(m_masked, g_masked, indexing='ij')
     
     for filter_label in filtering_methods:
-        # Initialize grids to sum Δχ² and count entries.
-        sum_grid = np.zeros((ec_masked.shape[0], ec_masked.shape[1]))
-        count_grid = np.zeros((ec_masked.shape[0], ec_masked.shape[1]))
-        
-        # Loop over all sources for this filter.
-        for source_name in dataset_labels:
-            if source_name not in all_results or filter_label not in all_results[source_name]:
-                print(f"Warning: Missing data for {filter_label} in {source_name}. Skipping.")
-                continue
-            dataset_results = all_results[source_name][filter_label]
-            for row in dataset_results:              # Each row is a list of dictionaries
-                for result in row:
-                    p0_val = result["p0"]
-                    ec_val = result["E_c"]
-                    # Use tolerance-based matching to locate the cell.
-                    matches = np.where(np.isclose(p0_masked, p0_val) & np.isclose(ec_masked, ec_val))
-                    if matches[0].size == 1:
-                        i = matches[0][0]
-                        j = matches[1][0]
-                        DeltaChi2 = result["fit_result"]["DeltaChi2"]
-                        sum_grid[i, j] += DeltaChi2
-                        count_grid[i, j] += 1
-                    else:
-                        continue
-        
-        # Compute mean Δχ² for each cell.
-        with np.errstate(divide='ignore', invalid='ignore'):
-            mean_delta_chi2_grid = np.where(count_grid != 0, sum_grid / count_grid, np.nan)
+        # -- 1) Compute mean Δχ² for this filter_label --
+        mean_delta_chi2_grid = compute_mean_delta_chi2_grid(
+            all_results=all_results,
+            dataset_labels=dataset_labels,
+            filter_label=filter_label,
+            p0_masked=p0_masked,
+            ec_masked=ec_masked
+        )
+
         print(np.min(mean_delta_chi2_grid))
         # Set up colormap.
         vmin, vmax = -10, 25
@@ -634,12 +649,18 @@ def plot_mean_delta_chi2_heatmap3(all_results, dataset_labels, png_naming):
         boundaries = np.linspace(vmin, vmax, num_colors + 1)
         cmap = plt.get_cmap('gnuplot2', num_colors)
         norm = mcolors.BoundaryNorm(boundaries=boundaries, ncolors=num_colors, clip=True)
-        
-        
+
         ma_mesh, g_mesh = np.meshgrid(m_masked, g_masked, indexing='ij')
+
         plt.figure(figsize=(10, 6))
         heatmap = plt.pcolormesh(ma_mesh / 1e-9, g_mesh, mean_delta_chi2_grid,
                                  cmap=cmap, norm=norm, shading='auto')
+        
+        # Overlay No_Filtering contour if provided and if we aren't plotting No_Filtering itself.
+        if (no_filtering_grid is not None) and (filter_label != "No_Filtering"):
+            if np.any(no_filtering_grid <= -6.2):
+                plt.contour(ma_mesh / 1e-9, g_mesh, no_filtering_grid,
+                            levels=[-6.2], colors='orange', linewidths=2)
         
         if np.any(mean_delta_chi2_grid <= -6.2):
             plt.contour(ma_mesh / 1e-9, g_mesh, mean_delta_chi2_grid,
@@ -799,13 +820,22 @@ with open(f'Top5_Source_ra_dec_specin.txt', 'r') as file:
                     print("(p0, Ec) Heatmaps done!")
                     '''
 
-# For LIN filtering ("week" and "month")
+no_filtering_sources = list(all_results_none.keys())  # e.g. ["No_Filtering"] or sometimes multiple sources
+
+no_filtering_grid = compute_mean_delta_chi2_grid(
+    all_results=all_results_none,
+    dataset_labels=no_filtering_sources,
+    filter_label="No_Filtering",
+    p0_masked=p0_masked,
+    ec_masked=ec_masked
+) 
+
 plot_mean_delta_chi2_heatmap3(all_results_none, list(all_results_none.keys()), "mean")
 # For LIN filtering ("week" and "month")
-plot_mean_delta_chi2_heatmap3(all_results_lin, list(all_results_lin.keys()), "mean_")
+plot_mean_delta_chi2_heatmap3(all_results_lin, list(all_results_lin.keys()), "mean_", no_filtering_grid=no_filtering_grid)
 
 # For SNR filtering ("snr_3", "snr_5", "snr_10")
-plot_mean_delta_chi2_heatmap3(all_results_snr, list(all_results_snr.keys()), "mean_")
+plot_mean_delta_chi2_heatmap3(all_results_snr, list(all_results_snr.keys()), "mean_", no_filtering_grid=no_filtering_grid)
 
 
 '''
