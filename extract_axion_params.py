@@ -87,6 +87,7 @@ def fit_data(x, y, y_err, emin, emax, p0, E_c, k, source_name, dataset_label, us
 
     e_lowers = x_filtered - emin_f
     e_uppers = emax_f - x_filtered
+    
     # Check if the last point was filtered out
     if not mask[-1]:  # If the last point was removed (y[-1] == 0)
         y_err_eff = y_err_filtered + 0.03 * y_filtered  # Only add 3% to errors
@@ -170,12 +171,13 @@ def fit_data(x, y, y_err, emin, emax, p0, E_c, k, source_name, dataset_label, us
     residual_colors = {"LogPar": "red", "Axion": "blue"}
     # Create figure
     fig, axs = plt.subplots(2, 1, figsize=(10, 8), sharex=True, gridspec_kw={'height_ratios': [3, 1]})
-    x_range = np.linspace(50, 1e6, int(1e4))
+    #x_range = np.linspace(50, 1e6, int(1e4))
     x_removed = x[~mask]
     y_removed = y[~mask]
     y_err_removed = y_err[~mask]
-    e_lowers_removed = e_lowers[~mask]
-    e_uppers_removed = e_uppers[~mask]
+    e_lowers_removed = x[~mask] - emin[~mask]
+    e_uppers_removed = emax[~mask] - x[~mask]
+    
     # Top plot: Data and fits
     axs[0].errorbar(x_filtered, y_filtered, xerr = [e_lowers, e_uppers],yerr=y_err_eff, fmt='o', label="Data", color='black')
     axs[0].plot(x_filtered, y_fit_logpar, label="LogPar Fit", linestyle='-', color=residual_colors["LogPar"])
