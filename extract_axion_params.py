@@ -137,8 +137,8 @@ def fit_data(x, y, y_err, p0, E_c, k, source_name, useEBL=True):
 
     # Least Squares for Axion
     least_squares_axion = LeastSquares(x_filtered, y_filtered, y_err_eff, LogPar_axion_func)
-    p0_axion = [1e-11, 2.0, 0.1, np.pi]
-    bounds_axion = [(1e-13, 1e-9), (1.0, 5.0), (-2.0, 2.0), (0, 2*np.pi)]
+    p0_axion = [1e-11, 2.0, 0.1, 0]
+    bounds_axion = [(1e-13, 1e-9), (1.0, 5.0), (-2.0, 2.0), (-np.pi, np.pi)]
 
     # Minuit fit for Axion
     m_axion = Minuit(least_squares_axion, Norm=p0_axion[0], alpha_=p0_axion[1], beta_=p0_axion[2], w=p0_axion[3])
