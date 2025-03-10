@@ -8,6 +8,7 @@ from naima.models import EblAbsorptionModel
 import astropy.units as u
 from iminuit.cost import LeastSquares
 from iminuit import Minuit
+from tqdm import tqdm
 
 path_to_save_heatmap_m_g = "./fit_results/heatmaps_m_g/"
 path_to_save_heatmap_Ec_p0 = "./fit_results/heatmaps_Ec_p0/"
@@ -119,7 +120,7 @@ def fit_data(x, y, y_err, p0, E_c, k, source_name, useEBL=True):
     for param, bound in zip(m_logpar.parameters, bounds_logpar):
         m_logpar.limits[param] = bound
 
-    print("\n=== LogPar Fit with iminuit ===")
+    #print("\n=== LogPar Fit with iminuit ===")
     m_logpar.simplex() 
     m_logpar.migrad()  # Minimize
     m_logpar.hesse()   # Compute uncertainties
@@ -146,7 +147,7 @@ def fit_data(x, y, y_err, p0, E_c, k, source_name, useEBL=True):
     for param, bound in zip(m_axion.parameters, bounds_axion):
         m_axion.limits[param] = bound
 
-    print("\n=== Axion Fit with iminuit ===")
+    #print("\n=== Axion Fit with iminuit ===")
     m_axion.simplex() 
     m_axion.migrad()  # Minimize
     m_axion.hesse()   # Compute uncertainties
@@ -237,7 +238,7 @@ def nested_fits(datasets, source_name, useEBL=True):
     for dataset_label, (x, y, y_err) in datasets.items():
         dataset_results = []
         # Loop over the mass dimension (rows)
-        for i in range(p0_masked.shape[0]):
+        for i in tqdm(range(p0_masked.shape[0])):
             row_results = []
             # Loop over the g dimension (columns)
             for j in range(p0_masked.shape[1]):
