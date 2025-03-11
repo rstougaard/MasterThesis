@@ -813,7 +813,7 @@ def plot_mean_delta_chi2_heatmap3(all_results, dataset_labels, png_naming, no_fi
         print(f"Finished plotting for filter: {filter_label}")
 
 
-
+'''
 source_name = "4FGL J0319.8+4130"  # No need to strip quotes, shlex handles it
 
 source_name_cleaned = (
@@ -951,7 +951,7 @@ with open(f'Source_ra_dec_specin.txt', 'r') as file:
                     all_results_snr[source_name] = results_snr
                     all_results_lin[source_name] = results_lin
 
-                    
+                    '''
                     plot_delta_chi2_heatmap(results, dataset_label="No_Filtering", png_naming =f"{source_name_cleaned}")
                     
                     plot_delta_chi2_heatmap(results_snr, dataset_label="snr_3", png_naming =f"{source_name_cleaned}")
@@ -961,7 +961,7 @@ with open(f'Source_ra_dec_specin.txt', 'r') as file:
                     plot_delta_chi2_heatmap(results_lin, dataset_label="week", png_naming =f"{source_name_cleaned}")
                     plot_delta_chi2_heatmap(results_lin, dataset_label="month", png_naming =f"{source_name_cleaned}")
                     print("(p0, Ec) Heatmaps done!")
-                    
+                    '''
 
 print('Plotting mean chi-squared heatmap!')
 no_filtering_sources = list(all_results_none.keys())  # e.g. ["No_Filtering"] or sometimes multiple sources
@@ -982,7 +982,7 @@ plot_mean_delta_chi2_heatmap3(all_results_lin, list(all_results_lin.keys()), "me
 plot_mean_delta_chi2_heatmap3(all_results_snr, list(all_results_snr.keys()), "mean_", no_filtering_grid=no_filtering_grid)
 
 
-
+'''
 plot_delta_chi2_heatmap_m_g(results, dataset_label="No_Filtering")
 plot_delta_chi2_heatmap_m_g(results_snr, dataset_label="snr_3")
 plot_delta_chi2_heatmap_m_g(results_snr, dataset_label="snr_5")
