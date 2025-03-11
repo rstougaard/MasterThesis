@@ -1035,7 +1035,7 @@ plot_mean_delta_chi2_heatmap3(all_results_lin, list(all_results_lin.keys()), "me
 plot_mean_delta_chi2_heatmap3(all_results_snr, list(all_results_snr.keys()), "mean_", no_filtering_grid=no_filtering_grid)
 
 
-'''
+
 plot_delta_chi2_heatmap_m_g(results, dataset_label="No_Filtering")
 plot_delta_chi2_heatmap_m_g(results_snr, dataset_label="snr_3")
 plot_delta_chi2_heatmap_m_g(results_snr, dataset_label="snr_5")
