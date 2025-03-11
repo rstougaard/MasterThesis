@@ -142,58 +142,58 @@ def fit_data(x, y, y_err, emin, emax, p0, E_c, k, source_name, dataset_label, us
         delta_chi2 = chi2_axion - chi2_logpar
     if fitting_method == "iminuit":
         # Least Squares for LogPar
-    least_squares_logpar = LeastSquares(x_filtered, y_filtered, y_err_eff, LogPar)
-    p0_logpar = [1e-11, 2.0, 0.1]
-    bounds_logpar = [(1e-13, 1e-9), (-1.0, 5.0), (-2.0, 2.0)]
+        least_squares_logpar = LeastSquares(x_filtered, y_filtered, y_err_eff, LogPar)
+        p0_logpar = [1e-11, 2.0, 0.1]
+        bounds_logpar = [(1e-13, 1e-9), (-1.0, 5.0), (-2.0, 2.0)]
 
-    # Minuit fit for LogPar
-    m_logpar = Minuit(least_squares_logpar, Norm=p0_logpar[0], alpha_=p0_logpar[1], beta_=p0_logpar[2])
+        # Minuit fit for LogPar
+        m_logpar = Minuit(least_squares_logpar, Norm=p0_logpar[0], alpha_=p0_logpar[1], beta_=p0_logpar[2])
 
-    # Set parameter limits
-    for param, bound in zip(m_logpar.parameters, bounds_logpar):
-        m_logpar.limits[param] = bound
+        # Set parameter limits
+        for param, bound in zip(m_logpar.parameters, bounds_logpar):
+            m_logpar.limits[param] = bound
 
-    #print("\n=== LogPar Fit with iminuit ===")
-    m_logpar.simplex() 
-    m_logpar.migrad()  # Minimize
-    m_logpar.hesse()   # Compute uncertainties
-    #print(m_logpar)
+        #print("\n=== LogPar Fit with iminuit ===")
+        m_logpar.simplex() 
+        m_logpar.migrad()  # Minimize
+        m_logpar.hesse()   # Compute uncertainties
+        #print(m_logpar)
 
-    # Extract results
-    popt_logpar = [m_logpar.values[p] for p in m_logpar.parameters]
-    perr_logpar = [m_logpar.errors[p] for p in m_logpar.parameters]
-    y_fit_logpar = LogPar(x_filtered, *popt_logpar)
-    chi2_logpar, dof_logpar = reduced_chi_square(y_filtered, y_fit_logpar, y_err_eff, len(p0_logpar))
+        # Extract results
+        popt_logpar = [m_logpar.values[p] for p in m_logpar.parameters]
+        perr_logpar = [m_logpar.errors[p] for p in m_logpar.parameters]
+        y_fit_logpar = LogPar(x_filtered, *popt_logpar)
+        chi2_logpar, dof_logpar = reduced_chi_square(y_filtered, y_fit_logpar, y_err_eff, len(p0_logpar))
 
-    def LogPar_axion_func(x, Norm, alpha_, beta_, w):
-        return LogPar(x, Norm, alpha_, beta_) * (1 - p0 / (1 + (E_c / x) ** k) * (1+0.2*np.tanh(w)))
+        def LogPar_axion_func(x, Norm, alpha_, beta_, w):
+            return LogPar(x, Norm, alpha_, beta_) * (1 - p0 / (1 + (E_c / x) ** k) * (1+0.2*np.tanh(w)))
 
-    # Least Squares for Axion
-    least_squares_axion = LeastSquares(x_filtered, y_filtered, y_err_eff, LogPar_axion_func)
-    p0_axion = [1e-11, 2.0, 0.1, np.pi/2]
-    bounds_axion = [(1e-13, 1e-9), (1.0, 5.0), (-2.0, 2.0), (-np.pi, np.pi)]
+        # Least Squares for Axion
+        least_squares_axion = LeastSquares(x_filtered, y_filtered, y_err_eff, LogPar_axion_func)
+        p0_axion = [1e-11, 2.0, 0.1, np.pi/2]
+        bounds_axion = [(1e-13, 1e-9), (1.0, 5.0), (-2.0, 2.0), (-np.pi, np.pi)]
 
-    # Minuit fit for Axion
-    m_axion = Minuit(least_squares_axion, Norm=p0_axion[0], alpha_=p0_axion[1], beta_=p0_axion[2], w=p0_axion[3])
+        # Minuit fit for Axion
+        m_axion = Minuit(least_squares_axion, Norm=p0_axion[0], alpha_=p0_axion[1], beta_=p0_axion[2], w=p0_axion[3])
 
-    # Set parameter limits
-    for param, bound in zip(m_axion.parameters, bounds_axion):
-        m_axion.limits[param] = bound
+        # Set parameter limits
+        for param, bound in zip(m_axion.parameters, bounds_axion):
+            m_axion.limits[param] = bound
 
-    #print("\n=== Axion Fit with iminuit ===")
-    m_axion.simplex() 
-    m_axion.migrad()  # Minimize
-    m_axion.hesse()   # Compute uncertainties
-    #print(m_axion)
+        #print("\n=== Axion Fit with iminuit ===")
+        m_axion.simplex() 
+        m_axion.migrad()  # Minimize
+        m_axion.hesse()   # Compute uncertainties
+        #print(m_axion)
 
-    # Extract results
-    popt_axion = [m_axion.values[p] for p in m_axion.parameters]
-    perr_axion = [m_axion.errors[p] for p in m_axion.parameters]
-    y_fit_axion = LogPar_axion_func(x_filtered, *popt_axion)
-    chi2_axion, dof_axion = reduced_chi_square(y_filtered, y_fit_axion, y_err_eff, len(p0_axion))
+        # Extract results
+        popt_axion = [m_axion.values[p] for p in m_axion.parameters]
+        perr_axion = [m_axion.errors[p] for p in m_axion.parameters]
+        y_fit_axion = LogPar_axion_func(x_filtered, *popt_axion)
+        chi2_axion, dof_axion = reduced_chi_square(y_filtered, y_fit_axion, y_err_eff, len(p0_axion))
 
-    # Compute Δχ²
-    delta_chi2 = chi2_axion - chi2_logpar
+        # Compute Δχ²
+        delta_chi2 = chi2_axion - chi2_logpar
 
 
     print("LogPar:\n")
@@ -879,7 +879,7 @@ with open(f'Source_ra_dec_specin.txt', 'r') as file:
                     all_results_snr[source_name] = results_snr
                     with open("all_results_snr.pkl", "wb") as file:
                         pickle.dump(all_results_snr, file)
-                        
+
                     all_results_lin[source_name] = results_lin
                     with open("all_results_lin.pkl", "wb") as file:
                         pickle.dump(all_results_lin, file)
