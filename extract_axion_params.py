@@ -211,13 +211,11 @@ def fit_data(x, y, y_err, emin, emax, p0, E_c, k, source_name, dataset_label, us
         "LogPar": {
             "params": popt_logpar,
             "errors": perr_logpar,
-            "cov": pcov_logpar,  # Return covariance matrix
             "chi2": chi2_logpar
         },
         "LogPar_Axion": {
             "params": popt_axion,
-            "errors": perr_axion,
-            "cov": pcov_axion,  # Return covariance matrix
+            "errors": perr_axion, # Return covariance matrix
             "chi2": chi2_axion
         },
         "DeltaChi2": delta_chi2,
