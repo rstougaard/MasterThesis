@@ -10,6 +10,7 @@ from iminuit.cost import LeastSquares
 from iminuit import Minuit
 from tqdm import tqdm
 from matplotlib.backends.backend_pdf import PdfPages
+import pickle
 
 path_to_save_heatmap_m_g = "./fit_results/heatmaps_m_g/"
 path_to_save_heatmap_Ec_p0 = "./fit_results/heatmaps_Ec_p0/"
@@ -80,7 +81,7 @@ def reduced_chi_square(y_obs, y_fit, y_err, num_params):
     dof = len(y_obs) - num_params  # Degrees of freedom
     return chi2 , dof
 
-def fit_data(x, y, y_err, emin, emax, p0, E_c, k, source_name, dataset_label, useEBL=True):
+def fit_data(x, y, y_err, emin, emax, p0, E_c, k, source_name, dataset_label, useEBL=True, fitting_method="iminuit"):
     # Filter out points where y is zero
     mask = y != 0
     x_filtered, y_filtered, y_err_filtered, emin_f, emax_f  = x[mask], y[mask], y_err[mask], emin[mask], emax[mask]
@@ -111,34 +112,89 @@ def fit_data(x, y, y_err, emin, emax, p0, E_c, k, source_name, dataset_label, us
         LogPar= LogPar_EBL
     else:
         LogPar = logpar_base
-        
-    bounds_logpar = ([1e-13, -1.0, -2.0], [1e-9, 5.0, 2.0])  # Lower and upper bounds
-    p0_logpar = [1e-11, 2.0, 0.1]  # Initial guesses
-    popt_logpar, pcov_logpar = curve_fit(
-        LogPar, x_filtered, y_filtered, sigma=y_err_eff, p0=p0_logpar, bounds=bounds_logpar, absolute_sigma=True
-    )
+    if fitting_method == "curve_fit":
+        bounds_logpar = ([1e-13, -1.0, -2.0], [1e-9, 5.0, 2.0])  # Lower and upper bounds
+        p0_logpar = [1e-11, 2.0, 0.1]  # Initial guesses
+        popt_logpar, pcov_logpar = curve_fit(
+            LogPar, x_filtered, y_filtered, sigma=y_err_eff, p0=p0_logpar, bounds=bounds_logpar, absolute_sigma=True
+        )
+        y_fit_logpar = LogPar(x_filtered, *popt_logpar)
+        chi2_logpar, dof_logpar = reduced_chi_square(y_filtered, y_fit_logpar, y_err_eff, len(popt_logpar))
+
+        # Extract parameter uncertainties
+        perr_logpar = np.sqrt(np.diag(pcov_logpar))
+
+        # Define bounds for axion_func parameters [Norm, alpha_, beta_]
+        def LogPar_axion_func(E, Norm, alpha_, beta_, w):
+            return LogPar(E, Norm, alpha_, beta_) * (1 - p0 / (1 + (E_c / E) ** k) * (1+0.2*np.tanh(w)))
+        bounds_alp = ([1e-13, -1.0, -2.0, -np.pi], [1e-9, 5.0, 2.0, np.pi])  # Lower and upper bounds
+        p0_alp= [1e-11, 2.0, 0.1, np.pi/2]  # Initial guesses
+        popt_axion, pcov_axion = curve_fit(
+            LogPar_axion_func, x_filtered, y_filtered, sigma=y_err_eff, p0=p0_alp, bounds=bounds_alp, absolute_sigma=True
+        )
+        y_fit_axion = LogPar_axion_func(x_filtered, *popt_axion)
+        chi2_axion, dof_axion = reduced_chi_square(y_filtered, y_fit_axion, y_err_eff, len(popt_axion))
+
+        # Extract parameter uncertainties
+        perr_axion = np.sqrt(np.diag(pcov_axion))
+
+        # Compute Δχ²
+        delta_chi2 = chi2_axion - chi2_logpar
+    if fitting_method == "iminuit":
+        # Least Squares for LogPar
+    least_squares_logpar = LeastSquares(x_filtered, y_filtered, y_err_eff, LogPar)
+    p0_logpar = [1e-11, 2.0, 0.1]
+    bounds_logpar = [(1e-13, 1e-9), (-1.0, 5.0), (-2.0, 2.0)]
+
+    # Minuit fit for LogPar
+    m_logpar = Minuit(least_squares_logpar, Norm=p0_logpar[0], alpha_=p0_logpar[1], beta_=p0_logpar[2])
+
+    # Set parameter limits
+    for param, bound in zip(m_logpar.parameters, bounds_logpar):
+        m_logpar.limits[param] = bound
+
+    #print("\n=== LogPar Fit with iminuit ===")
+    m_logpar.simplex() 
+    m_logpar.migrad()  # Minimize
+    m_logpar.hesse()   # Compute uncertainties
+    #print(m_logpar)
+
+    # Extract results
+    popt_logpar = [m_logpar.values[p] for p in m_logpar.parameters]
+    perr_logpar = [m_logpar.errors[p] for p in m_logpar.parameters]
     y_fit_logpar = LogPar(x_filtered, *popt_logpar)
-    chi2_logpar, dof_logpar = reduced_chi_square(y_filtered, y_fit_logpar, y_err_eff, len(popt_logpar))
+    chi2_logpar, dof_logpar = reduced_chi_square(y_filtered, y_fit_logpar, y_err_eff, len(p0_logpar))
 
-    # Extract parameter uncertainties
-    perr_logpar = np.sqrt(np.diag(pcov_logpar))
+    def LogPar_axion_func(x, Norm, alpha_, beta_, w):
+        return LogPar(x, Norm, alpha_, beta_) * (1 - p0 / (1 + (E_c / x) ** k) * (1+0.2*np.tanh(w)))
 
-    # Define bounds for axion_func parameters [Norm, alpha_, beta_]
-    def LogPar_axion_func(E, Norm, alpha_, beta_, w):
-        return LogPar(E, Norm, alpha_, beta_) * (1 - p0 / (1 + (E_c / E) ** k) * (1+0.2*np.tanh(w)))
-    bounds_alp = ([1e-13, -1.0, -2.0, -np.pi], [1e-9, 5.0, 2.0, np.pi])  # Lower and upper bounds
-    p0_alp= [1e-11, 2.0, 0.1, np.pi/2]  # Initial guesses
-    popt_axion, pcov_axion = curve_fit(
-        LogPar_axion_func, x_filtered, y_filtered, sigma=y_err_eff, p0=p0_alp, bounds=bounds_alp, absolute_sigma=True
-    )
+    # Least Squares for Axion
+    least_squares_axion = LeastSquares(x_filtered, y_filtered, y_err_eff, LogPar_axion_func)
+    p0_axion = [1e-11, 2.0, 0.1, np.pi/2]
+    bounds_axion = [(1e-13, 1e-9), (1.0, 5.0), (-2.0, 2.0), (-np.pi, np.pi)]
+
+    # Minuit fit for Axion
+    m_axion = Minuit(least_squares_axion, Norm=p0_axion[0], alpha_=p0_axion[1], beta_=p0_axion[2], w=p0_axion[3])
+
+    # Set parameter limits
+    for param, bound in zip(m_axion.parameters, bounds_axion):
+        m_axion.limits[param] = bound
+
+    #print("\n=== Axion Fit with iminuit ===")
+    m_axion.simplex() 
+    m_axion.migrad()  # Minimize
+    m_axion.hesse()   # Compute uncertainties
+    #print(m_axion)
+
+    # Extract results
+    popt_axion = [m_axion.values[p] for p in m_axion.parameters]
+    perr_axion = [m_axion.errors[p] for p in m_axion.parameters]
     y_fit_axion = LogPar_axion_func(x_filtered, *popt_axion)
-    chi2_axion, dof_axion = reduced_chi_square(y_filtered, y_fit_axion, y_err_eff, len(popt_axion))
-
-    # Extract parameter uncertainties
-    perr_axion = np.sqrt(np.diag(pcov_axion))
+    chi2_axion, dof_axion = reduced_chi_square(y_filtered, y_fit_axion, y_err_eff, len(p0_axion))
 
     # Compute Δχ²
     delta_chi2 = chi2_axion - chi2_logpar
+
 
     print("LogPar:\n")
     for param, value, error in zip(["Norm", "alpha_", "beta_"], popt_logpar, perr_logpar):
@@ -168,143 +224,11 @@ def fit_data(x, y, y_err, emin, emax, p0, E_c, k, source_name, dataset_label, us
         "y_fit_LogPar": y_fit_logpar,
         "y_fit_Axion": y_fit_axion,
     }
-'''
-    # Least Squares for LogPar
-    least_squares_logpar = LeastSquares(x_filtered, y_filtered, y_err_eff, LogPar)
-    p0_logpar = [1e-11, 2.0, 0.1]
-    bounds_logpar = [(1e-13, 1e-9), (-1.0, 5.0), (-2.0, 2.0)]
 
-    # Minuit fit for LogPar
-    m_logpar = Minuit(least_squares_logpar, Norm=p0_logpar[0], alpha_=p0_logpar[1], beta_=p0_logpar[2])
 
-    # Set parameter limits
-    for param, bound in zip(m_logpar.parameters, bounds_logpar):
-        m_logpar.limits[param] = bound
-
-    #print("\n=== LogPar Fit with iminuit ===")
-    m_logpar.simplex() 
-    m_logpar.migrad()  # Minimize
-    m_logpar.hesse()   # Compute uncertainties
-    #print(m_logpar)
-
-    # Extract results
-    popt_logpar = [m_logpar.values[p] for p in m_logpar.parameters]
-    perr_logpar = [m_logpar.errors[p] for p in m_logpar.parameters]
-    y_fit_logpar = LogPar(x_filtered, *popt_logpar)
-    chi2_logpar, dof_logpar = reduced_chi_square(y_filtered, y_fit_logpar, y_err_eff, len(p0_logpar))
-
-    def LogPar_axion_func(x, Norm, alpha_, beta_, w):
-        return LogPar(x, Norm, alpha_, beta_) * (1 - p0 / (1 + (E_c / x) ** k) * (1+0.2*np.tanh(w)))
-
-    # Least Squares for Axion
-    least_squares_axion = LeastSquares(x_filtered, y_filtered, y_err_eff, LogPar_axion_func)
-    p0_axion = [1e-11, 2.0, 0.1, 0]
-    bounds_axion = [(1e-13, 1e-9), (1.0, 5.0), (-2.0, 2.0), (-np.pi, np.pi)]
-
-    # Minuit fit for Axion
-    m_axion = Minuit(least_squares_axion, Norm=p0_axion[0], alpha_=p0_axion[1], beta_=p0_axion[2], w=p0_axion[3])
-
-    # Set parameter limits
-    for param, bound in zip(m_axion.parameters, bounds_axion):
-        m_axion.limits[param] = bound
-
-    #print("\n=== Axion Fit with iminuit ===")
-    m_axion.simplex() 
-    m_axion.migrad()  # Minimize
-    m_axion.hesse()   # Compute uncertainties
-    #print(m_axion)
-
-    # Extract results
-    popt_axion = [m_axion.values[p] for p in m_axion.parameters]
-    perr_axion = [m_axion.errors[p] for p in m_axion.parameters]
-    y_fit_axion = LogPar_axion_func(x_filtered, *popt_axion)
-    chi2_axion, dof_axion = reduced_chi_square(y_filtered, y_fit_axion, y_err_eff, len(p0_axion))
-
-    # Compute Δχ²
-    delta_chi2 = chi2_axion - chi2_logpar
-    residuals_logpar = (y_filtered - y_fit_logpar) / y_err_eff
-    residuals_axion = (y_filtered - y_fit_axion) / y_err_eff
-    residual_colors = {"LogPar": "red", "Axion": "blue"}
-    # Create figure
-    fig, axs = plt.subplots(2, 1, figsize=(10, 8), sharex=True, gridspec_kw={'height_ratios': [3, 1]})
-    #x_range = np.linspace(50, 1e6, int(1e4))
-    x_removed = x[~mask]
-    y_removed = y[~mask]
-    y_err_removed = y_err[~mask]
-    e_lowers_removed = x[~mask] - emin[~mask]
-    e_uppers_removed = emax[~mask] - x[~mask]
     
-    # Top plot: Data and fits
-    axs[0].errorbar(x_filtered, y_filtered, xerr = [e_lowers, e_uppers],yerr=y_err_eff, fmt='o', label="Data", color='black')
-    axs[0].plot(x_filtered, y_fit_logpar, label="LogPar Fit", linestyle='-', color=residual_colors["LogPar"])
-    axs[0].plot(x_filtered, y_fit_axion, label="Axion Fit", linestyle='--', color=residual_colors["Axion"])
-    #axs[0].plot(x_range, axion_func(x_range, *params_axion), label="axion_func(E)", linestyle='-', color='orange')
-    #axs[0].plot(x_range, LogPar(x_range, *params_logpar), label="LogPar(E)", linestyle='-', color='green')
-    axs[0].errorbar(x_removed, y_removed, xerr=[e_lowers_removed, e_uppers_removed], yerr=y_err_removed, fmt='o', 
-            color='grey', alpha=0.5, label="Removed Data")
-    axs[0].set_ylabel("dN/dE [ photons/cm²/s/MeV ]")
-    axs[0].set_title(f"Fits for {source_name}:{dataset_label}")
-    axs[0].set_xscale('log')
-    axs[0].set_yscale('log')
-    #axs[0].set_ylim(1e-30, 1e-10)
-    axs[0].legend()
-    axs[0].grid(True, which="both", linestyle="--", linewidth=0.5)
 
-    # Add parameter box
-    textstr = "LogPar:\n"
-    for param, value, error in zip(["Norm", "alpha_", "beta_"], popt_logpar, perr_logpar):
-        textstr += f"  {param}: {value:.2e} ± {error:.2e}\n"
-    textstr += f"  $\chi^2$ / dof: {chi2_logpar:.2f} / {dof_logpar}\n\n"
-
-    textstr += "Axion:\n"
-    for param, value, error in zip(["Norm", "alpha_", "beta_", "w"], popt_axion, perr_axion):
-        textstr += f"  {param}: {value:.2e} ± {error:.2e}\n"
-    textstr += f"  $\chi^2$ / dof: {chi2_axion:.2f} / {dof_axion}\n\n"
-
-    textstr += f"Δχ² (Axion - LogPar): {delta_chi2:.2f}"
-
-    axs[0].text(0.02, 0.56, textstr, transform=axs[0].transAxes, fontsize=10,
-                verticalalignment='top', bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
-
-    # Bottom plot: Residuals
-    axs[1].scatter(x_filtered, residuals_logpar, label="LogPar Residuals", color=residual_colors["LogPar"], marker='o')
-    axs[1].scatter(x_filtered, residuals_axion, label="Axion Residuals", color=residual_colors["Axion"], marker='x')
-    axs[1].axhline(0, color='black', linestyle='--', linewidth=0.8)
-    axs[1].axhline(1, color='green', linestyle='--', linewidth=0.8, label='+1σ')
-    axs[1].axhline(-1, color='green', linestyle='--', linewidth=0.8)
-    axs[1].axhline(2, color='orange', linestyle='--', linewidth=0.8, label='+2σ')
-    axs[1].axhline(-2, color='orange', linestyle='--', linewidth=0.8)
-    axs[1].set_ylim(-4, 4)
-    axs[1].set_xlabel("Energy [ MeV ]")
-    axs[1].set_ylabel("Normalized Residual")
-    axs[1].legend(ncol=2, loc='upper right')
-    axs[1].grid(True, which="both", linestyle="--", linewidth=0.5)
-
-    # Adjust layout
-    plt.tight_layout()
-
-    # Return fit results
-    return {
-        "LogPar": {
-            "params": popt_logpar,
-            "errors": perr_logpar,
-            "chi2": chi2_logpar,
-            "dof": dof_logpar
-        },
-        "Axion": {
-            "params": popt_axion,
-            "errors": perr_axion,
-            "chi2": chi2_axion,
-            "dof": dof_axion
-        },
-        "DeltaChi2": delta_chi2,
-        "y_fit_LogPar": y_fit_logpar,
-        "y_fit_Axion": y_fit_axion,
-    }, fig
-    
-'''
-
-def nested_fits(datasets, source_name, useEBL=True):
+def nested_fits(datasets, source_name, useEBL=True, fitting_method="iminuit"):
     results = {}
     # Here we assume p0_masked and ec_masked are defined globally (or accessible in this scope)
     # and have the same shape (n_mass_masked, n_g_masked) corresponding to your m, g grid.
@@ -329,7 +253,8 @@ def nested_fits(datasets, source_name, useEBL=True):
                     k=k,  # Ensure k is defined in your scope
                     source_name=source_name,
                     dataset_label=dataset_label,
-                    useEBL=useEBL
+                    useEBL=useEBL,
+                    fitting_method = fitting_method
                 )
                 row_results.append({
                     "p0": p0_val,
@@ -877,7 +802,7 @@ all_results_lin = {}
 with open(f'Source_ra_dec_specin.txt', 'r') as file:
                 #for line in file:
                 for i, line in enumerate(file):
-                    if i >= 15:
+                    if i >= 5:
                         break
                     parts = line.strip().split()
     
@@ -943,13 +868,21 @@ with open(f'Source_ra_dec_specin.txt', 'r') as file:
                                     f"month": (sorted_data_lin_month['geometric_mean'], sorted_data_lin_month['flux_tot_value']/bin_size, sorted_data_lin_month['flux_tot_error']/bin_size, sorted_data_lin_month['emin'], sorted_data_lin_month['emax'] )}
                     print(i, source_name)
 
-                    results = nested_fits(datasets, source_name, useEBL=True)
-                    results_snr = nested_fits(datasets_snr, source_name, useEBL=True)
-                    results_lin= nested_fits(datasets_lin, source_name, useEBL=True)
+                    results = nested_fits(datasets, source_name, useEBL=True, fitting_method="iminuit")
+                    results_snr = nested_fits(datasets_snr, source_name, useEBL=True, fitting_method="iminuit")
+                    results_lin= nested_fits(datasets_lin, source_name, useEBL=True, fitting_method="iminuit")
 
                     all_results_none[source_name] = results
+                    with open("all_results_none.pkl", "wb") as file:
+                        pickle.dump(all_results_none, file)
+                        
                     all_results_snr[source_name] = results_snr
+                    with open("all_results_snr.pkl", "wb") as file:
+                        pickle.dump(all_results_snr, file)
+                        
                     all_results_lin[source_name] = results_lin
+                    with open("all_results_lin.pkl", "wb") as file:
+                        pickle.dump(all_results_lin, file)
 
                     '''
                     plot_delta_chi2_heatmap(results, dataset_label="No_Filtering", png_naming =f"{source_name_cleaned}")
