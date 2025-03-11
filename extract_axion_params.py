@@ -43,7 +43,7 @@ mass_unique = axion_data[::n_g, 0]     # length = n_mass
 
 # Define your desired start and stop values
 m_start_val = 3e-10
-g_start_val = 5e-13
+g_start_val = 7e-13
 m_stop_val  = 2e-8
 g_stop_val  = 1e-11
 
@@ -670,7 +670,7 @@ def plot_mean_delta_chi2_heatmap3(all_results, dataset_labels, png_naming, no_fi
         if np.any(mean_delta_chi2_grid <= -6.2):
             plt.contour(ma_mesh / 1e-9, g_mesh, mean_delta_chi2_grid,
                         levels=[-6.2], colors='#78c679', linewidths=2)
-            
+        
         if np.any(mean_delta_chi2_grid >= 6.2):
             plt.contour(ma_mesh / 1e-9, g_mesh, mean_delta_chi2_grid,
                         levels=[6.2], colors='red', linewidths=2)
@@ -800,7 +800,7 @@ all_results_lin = {}
 with open(f'Source_ra_dec_specin.txt', 'r') as file:
                 #for line in file:
                 for i, line in enumerate(file):
-                    if i >= 5:
+                    if i >= 15:
                         break
                     parts = line.strip().split()
     
@@ -871,15 +871,15 @@ with open(f'Source_ra_dec_specin.txt', 'r') as file:
                     results_lin= nested_fits(datasets_lin, source_name, useEBL=True, fitting_method="iminuit")
 
                     all_results_none[source_name] = results
-                    with open("all_results_none.pkl", "wb") as file:
+                    with open("all_results_none_15.pkl", "wb") as file:
                         pickle.dump(all_results_none, file)
                         
                     all_results_snr[source_name] = results_snr
-                    with open("all_results_snr.pkl", "wb") as file:
+                    with open("all_results_snr_15.pkl", "wb") as file:
                         pickle.dump(all_results_snr, file)
 
                     all_results_lin[source_name] = results_lin
-                    with open("all_results_lin.pkl", "wb") as file:
+                    with open("all_results_lin_15.pkl", "wb") as file:
                         pickle.dump(all_results_lin, file)
 
                     '''
