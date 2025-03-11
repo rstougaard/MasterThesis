@@ -148,7 +148,7 @@ def fit_data(x, y, y_err, emin, emax, p0, E_c, k, source_name, dataset_label, us
         print(f"  {param}: {value:.2e} ± {error:.2e}\n $\chi^2$ / dof: {chi2_axion:.2f} / {dof_axion}\n\n")  
 
     print(f"Δχ² (Axion - LogPar): {delta_chi2:.2f}")
-
+    print('--------------------------------------------------------------------------------------')
 
     # Return fit results
     return {
@@ -167,7 +167,7 @@ def fit_data(x, y, y_err, emin, emax, p0, E_c, k, source_name, dataset_label, us
         "DeltaChi2": delta_chi2,
         "y_fit_LogPar": y_fit_logpar,
         "y_fit_Axion": y_fit_axion,
-    }, fig
+    }
 '''
     # Least Squares for LogPar
     least_squares_logpar = LeastSquares(x_filtered, y_filtered, y_err_eff, LogPar)
