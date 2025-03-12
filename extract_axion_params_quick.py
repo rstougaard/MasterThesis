@@ -140,7 +140,11 @@ def fit_data(x, y, y_err, emin, emax, p0, E_c, k, source_name, dataset_label, us
         # Estimate the variance of the residuals
         residual_variance = chi2_logpar / dof_logpar
         # The covariance is approximately the inverse of (J^T J) times the residual variance
-        pcov_logpar = np.linalg.inv(J.T.dot(J)) * residual_variance
+        try:
+            pcov_logpar = np.linalg.inv(J.T.dot(J)) * residual_variance
+        except np.linalg.LinAlgError:
+            pcov_logpar = np.linalg.pinv(J.T.dot(J)) * residual_variance
+
 
         # Evaluate the fit and compute uncertainties
         y_fit_logpar = LogPar(x_filtered, *popt_logpar)
