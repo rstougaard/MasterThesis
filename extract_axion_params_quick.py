@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 import numpy as np
 from scipy.optimize import curve_fit
+from scipy.optimize import least_squares
 import shlex
 from naima.models import EblAbsorptionModel
 import astropy.units as u
