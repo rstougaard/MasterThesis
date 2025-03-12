@@ -199,10 +199,12 @@ def fit_data(x, y, y_err, emin, emax, p0, E_c, k, source_name, dataset_label, us
 
     print("LogPar:\n")
     for param, value, error in zip(["Norm", "alpha_", "beta_"], popt_logpar, perr_logpar):
-        print(f"  {param}: {value:.2e} ± {error:.2e}\n $\chi^2$ / dof: {chi2_logpar:.2f} / {dof_logpar}\n\n")
+        print(f"  {param}: {value:.2e} ± {error:.2e}\n")
+    print(f'χ² / dof: {chi2_logpar:.2f} / {dof_logpar}\n\n')
     print("Axion:\n")
     for param, value, error in zip(["Norm", "alpha_", "beta_", "w"], popt_axion, perr_axion):
-        print(f"  {param}: {value:.2e} ± {error:.2e}\n $\chi^2$ / dof: {chi2_axion:.2f} / {dof_axion}\n\n")  
+        print(f"  {param}: {value:.2e} ± {error:.2e}\n")  
+    print( f"χ² / dof: {chi2_axion:.2f} / {dof_axion}\n\n")
 
     print(f"Δχ² (Axion - LogPar): {delta_chi2:.2f}")
     print('--------------------------------------------------------------------------------------')
@@ -806,21 +808,21 @@ with open(f'Source_ra_dec_specin.txt', 'r') as file:
                                     f"month": (sorted_data_lin_month['geometric_mean'], sorted_data_lin_month['flux_tot_value']/bin_size, sorted_data_lin_month['flux_tot_error']/bin_size, sorted_data_lin_month['emin'], sorted_data_lin_month['emax'] )}
                     print(source_name)
 
-                    results = nested_fits_combined(datasets, source_name, useEBL=True, fitting_method="iminuit", chunk_size=10)
-                    results_snr = nested_fits_combined(datasets_snr, source_name, useEBL=True, fitting_method="iminuit", chunk_size=10)
-                    results_lin= nested_fits_combined(datasets_lin, source_name, useEBL=True, fitting_method="iminuit", chunk_size=10)
+                    results = nested_fits_combined(datasets, source_name, useEBL=True, fitting_method="curve_fit", chunk_size=10)
+                    results_snr = nested_fits_combined(datasets_snr, source_name, useEBL=True, fitting_method="curve_fit", chunk_size=10)
+                    results_lin= nested_fits_combined(datasets_lin, source_name, useEBL=True, fitting_method="curve_fit", chunk_size=10)
                     
 
                     all_results_none[source_name] = results
-                    with open("all_results_none_32.pkl", "wb") as file:
+                    with open("all_results_none_32_curve_fit.pkl", "wb") as file:
                         pickle.dump(all_results_none, file)
                         
                     all_results_snr[source_name] = results_snr
-                    with open("all_results_snr_32.pkl", "wb") as file:
+                    with open("all_results_snr_32_curve_fit.pkl", "wb") as file:
                         pickle.dump(all_results_snr, file)
 
                     all_results_lin[source_name] = results_lin
-                    with open("all_results_lin_32.pkl", "wb") as file:
+                    with open("all_results_lin_32_curve_fit.pkl", "wb") as file:
                         pickle.dump(all_results_lin, file)
 
                     '''
