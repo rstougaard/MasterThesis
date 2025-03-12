@@ -860,7 +860,7 @@ with open(f'Source_ra_dec_specin.txt', 'r') as file:
                     all_results_none[source_name] = results
                     with open("all_results_none_32_curve_fit.pkl", "wb") as file:
                         pickle.dump(all_results_none, file)
-                        
+                    '''    
                     all_results_snr[source_name] = results_snr
                     with open("all_results_snr_32_curve_fit.pkl", "wb") as file:
                         pickle.dump(all_results_snr, file)
@@ -869,7 +869,7 @@ with open(f'Source_ra_dec_specin.txt', 'r') as file:
                     with open("all_results_lin_32_curve_fit.pkl", "wb") as file:
                         pickle.dump(all_results_lin, file)
 
-                    '''
+                    
                     plot_delta_chi2_heatmap(results, dataset_label="No_Filtering", png_naming =f"{source_name_cleaned}")
                     
                     plot_delta_chi2_heatmap(results_snr, dataset_label="snr_3", png_naming =f"{source_name_cleaned}")
