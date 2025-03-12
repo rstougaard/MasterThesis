@@ -804,7 +804,7 @@ with open(f'Source_ra_dec_specin.txt', 'r') as file:
                                     f"snr_10": (sorted_data_snr10['geometric_mean'], sorted_data_snr10['flux_tot_value']/bin_size, sorted_data_snr10['flux_tot_error']/bin_size, sorted_data_snr10['emin'], sorted_data_snr10['emax'] )}
                     datasets_lin = {f"week": (sorted_data_lin_week['geometric_mean'], sorted_data_lin_week['flux_tot_value']/bin_size, sorted_data_lin_week['flux_tot_error']/bin_size, sorted_data_lin_week['emin'], sorted_data_lin_week['emax'] ),
                                     f"month": (sorted_data_lin_month['geometric_mean'], sorted_data_lin_month['flux_tot_value']/bin_size, sorted_data_lin_month['flux_tot_error']/bin_size, sorted_data_lin_month['emin'], sorted_data_lin_month['emax'] )}
-                    print(i, source_name)
+                    print(source_name)
 
                     results = nested_fits_combined(datasets, source_name, useEBL=True, fitting_method="iminuit", chunk_size=10)
                     results_snr = nested_fits_combined(datasets_snr, source_name, useEBL=True, fitting_method="iminuit", chunk_size=10)
