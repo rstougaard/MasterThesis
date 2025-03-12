@@ -117,7 +117,7 @@ def fit_data(x, y, y_err, emin, emax, p0, E_c, k, source_name, dataset_label, us
         bounds_logpar = ([1e-13, -2.0, -2.0], [1e-9, 5.0, 5.0])  # Lower and upper bounds
         p0_logpar = [1e-11, 2.0, 0.1]  # Initial guesses
         popt_logpar, pcov_logpar = curve_fit(
-            LogPar, x_filtered, y_filtered, sigma=y_err_eff, p0=p0_logpar, bounds=bounds_logpar, absolute_sigma=True, maxfev=10000)
+            LogPar, x_filtered, y_filtered, sigma=y_err_eff, p0=p0_logpar, bounds=bounds_logpar, absolute_sigma=True, maxfev=50000)
         y_fit_logpar = LogPar(x_filtered, *popt_logpar)
         chi2_logpar, dof_logpar = reduced_chi_square(y_filtered, y_fit_logpar, y_err_eff, len(popt_logpar))
 
