@@ -3,7 +3,6 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 import numpy as np
 from scipy.optimize import curve_fit
-from scipy.optimize import least_squares
 import shlex
 from naima.models import EblAbsorptionModel
 import astropy.units as u
@@ -115,76 +114,33 @@ def fit_data(x, y, y_err, emin, emax, p0, E_c, k, source_name, dataset_label, us
     else:
         LogPar = logpar_base
     if fitting_method == "curve_fit":
-        bounds_logpar = ([1e-13, -2.0, -2.0], [1e-9, 5.0, 5.0])
-        p0_logpar = [1e-11, 2.0, 0.1]
-
-        # Define the residuals for LogPar.
-        # Here we scale by the effective error so that the sum of squared residuals equals chi².
-        def residuals_logpar(params, x, y, y_err):
-            return (LogPar(x, *params) - y) / y_err
-
-        # Run the least squares fit (increasing max function evaluations if needed)
-        res_logpar = least_squares(
-            residuals_logpar,
-            p0_logpar,
-            bounds=bounds_logpar,
-            args=(x_filtered, y_filtered, y_err_eff),
-            max_nfev=50000  # or increase further if necessary
-        )
-        popt_logpar = res_logpar.x
-
-        # Compute the covariance matrix from the Jacobian
-        J = res_logpar.jac  # Jacobian at the solution
-        dof_logpar = len(y_filtered) - len(popt_logpar)
-        chi2_logpar = np.sum(res_logpar.fun**2)
-        # Estimate the variance of the residuals
-        residual_variance = chi2_logpar / dof_logpar
-        # The covariance is approximately the inverse of (J^T J) times the residual variance
-        try:
-            pcov_logpar = np.linalg.inv(J.T.dot(J)) * residual_variance
-        except np.linalg.LinAlgError:
-            pcov_logpar = np.linalg.pinv(J.T.dot(J)) * residual_variance
-
-
-        # Evaluate the fit and compute uncertainties
+        bounds_logpar = ([1e-13, -2.0, -2.0], [1e-9, 5.0, 5.0])  # Lower and upper bounds
+        p0_logpar = [1e-11, 2.0, 0.1]  # Initial guesses
+        popt_logpar, pcov_logpar = curve_fit(
+            LogPar, x_filtered, y_filtered, sigma=y_err_eff, p0=p0_logpar, bounds=bounds_logpar, absolute_sigma=True, maxfev=100000)
         y_fit_logpar = LogPar(x_filtered, *popt_logpar)
         chi2_logpar, dof_logpar = reduced_chi_square(y_filtered, y_fit_logpar, y_err_eff, len(popt_logpar))
+
+        # Extract parameter uncertainties
         perr_logpar = np.sqrt(np.diag(pcov_logpar))
 
-        # --- Now for the axion function fit ---
-        # Define the axion function that incorporates LogPar
+        # Define bounds for axion_func parameters [Norm, alpha_, beta_]
         def LogPar_axion_func(E, Norm, alpha_, beta_, w):
-            return LogPar(E, Norm, alpha_, beta_) * (1 - p0 / (1 + (E_c / E) ** k) * (1 + 0.2 * np.tanh(w)))
-
-        bounds_alp = ([1e-13, -2.0, -2.0, -np.pi], [1e-9, 5.0, 5.0, np.pi])
-        p0_alp = [1e-11, 2.0, 0.1, np.pi/2]
-
-        # Define the residuals for the axion function
-        def residuals_axion(params, x, y, y_err):
-            return (LogPar_axion_func(x, *params) - y) / y_err
-
-        res_axion = least_squares(
-            residuals_axion,
-            p0_alp,
-            bounds=bounds_alp,
-            args=(x_filtered, y_filtered, y_err_eff)
+            return LogPar(E, Norm, alpha_, beta_) * (1 - p0 / (1 + (E_c / E) ** k) * (1+0.2*np.tanh(w)))
+        bounds_alp = ([1e-13, -2.0, -2.0, -np.pi], [1e-9, 5.0, 5.0, np.pi])  # Lower and upper bounds
+        p0_alp= [1e-11, 2.0, 0.1, np.pi/2]  # Initial guesses
+        popt_axion, pcov_axion = curve_fit(
+            LogPar_axion_func, x_filtered, y_filtered, sigma=y_err_eff, p0=p0_alp, bounds=bounds_alp, absolute_sigma=True
         )
-        popt_axion = res_axion.x
-
-        # Compute the covariance matrix for the axion fit
-        J_axion = res_axion.jac
-        dof_axion = len(y_filtered) - len(popt_axion)
-        chi2_axion = np.sum(res_axion.fun**2)
-        residual_variance_ax = chi2_axion / dof_axion
-        pcov_axion = np.linalg.inv(J_axion.T.dot(J_axion)) * residual_variance_ax
-
-        # Evaluate the axion fit and compute uncertainties
         y_fit_axion = LogPar_axion_func(x_filtered, *popt_axion)
         chi2_axion, dof_axion = reduced_chi_square(y_filtered, y_fit_axion, y_err_eff, len(popt_axion))
+
+        # Extract parameter uncertainties
         perr_axion = np.sqrt(np.diag(pcov_axion))
 
         # Compute Δχ²
         delta_chi2 = chi2_axion - chi2_logpar
+
     if fitting_method == "iminuit":
         # Least Squares for LogPar
         least_squares_logpar = LeastSquares(x_filtered, y_filtered, y_err_eff, LogPar)
@@ -860,7 +816,7 @@ with open(f'Source_ra_dec_specin.txt', 'r') as file:
                     all_results_none[source_name] = results
                     with open("all_results_none_32_curve_fit.pkl", "wb") as file:
                         pickle.dump(all_results_none, file)
-                    '''    
+                    '''   
                     all_results_snr[source_name] = results_snr
                     with open("all_results_snr_32_curve_fit.pkl", "wb") as file:
                         pickle.dump(all_results_snr, file)
