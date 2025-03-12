@@ -114,7 +114,7 @@ def fit_data(x, y, y_err, emin, emax, p0, E_c, k, source_name, dataset_label, us
     else:
         LogPar = logpar_base
     if fitting_method == "curve_fit":
-        bounds_logpar = ([1e-13, -1.0, -2.0], [1e-9, 5.0, 2.0])  # Lower and upper bounds
+        bounds_logpar = ([1e-13, -2.0, -2.0], [1e-9, 5.0, 5.0])  # Lower and upper bounds
         p0_logpar = [1e-11, 2.0, 0.1]  # Initial guesses
         popt_logpar, pcov_logpar = curve_fit(
             LogPar, x_filtered, y_filtered, sigma=y_err_eff, p0=p0_logpar, bounds=bounds_logpar, absolute_sigma=True
@@ -128,7 +128,7 @@ def fit_data(x, y, y_err, emin, emax, p0, E_c, k, source_name, dataset_label, us
         # Define bounds for axion_func parameters [Norm, alpha_, beta_]
         def LogPar_axion_func(E, Norm, alpha_, beta_, w):
             return LogPar(E, Norm, alpha_, beta_) * (1 - p0 / (1 + (E_c / E) ** k) * (1+0.2*np.tanh(w)))
-        bounds_alp = ([1e-13, -1.0, -2.0, -np.pi], [1e-9, 5.0, 2.0, np.pi])  # Lower and upper bounds
+        bounds_alp = ([1e-13, -2.0, -2.0, -np.pi], [1e-9, 5.0, 5.0, np.pi])  # Lower and upper bounds
         p0_alp= [1e-11, 2.0, 0.1, np.pi/2]  # Initial guesses
         popt_axion, pcov_axion = curve_fit(
             LogPar_axion_func, x_filtered, y_filtered, sigma=y_err_eff, p0=p0_alp, bounds=bounds_alp, absolute_sigma=True
@@ -145,7 +145,7 @@ def fit_data(x, y, y_err, emin, emax, p0, E_c, k, source_name, dataset_label, us
         # Least Squares for LogPar
         least_squares_logpar = LeastSquares(x_filtered, y_filtered, y_err_eff, LogPar)
         p0_logpar = [1e-11, 2.0, 0.1]
-        bounds_logpar = [(1e-13, 1e-9), (-1.0, 5.0), (-2.0, 2.0)]
+        bounds_logpar = [(1e-13, 1e-9), (-2.0, 5.0), (-2.0, 5.0)]
 
         # Minuit fit for LogPar
         m_logpar = Minuit(least_squares_logpar, Norm=p0_logpar[0], alpha_=p0_logpar[1], beta_=p0_logpar[2])
@@ -172,7 +172,7 @@ def fit_data(x, y, y_err, emin, emax, p0, E_c, k, source_name, dataset_label, us
         # Least Squares for Axion
         least_squares_axion = LeastSquares(x_filtered, y_filtered, y_err_eff, LogPar_axion_func)
         p0_axion = [1e-11, 2.0, 0.1, np.pi/2]
-        bounds_axion = [(1e-13, 1e-9), (1.0, 5.0), (-2.0, 2.0), (-np.pi, np.pi)]
+        bounds_axion = [(1e-13, 1e-9), (-2.0, 5.0), (-2.0, 5.0), (-np.pi, np.pi)]
 
         # Minuit fit for Axion
         m_axion = Minuit(least_squares_axion, Norm=p0_axion[0], alpha_=p0_axion[1], beta_=p0_axion[2], w=p0_axion[3])
