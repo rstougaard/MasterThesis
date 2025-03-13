@@ -800,12 +800,12 @@ with open(f'Source_ra_dec_specin.txt', 'r') as file:
                     bin_size = np.array(sorted_data_none['emax'])-np.array(sorted_data_none['emin'])
                     e_lowers = sorted_data_none['geometric_mean'] - sorted_data_none['emin']
                     e_uppers = sorted_data_none['emax'] - sorted_data_none['geometric_mean']
-                    datasets = {f"No_Filtering": (sorted_data_none['geometric_mean'], sorted_data_none['flux_tot_value']/bin_size, sorted_data_none['flux_tot_error']/bin_size, sorted_data_none['emin'], sorted_data_none['emax'] )}
-                    datasets_snr = {f"snr_3": (sorted_data_snr3['geometric_mean'], sorted_data_snr3['flux_tot_value']/bin_size, sorted_data_snr3['flux_tot_error']/bin_size, sorted_data_snr3['emin'], sorted_data_snr3['emax'] ),
-                                    f"snr_5": (sorted_data_snr5['geometric_mean'], sorted_data_snr5['flux_tot_value']/bin_size, sorted_data_snr5['flux_tot_error']/bin_size, sorted_data_snr5['emin'], sorted_data_snr5['emax'] ),
-                                    f"snr_10": (sorted_data_snr10['geometric_mean'], sorted_data_snr10['flux_tot_value']/bin_size, sorted_data_snr10['flux_tot_error']/bin_size, sorted_data_snr10['emin'], sorted_data_snr10['emax'] )}
-                    datasets_lin = {f"week": (sorted_data_lin_week['geometric_mean'], sorted_data_lin_week['flux_tot_value']/bin_size, sorted_data_lin_week['flux_tot_error']/bin_size, sorted_data_lin_week['emin'], sorted_data_lin_week['emax'] ),
-                                    f"month": (sorted_data_lin_month['geometric_mean'], sorted_data_lin_month['flux_tot_value']/bin_size, sorted_data_lin_month['flux_tot_error']/bin_size, sorted_data_lin_month['emin'], sorted_data_lin_month['emax'] )}
+                    datasets = {f"No_Filtering": (sorted_data_none['geometric_mean'], sorted_data_none['flux_tot_value'], sorted_data_none['flux_tot_error'], sorted_data_none['emin'], sorted_data_none['emax'] )}
+                    datasets_snr = {f"snr_3": (sorted_data_snr3['geometric_mean'], sorted_data_snr3['flux_tot_value'], sorted_data_snr3['flux_tot_error'], sorted_data_snr3['emin'], sorted_data_snr3['emax'] ),
+                                    f"snr_5": (sorted_data_snr5['geometric_mean'], sorted_data_snr5['flux_tot_value'], sorted_data_snr5['flux_tot_error'], sorted_data_snr5['emin'], sorted_data_snr5['emax'] ),
+                                    f"snr_10": (sorted_data_snr10['geometric_mean'], sorted_data_snr10['flux_tot_value'], sorted_data_snr10['flux_tot_error'], sorted_data_snr10['emin'], sorted_data_snr10['emax'] )}
+                    datasets_lin = {f"week": (sorted_data_lin_week['geometric_mean'], sorted_data_lin_week['flux_tot_value'], sorted_data_lin_week['flux_tot_error'], sorted_data_lin_week['emin'], sorted_data_lin_week['emax'] ),
+                                    f"month": (sorted_data_lin_month['geometric_mean'], sorted_data_lin_month['flux_tot_value'], sorted_data_lin_month['flux_tot_error'], sorted_data_lin_month['emin'], sorted_data_lin_month['emax'] )}
                     print(source_name)
 
                     results = nested_fits_combined(datasets, source_name, useEBL=True, fitting_method="iminuit", chunk_size=10)
@@ -814,15 +814,15 @@ with open(f'Source_ra_dec_specin.txt', 'r') as file:
                     
 
                     all_results_none[source_name] = results
-                    with open("all_results_none_32_minuit.pkl", "wb") as file:
+                    with open("all_results_none_32_minuit_nodivbin.pkl", "wb") as file:
                         pickle.dump(all_results_none, file)
                       
                     all_results_snr[source_name] = results_snr
-                    with open("all_results_snr_32_minuit.pkl", "wb") as file:
+                    with open("all_results_snr_32_minuit_nodivbin.pkl", "wb") as file:
                         pickle.dump(all_results_snr, file)
 
                     all_results_lin[source_name] = results_lin
-                    with open("all_results_lin_32_minuit.pkl", "wb") as file:
+                    with open("all_results_lin_32_minuit_nodivbin.pkl", "wb") as file:
                         pickle.dump(all_results_lin, file)
 
                     ''' 
