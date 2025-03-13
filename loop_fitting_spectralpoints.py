@@ -5,8 +5,6 @@ from scipy.optimize import curve_fit
 import shlex
 from iminuit.cost import LeastSquares
 from iminuit import Minuit
-from lmfit import Model
-import itertools
 from matplotlib.backends.backend_pdf import PdfPages
 
 def simple_plot(dataset_none, dataset_snr, colors_snr, dataset_lin, colors_lin, source, png_naming=""):
