@@ -808,9 +808,9 @@ with open(f'Source_ra_dec_specin.txt', 'r') as file:
                                     f"month": (sorted_data_lin_month['geometric_mean'], sorted_data_lin_month['flux_tot_value']/bin_size, sorted_data_lin_month['flux_tot_error']/bin_size, sorted_data_lin_month['emin'], sorted_data_lin_month['emax'] )}
                     print(source_name)
 
-                    results = nested_fits_combined(datasets, source_name, useEBL=True, fitting_method="curve_fit", chunk_size=10)
-                    results_snr = nested_fits_combined(datasets_snr, source_name, useEBL=True, fitting_method="curve_fit", chunk_size=10)
-                    results_lin= nested_fits_combined(datasets_lin, source_name, useEBL=True, fitting_method="curve_fit", chunk_size=10)
+                    results = nested_fits_combined(datasets, source_name, useEBL=True, fitting_method="iminuit", chunk_size=10)
+                    results_snr = nested_fits_combined(datasets_snr, source_name, useEBL=True, fitting_method="iminuit", chunk_size=10)
+                    results_lin= nested_fits_combined(datasets_lin, source_name, useEBL=True, fitting_method="iminuit", chunk_size=10)
                     
 
                     all_results_none[source_name] = results
