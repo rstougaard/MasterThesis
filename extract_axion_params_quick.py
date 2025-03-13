@@ -145,7 +145,7 @@ def fit_data(x, y, y_err, emin, emax, p0, E_c, k, source_name, dataset_label, us
         # Least Squares for LogPar
         least_squares_logpar = LeastSquares(x_filtered, y_filtered, y_err_eff, LogPar)
         p0_logpar = [1e-8, 2.0, 0.1]
-        bounds_logpar = [(1e-13, 1e-7), (-2.0, 5.0), (-2.0, 5.0)]
+        bounds_logpar = [(1e-12, 1e-7), (-2.0, 5.0), (-2.0, 5.0)]
 
         # Minuit fit for LogPar
         m_logpar = Minuit(least_squares_logpar, Norm=p0_logpar[0], alpha_=p0_logpar[1], beta_=p0_logpar[2])
@@ -171,8 +171,8 @@ def fit_data(x, y, y_err, emin, emax, p0, E_c, k, source_name, dataset_label, us
 
         # Least Squares for Axion
         least_squares_axion = LeastSquares(x_filtered, y_filtered, y_err_eff, LogPar_axion_func)
-        p0_axion = [1e-11, 2.0, 0.1, np.pi/2]
-        bounds_axion = [(1e-13, 1e-9), (-2.0, 5.0), (-2.0, 5.0), (-np.pi, np.pi)]
+        p0_axion = [1e-8, 2.0, 0.1, np.pi/2]
+        bounds_axion = [(1e-12, 1e-7), (-2.0, 5.0), (-2.0, 5.0), (-np.pi, np.pi)]
 
         # Minuit fit for Axion
         m_axion = Minuit(least_squares_axion, Norm=p0_axion[0], alpha_=p0_axion[1], beta_=p0_axion[2], w=p0_axion[3])
