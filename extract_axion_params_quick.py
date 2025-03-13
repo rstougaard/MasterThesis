@@ -114,8 +114,8 @@ def fit_data(x, y, y_err, emin, emax, p0, E_c, k, source_name, dataset_label, us
     else:
         LogPar = logpar_base
     if fitting_method == "curve_fit":
-        bounds_logpar = ([1e-13, -1.0, -1.0], [1e-9, 5.0, 3.0])  # Lower and upper bounds
-        p0_logpar = [1e-11, 2.0, 0.1]  # Initial guesses
+        bounds_logpar = ([1e-12, -1.0, -1.0], [1e-7, 5.0, 3.0])  # Lower and upper bounds
+        p0_logpar = [1e-9, 2.0, 0.1]  # Initial guesses
         popt_logpar, pcov_logpar = curve_fit(
             LogPar, x_filtered, y_filtered, sigma=y_err_eff, p0=p0_logpar, bounds=bounds_logpar, absolute_sigma=True, maxfev=100000)
         y_fit_logpar = LogPar(x_filtered, *popt_logpar)
@@ -127,8 +127,8 @@ def fit_data(x, y, y_err, emin, emax, p0, E_c, k, source_name, dataset_label, us
         # Define bounds for axion_func parameters [Norm, alpha_, beta_]
         def LogPar_axion_func(E, Norm, alpha_, beta_, w):
             return LogPar(E, Norm, alpha_, beta_) * (1 - p0 / (1 + (E_c / E) ** k) * (1+0.2*np.tanh(w)))
-        bounds_alp = ([1e-13, -1.0, -1.0, -np.pi], [1e-9, 5.0, 3.0, np.pi])  # Lower and upper bounds
-        p0_alp= [1e-11, 2.0, 0.1, np.pi/2]  # Initial guesses
+        bounds_alp = ([1e-12, -1.0, -1.0, -np.pi], [1e-7, 5.0, 3.0, np.pi])  # Lower and upper bounds
+        p0_alp= [1e-9, 2.0, 0.1, np.pi/2]  # Initial guesses
         popt_axion, pcov_axion = curve_fit(
             LogPar_axion_func, x_filtered, y_filtered, sigma=y_err_eff, p0=p0_alp, bounds=bounds_alp, absolute_sigma=True
         )
@@ -808,21 +808,21 @@ with open(f'Source_ra_dec_specin.txt', 'r') as file:
                                     f"month": (sorted_data_lin_month['geometric_mean'], sorted_data_lin_month['flux_tot_value'], sorted_data_lin_month['flux_tot_error'], sorted_data_lin_month['emin'], sorted_data_lin_month['emax'] )}
                     print(source_name)
 
-                    results = nested_fits_combined(datasets, source_name, useEBL=True, fitting_method="iminuit", chunk_size=10)
-                    results_snr = nested_fits_combined(datasets_snr, source_name, useEBL=True, fitting_method="iminuit", chunk_size=10)
-                    results_lin= nested_fits_combined(datasets_lin, source_name, useEBL=True, fitting_method="iminuit", chunk_size=10)
+                    results = nested_fits_combined(datasets, source_name, useEBL=True, fitting_method="curve_fit", chunk_size=10)
+                    results_snr = nested_fits_combined(datasets_snr, source_name, useEBL=True, fitting_method="curve_fit", chunk_size=10)
+                    results_lin= nested_fits_combined(datasets_lin, source_name, useEBL=True, fitting_method="curve_fit", chunk_size=10)
                     
 
                     all_results_none[source_name] = results
-                    with open("all_results_none_32_minuit_nodivbin.pkl", "wb") as file:
+                    with open("all_results_none_32_curve_fit_nodivbin.pkl", "wb") as file:
                         pickle.dump(all_results_none, file)
                       
                     all_results_snr[source_name] = results_snr
-                    with open("all_results_snr_32_minuit_nodivbin.pkl", "wb") as file:
+                    with open("all_results_snr_32_curve_fit_nodivbin.pkl", "wb") as file:
                         pickle.dump(all_results_snr, file)
 
                     all_results_lin[source_name] = results_lin
-                    with open("all_results_lin_32_minuit_nodivbin.pkl", "wb") as file:
+                    with open("all_results_lin_32_curve_fit_nodivbin.pkl", "wb") as file:
                         pickle.dump(all_results_lin, file)
 
                     ''' 
