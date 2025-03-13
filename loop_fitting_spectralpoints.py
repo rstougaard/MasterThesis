@@ -514,7 +514,7 @@ with PdfPages('./fit_results/spetral_points.pdf') as pdf:
                         pdf.savefig(fig)
                         plt.close(fig)
 
-                '''  
+'''  
                 for when I need example walk throug of NGC 1275
                     print()
                     print(f"CURVE FIT for {source_name}")
@@ -525,4 +525,4 @@ with PdfPages('./fit_results/spetral_points.pdf') as pdf:
                     plot_fits_with_residuals(datasets, results, e_lowers, e_uppers, png_naming =f"_{source_name_cleaned}")
                     plot_fits_with_residuals(datasets_snr, results_snr, e_lowers, e_uppers, png_naming =f"_{source_name_cleaned}")
                     plot_fits_with_residuals(datasets_lin, results_lin, e_lowers, e_uppers, png_naming =f"_{source_name_cleaned}")
-                '''
+'''
