@@ -144,8 +144,8 @@ def fit_data(x, y, y_err, emin, emax, p0, E_c, k, source_name, dataset_label, us
     if fitting_method == "iminuit":
         # Least Squares for LogPar
         least_squares_logpar = LeastSquares(x_filtered, y_filtered, y_err_eff, LogPar)
-        p0_logpar = [1e-11, 2.0, 0.1]
-        bounds_logpar = [(1e-13, 1e-9), (-2.0, 5.0), (-2.0, 5.0)]
+        p0_logpar = [1e-8, 2.0, 0.1]
+        bounds_logpar = [(1e-13, 1e-7), (-2.0, 5.0), (-2.0, 5.0)]
 
         # Minuit fit for LogPar
         m_logpar = Minuit(least_squares_logpar, Norm=p0_logpar[0], alpha_=p0_logpar[1], beta_=p0_logpar[2])
