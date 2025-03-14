@@ -139,7 +139,7 @@ def plot_individual_delta_chi2_heatmap_with_pdf(all_results, dataset_labels, png
                 print(f"Source: {source_name} | Filter: {filter_label} | min: {np.min(mean_delta_chi2_grid)}, max: {np.max(mean_delta_chi2_grid)}")
                 
                 # Set up colormap parameters.
-                vmin, vmax = -10, 25
+                vmin, vmax = -np.min(mean_delta_chi2_grid), np.max(mean_delta_chi2_grid)
                 num_colors = 30
                 boundaries = np.linspace(vmin, vmax, num_colors + 1)
                 cmap = plt.get_cmap('gnuplot2', num_colors)
@@ -194,8 +194,8 @@ with open("all_results_none_32_curve_fit_nodivbin.pkl", "rb") as file:
 with open("all_results_lin_32_curve_fit_nodivbin.pkl", "rb") as file:
     all_results_lin = pickle.load(file)
 
-with open("all_results_none_32_curve_fit_nodivbin.pkl", "rb") as file:
+with open("all_results_snr_32_curve_fit_nodivbin.pkl", "rb") as file:
     all_results_snr = pickle.load(file)
 
 no_filtering_sources = list(all_results_none.keys()) 
-plot_individual_delta_chi2_heatmap_with_pdf(all_results_lin, no_filtering_sources, " ", filtering_methods="week", pdf_filename="indv_heatmaps_week.pdf")
+plot_individual_delta_chi2_heatmap_with_pdf(all_results_snr, no_filtering_sources, " ", filtering_methods="snr_3", pdf_filename="indv_heatmaps_snr3.pdf")
