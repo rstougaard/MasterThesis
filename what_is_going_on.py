@@ -198,4 +198,4 @@ with open("all_results_none_32_curve_fit_nodivbin.pkl", "rb") as file:
     all_results_snr = pickle.load(file)
 
 no_filtering_sources = list(all_results_none.keys()) 
-plot_individual_delta_chi2_heatmap_with_pdf(all_results_lin, no_filtering_sources, " ", filtering_methods="month", pdf_filename="indv_heatmaps_month.pdf")
+plot_individual_delta_chi2_heatmap_with_pdf(all_results_snr, no_filtering_sources, " ", filtering_methods="snr_10", pdf_filename="indv_heatmaps_snr10.pdf")
