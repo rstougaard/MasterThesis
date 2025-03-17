@@ -276,7 +276,36 @@ def plot_mean_delta_chi2_heatmap(all_results, dataset_labels, png_naming, no_fil
 
         print(f"Finished plotting for filter: {filter_label}")
 
+with open("all_results_none_32_curve_fit_nodivbin.pkl", "rb") as file:
+    all_results_none = pickle.load(file)
 
+with open("all_results_lin_32_curve_fit_nodivbin.pkl", "rb") as file:
+    all_results_lin = pickle.load(file)
+
+with open("all_results_snr_32_curve_fit_nodivbin.pkl", "rb") as file:
+    all_results_snr = pickle.load(file)
+
+no_filtering_sources = list(all_results_none.keys()) 
+plot_individual_delta_chi2_heatmap_with_pdf(all_results_none, no_filtering_sources, " ", filtering_methods="No_Filtering", pdf_filename="indv_heatmaps_no_filter.pdf")
+
+print('Plotting mean chi-squared heatmap!')
+no_filtering_sources = list(all_results_none.keys())  # e.g. ["No_Filtering"] or sometimes multiple sources
+
+no_filtering_grid = compute_mean_delta_chi2_grid(
+    all_results=all_results_none,
+    dataset_labels=no_filtering_sources,
+    filter_label="No_Filtering",
+    p0_masked=p0_masked,
+    ec_masked=ec_masked
+) 
+
+plot_mean_delta_chi2_heatmap(all_results_none, list(all_results_none.keys()), "mean", remove_source_label="4FGL J2314.0+1445")
+# For LIN filtering ("week" and "month")
+plot_mean_delta_chi2_heatmap(all_results_lin, list(all_results_lin.keys()), "mean_", no_filtering_grid=no_filtering_grid, remove_source_label="4FGL J2314.0+1445")
+
+# For SNR filtering ("snr_3", "snr_5", "snr_10")
+plot_mean_delta_chi2_heatmap(all_results_snr, list(all_results_snr.keys()), "mean_", no_filtering_grid=no_filtering_grid, remove_source_label="4FGL J2314.0+1445")
+'''
 with open("all_results_none_32_curve_fit_nodivbin_cutoff.pkl", "rb") as file:
     all_results_none = pickle.load(file)
 
@@ -306,3 +335,4 @@ plot_mean_delta_chi2_heatmap(all_results_lin, list(all_results_lin.keys()), "mea
 
 # For SNR filtering ("snr_3", "snr_5", "snr_10")
 plot_mean_delta_chi2_heatmap(all_results_snr, list(all_results_snr.keys()), "mean_", no_filtering_grid=no_filtering_grid, remove_source_label="4FGL J1013.7+3444")
+'''
