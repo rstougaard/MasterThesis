@@ -45,7 +45,7 @@ mass_unique = axion_data[::n_g, 0]     # length = n_mass
 # Define your desired start and stop values
 m_start_val = 3e-10
 g_start_val = 7e-13
-m_stop_val  = 2e-8
+m_stop_val  = 1.5e-8
 g_stop_val  = 1e-11
 
 # Find the row (mass) and column (g) indices closest to the desired start values.
@@ -76,13 +76,17 @@ def logpar_base(x, Norm, alpha_, beta_):
     E_b = 1000  # Fixed E_b value
     return Norm * (x / E_b) ** (-(alpha_ + beta_ * np.log(x / E_b)))
 
+def cutoff_base(x, Norm, l1, l2):
+    E_b = 1000
+    return np.piecewise(x, [x < E_b, x >= E_b], [lambda x: Norm*(x/E_b)**l1, lambda x: Norm*(x/E_b)**l2])
+
 def reduced_chi_square(y_obs, y_fit, y_err, num_params):
     residuals = (y_obs - y_fit) / y_err
     chi2 = np.sum(residuals**2)
     dof = len(y_obs) - num_params  # Degrees of freedom
     return chi2 , dof
 
-def fit_data(x, y, y_err, emin, emax, p0, E_c, k, source_name, dataset_label, useEBL=True, fitting_method="iminuit"):
+def fit_data(x, y, y_err, emin, emax, p0, E_c, k, source_name, dataset_label, useEBL=True, fitting_method="iminuit", basefunc = "cutoff"):
     # Filter out points where y is zero
     mask = y != 0
     x_filtered, y_filtered, y_err_filtered, emin_f, emax_f  = x[mask], y[mask], y_err[mask], emin[mask], emax[mask]
@@ -100,7 +104,7 @@ def fit_data(x, y, y_err, emin, emax, p0, E_c, k, source_name, dataset_label, us
 
     y_err_eff = np.array(y_err_eff)
 
-    if useEBL:
+    if useEBL and basefunc == "logpar":
         with fits.open('table-4LAC-DR3-h.fits') as f:
             data1 = f[1].data
         idx = (data1['Source_Name'] == source_name)
@@ -110,93 +114,59 @@ def fit_data(x, y, y_err, emin, emax, p0, E_c, k, source_name, dataset_label, us
         def LogPar_EBL(x, Norm, alpha_, beta_):
             return logpar_base(x, Norm, alpha_, beta_) * ebl
 
-        LogPar= LogPar_EBL
-    else:
-        LogPar = logpar_base
+        base = LogPar_EBL
+        bounds_base = ([1e-12, -1.0, -1.0], [1e-7, 5.0, 3.0])  # Lower and upper bounds
+        p0_base = [1e-9, 2.0, 0.1]  # Initial guesses
+
+        def axion_func(E, Norm, alpha_, beta_, w):
+            return base(E, Norm, alpha_, beta_) * (1 - p0 / (1 + (E_c / E) ** k) * (1+0.2*np.tanh(w)))
+        
+        bounds_alp = ([1e-12, -1.0, -1.0, -np.pi], [1e-7, 5.0, 3.0, np.pi])  # Lower and upper bounds
+        p0_alp= [1e-9, 2.0, 0.1, np.pi/2]
+
+    elif useEBL and basefunc == "cutoff":
+        with fits.open('table-4LAC-DR3-h.fits') as f:
+            data1 = f[1].data
+        idx = (data1['Source_Name'] == source_name)
+        z = data1['Redshift'][idx][0]
+        ebl = EblAbsorptionModel(z).transmission(x_filtered * u.MeV)
+
+        def cutoff_EBL(x, Norm,  l1, l2):
+            return cutoff_base(x, Norm, l1, l2) * ebl
+
+        base = cutoff_EBL
+
+        bounds_base = ([1e-12, -5.0, -5.0], [1e-7, 5.0, 5.0])  # Lower and upper bounds
+        p0_base = [1e-9, 2.0, 2.0]  # Initial guesses
+
+        def axion_func(E, Norm, l1, l2, w):
+            return base(E, Norm, l1, l2) * (1 - p0 / (1 + (E_c / E) ** k) * (1+0.2*np.tanh(w)))
+        
+        bounds_alp = ([1e-12, -5.0, -5.0, -np.pi], [1e-7, 5.0, 5.0, np.pi])  # Lower and upper bounds
+        p0_alp= [1e-9, 2.0, 2.0, np.pi/2]
+
     if fitting_method == "curve_fit":
-        bounds_logpar = ([1e-12, -1.0, -1.0], [1e-7, 5.0, 3.0])  # Lower and upper bounds
-        p0_logpar = [1e-9, 2.0, 0.1]  # Initial guesses
-        popt_logpar, pcov_logpar = curve_fit(
-            LogPar, x_filtered, y_filtered, sigma=y_err_eff, p0=p0_logpar, bounds=bounds_logpar, absolute_sigma=True, maxfev=100000)
-        y_fit_logpar = LogPar(x_filtered, *popt_logpar)
-        chi2_logpar, dof_logpar = reduced_chi_square(y_filtered, y_fit_logpar, y_err_eff, len(popt_logpar))
+        
+        popt_base, pcov_base = curve_fit(
+            base, x_filtered, y_filtered, sigma=y_err_eff, p0=p0_base, bounds=bounds_base, absolute_sigma=True, maxfev=100000)
+        y_fit_base = base(x_filtered, *popt_base)
+        chi2_base, dof_base = reduced_chi_square(y_filtered, y_fit_base, y_err_eff, len(popt_base))
 
         # Extract parameter uncertainties
-        perr_logpar = np.sqrt(np.diag(pcov_logpar))
+        perr_base = np.sqrt(np.diag(pcov_base))
 
-        # Define bounds for axion_func parameters [Norm, alpha_, beta_]
-        def LogPar_axion_func(E, Norm, alpha_, beta_, w):
-            return LogPar(E, Norm, alpha_, beta_) * (1 - p0 / (1 + (E_c / E) ** k) * (1+0.2*np.tanh(w)))
-        bounds_alp = ([1e-12, -1.0, -1.0, -np.pi], [1e-7, 5.0, 3.0, np.pi])  # Lower and upper bounds
-        p0_alp= [1e-9, 2.0, 0.1, np.pi/2]  # Initial guesses
         popt_axion, pcov_axion = curve_fit(
-            LogPar_axion_func, x_filtered, y_filtered, sigma=y_err_eff, p0=p0_alp, bounds=bounds_alp, absolute_sigma=True
+            axion_func, x_filtered, y_filtered, sigma=y_err_eff, p0=p0_alp, bounds=bounds_alp, absolute_sigma=True
         )
-        y_fit_axion = LogPar_axion_func(x_filtered, *popt_axion)
+        y_fit_axion = axion_func(x_filtered, *popt_axion)
         chi2_axion, dof_axion = reduced_chi_square(y_filtered, y_fit_axion, y_err_eff, len(popt_axion))
 
         # Extract parameter uncertainties
         perr_axion = np.sqrt(np.diag(pcov_axion))
 
         # Compute Δχ²
-        delta_chi2 = chi2_axion - chi2_logpar
-
-    if fitting_method == "iminuit":
-        # Least Squares for LogPar
-        least_squares_logpar = LeastSquares(x_filtered, y_filtered, y_err_eff, LogPar)
-        p0_logpar = [1e-8, 2.0, 0.1]
-        bounds_logpar = [(1e-12, 1e-7), (-2.0, 5.0), (-2.0, 5.0)]
-
-        # Minuit fit for LogPar
-        m_logpar = Minuit(least_squares_logpar, Norm=p0_logpar[0], alpha_=p0_logpar[1], beta_=p0_logpar[2])
-
-        # Set parameter limits
-        for param, bound in zip(m_logpar.parameters, bounds_logpar):
-            m_logpar.limits[param] = bound
-
-        #print("\n=== LogPar Fit with iminuit ===")
-        m_logpar.simplex() 
-        m_logpar.migrad()  # Minimize
-        m_logpar.hesse()   # Compute uncertainties
-        #print(m_logpar)
-
-        # Extract results
-        popt_logpar = [m_logpar.values[p] for p in m_logpar.parameters]
-        perr_logpar = [m_logpar.errors[p] for p in m_logpar.parameters]
-        y_fit_logpar = LogPar(x_filtered, *popt_logpar)
-        chi2_logpar, dof_logpar = reduced_chi_square(y_filtered, y_fit_logpar, y_err_eff, len(p0_logpar))
-
-        def LogPar_axion_func(x, Norm, alpha_, beta_, w):
-            return LogPar(x, Norm, alpha_, beta_) * (1 - p0 / (1 + (E_c / x) ** k) * (1+0.2*np.tanh(w)))
-
-        # Least Squares for Axion
-        least_squares_axion = LeastSquares(x_filtered, y_filtered, y_err_eff, LogPar_axion_func)
-        p0_axion = [1e-8, 2.0, 0.1, np.pi/2]
-        bounds_axion = [(1e-12, 1e-7), (-2.0, 5.0), (-2.0, 5.0), (-np.pi, np.pi)]
-
-        # Minuit fit for Axion
-        m_axion = Minuit(least_squares_axion, Norm=p0_axion[0], alpha_=p0_axion[1], beta_=p0_axion[2], w=p0_axion[3])
-
-        # Set parameter limits
-        for param, bound in zip(m_axion.parameters, bounds_axion):
-            m_axion.limits[param] = bound
-
-        #print("\n=== Axion Fit with iminuit ===")
-        m_axion.simplex() 
-        m_axion.migrad()  # Minimize
-        m_axion.hesse()   # Compute uncertainties
-        #print(m_axion)
-
-        # Extract results
-        popt_axion = [m_axion.values[p] for p in m_axion.parameters]
-        perr_axion = [m_axion.errors[p] for p in m_axion.parameters]
-        y_fit_axion = LogPar_axion_func(x_filtered, *popt_axion)
-        chi2_axion, dof_axion = reduced_chi_square(y_filtered, y_fit_axion, y_err_eff, len(p0_axion))
-
-        # Compute Δχ²
-        delta_chi2 = chi2_axion - chi2_logpar
-
-
+        delta_chi2 = chi2_axion - chi2_base
+    '''
     print("LogPar:\n")
     for param, value, error in zip(["Norm", "alpha_", "beta_"], popt_logpar, perr_logpar):
         print(f"  {param}: {value:.2e} ± {error:.2e}\n")
@@ -208,21 +178,23 @@ def fit_data(x, y, y_err, emin, emax, p0, E_c, k, source_name, dataset_label, us
 
     print(f"Δχ² (Axion - LogPar): {delta_chi2:.2f}")
     print('--------------------------------------------------------------------------------------')
-
+    '''
     # Return fit results
     return {
-        "LogPar": {
-            "params": popt_logpar,
-            "errors": perr_logpar,
-            "chi2": chi2_logpar
+        "Base": {
+            "params": popt_base,
+            "errors": perr_base,
+            "chi2": chi2_base,
+            "dof": dof_base
         },
-        "LogPar_Axion": {
+        "Axion": {
             "params": popt_axion,
             "errors": perr_axion, # Return covariance matrix
-            "chi2": chi2_axion
+            "chi2": chi2_axion,
+            "dof": dof_axion,
         },
         "DeltaChi2": delta_chi2,
-        "y_fit_LogPar": y_fit_logpar,
+        "y_fit_LogPar": y_fit_base,
         "y_fit_Axion": y_fit_axion,
     }
 
@@ -565,50 +537,7 @@ def plot_mean_delta_chi2_heatmap3(all_results, dataset_labels, png_naming, no_fi
         plt.tight_layout()
         plt.savefig(f'{path_to_save_heatmap_m_g}{png_naming}_{filter_label}_ma_ga.png', dpi=300)
         plt.close()
-        '''
-        # Prepare scatter plot data by flattening the grids.
-        # For (p0, Ec) scatter:
-        p0_scatter = p0_masked.flatten()
-        Ec_scatter = ec_masked.flatten()
-        delta_scatter = mean_delta_chi2_grid.flatten()
-
-        # For (m_a, g) scatter: create a full grid from the unique values.
-        m_a_grid, g_grid = np.meshgrid(m_masked, g_masked, indexing='ij')
-        m_a_scatter = m_a_grid.flatten()
-        g_scatter = g_grid.flatten()
-
-        # ============================================================================
-        # Create Linked Scatter Plots with Color Coding by Δχ²
-        # ============================================================================
-        fig, (ax_left, ax_right) = plt.subplots(1, 2, figsize=(14, 6))
-
-        # Left panel: (m_a, g) space (all points, log-log scale).
-        sc1 = ax_left.scatter(m_a_scatter, g_scatter, c=delta_scatter, cmap='viridis',
-                            s=30, edgecolor='k')
-        ax_left.set_xscale('log')
-        ax_left.set_yscale('log')
-        ax_left.set_xlabel('m_a (eV)')
-        ax_left.set_ylabel('g_a (GeV^-1)')
-        ax_left.set_title('(m_a, g_a) Space\nColor-coded by Δχ²')
-        cbar1 = plt.colorbar(sc1, ax=ax_left)
-        cbar1.set_label('Δχ²')
-
-        # Right panel: (p0, Ec) space.
-        # Filter to only include points with negative Δχ².
-        sc2 = ax_right.scatter(Ec_scatter, p0_scatter, c=delta_scatter, cmap='viridis',
-                            s=30, edgecolor='k')
-        ax_right.set_xlabel('E_c (MeV)')
-        ax_right.set_ylabel('p0')
-        ax_right.set_title('(p0, E_c) Space')
-        ax_right.set_ylim(0, 1)  # p0 goes from 0 to 1
-        ax_right.set_xlim(0, 2000)
-        cbar2 = plt.colorbar(sc2, ax=ax_right)
-        cbar2.set_label('Δχ²')
-
-        plt.tight_layout()
-        plt.savefig(f"{path_to_save_heatmap_m_g}{png_naming}_{filter_label}_linked_scatter_color_coded.png", dpi=300)
-        '''
-        
+              
         print(f"Finished plotting for filter: {filter_label}")
 
 
@@ -670,7 +599,7 @@ results = nested_fits(datasets, source_name, useEBL=True)
 results_snr = nested_fits(datasets_snr, source_name, useEBL=True)
 results_lin= nested_fits(datasets_lin, source_name, useEBL=True)
 '''
-def process_chunk(i, j_start, j_end, x, y, y_err, emin, emax, source_name, dataset_label, useEBL, fitting_method):
+def process_chunk(i, j_start, j_end, x, y, y_err, emin, emax, source_name, dataset_label, useEBL, fitting_method, basefunc):
     # For row i, get a chunk of p0 and Ec values from the masked grid.
     p0_chunk = p0_masked[i, j_start:j_end]
     ec_chunk = ec_masked[i, j_start:j_end]
@@ -690,7 +619,8 @@ def process_chunk(i, j_start, j_end, x, y, y_err, emin, emax, source_name, datas
             source_name=source_name,
             dataset_label=dataset_label,
             useEBL=useEBL,
-            fitting_method=fitting_method
+            fitting_method=fitting_method,
+            basefunc = basefunc
         ),
         otypes=[object]  # each fit_data returns a dict (or any object)
     )
@@ -704,7 +634,7 @@ def process_chunk(i, j_start, j_end, x, y, y_err, emin, emax, source_name, datas
         "fit_result": results_chunk[idx]
     } for idx in range(len(p0_chunk))]
 
-def nested_fits_combined(datasets, source_name, useEBL=True, fitting_method="iminuit", chunk_size=10):
+def nested_fits_combined(datasets, source_name, useEBL=True, fitting_method="iminuit", basefunc = "cutoff", chunk_size=10):
     """
     This function processes each row (mass) of the masked (p0, Ec) grid.
     Each row is split into chunks (to minimize overhead) and processed in parallel.
@@ -726,7 +656,7 @@ def nested_fits_combined(datasets, source_name, useEBL=True, fitting_method="imi
                     i, j_start, j_end, 
                     np.array(x), np.array(y), np.array(y_err),
                     np.array(emin), np.array(emax),
-                    source_name, dataset_label, useEBL, fitting_method
+                    source_name, dataset_label, useEBL, fitting_method, basefunc
                 ))
             # Execute the tasks in parallel for row i.
             row_results = []
@@ -808,21 +738,21 @@ with open(f'Source_ra_dec_specin.txt', 'r') as file:
                                     f"month": (sorted_data_lin_month['geometric_mean'], sorted_data_lin_month['flux_tot_value'], sorted_data_lin_month['flux_tot_error'], sorted_data_lin_month['emin'], sorted_data_lin_month['emax'] )}
                     print(source_name)
 
-                    results = nested_fits_combined(datasets, source_name, useEBL=True, fitting_method="curve_fit", chunk_size=10)
-                    results_snr = nested_fits_combined(datasets_snr, source_name, useEBL=True, fitting_method="curve_fit", chunk_size=10)
-                    results_lin= nested_fits_combined(datasets_lin, source_name, useEBL=True, fitting_method="curve_fit", chunk_size=10)
+                    results = nested_fits_combined(datasets, source_name, useEBL=True, fitting_method="curve_fit", basefunc = "cutoff", chunk_size=10)
+                    results_snr = nested_fits_combined(datasets_snr, source_name, useEBL=True, fitting_method="curve_fit", basefunc = "cutoff", chunk_size=10)
+                    results_lin= nested_fits_combined(datasets_lin, source_name, useEBL=True, fitting_method="curve_fit", basefunc = "cutoff", chunk_size=10)
                     
 
                     all_results_none[source_name] = results
-                    with open("all_results_none_32_curve_fit_nodivbin.pkl", "wb") as file:
+                    with open("all_results_none_32_curve_fit_nodivbin_cutoff.pkl", "wb") as file:
                         pickle.dump(all_results_none, file)
                       
                     all_results_snr[source_name] = results_snr
-                    with open("all_results_snr_32_curve_fit_nodivbin.pkl", "wb") as file:
+                    with open("all_results_snr_32_curve_fit_nodivbin_cutoff.pkl", "wb") as file:
                         pickle.dump(all_results_snr, file)
 
                     all_results_lin[source_name] = results_lin
-                    with open("all_results_lin_32_curve_fit_nodivbin.pkl", "wb") as file:
+                    with open("all_results_lin_32_curve_fit_nodivbin_cutoff.pkl", "wb") as file:
                         pickle.dump(all_results_lin, file)
 
                     ''' 
@@ -836,7 +766,7 @@ with open(f'Source_ra_dec_specin.txt', 'r') as file:
                     plot_delta_chi2_heatmap(results_lin, dataset_label="month", png_naming =f"{source_name_cleaned}")
                     print("(p0, Ec) Heatmaps done!")
                     '''
-
+'''
 print('Plotting mean chi-squared heatmap!')
 no_filtering_sources = list(all_results_none.keys())  # e.g. ["No_Filtering"] or sometimes multiple sources
 
@@ -856,7 +786,7 @@ plot_mean_delta_chi2_heatmap3(all_results_lin, list(all_results_lin.keys()), "me
 plot_mean_delta_chi2_heatmap3(all_results_snr, list(all_results_snr.keys()), "mean_", no_filtering_grid=no_filtering_grid)
 
 
-'''
+
 plot_delta_chi2_heatmap_m_g(results, dataset_label="No_Filtering")
 plot_delta_chi2_heatmap_m_g(results_snr, dataset_label="snr_3")
 plot_delta_chi2_heatmap_m_g(results_snr, dataset_label="snr_5")
