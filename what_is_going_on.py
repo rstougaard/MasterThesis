@@ -174,7 +174,7 @@ def plot_individual_delta_chi2_heatmap_with_pdf(all_results, dataset_labels, png
                 plt.yscale('log')
                 ax = plt.gca()
                 ax.xaxis.set_major_formatter(ticker.FormatStrFormatter("%g"))
-                ax.set_xlim(0.3, 6)
+                ax.set_xlim(0.3, 10)
                 plt.xticks(fontsize=15)
                 plt.yticks(fontsize=15)
                 plt.tight_layout()
@@ -191,6 +191,90 @@ def plot_individual_delta_chi2_heatmap_with_pdf(all_results, dataset_labels, png
                 print(f"Finished plotting for source: {source_name} with filter: {filter_label}")
 
     print(f"All plots have been saved to the PDF: {pdf_filename}")
+    return
+
+def plot_mean_delta_chi2_heatmap(all_results, dataset_labels, png_naming, no_filtering_grid=None, remove_source_label=None):
+    """
+    Generates mean Δχ² heatmaps for each filtering category in two spaces:
+      (E_c, p₀) and (mₐ, gₐ).
+
+    Assumes that the data were generated in a nested loop over masses and g-values:
+      - ec_all_full and p0_all_full (reshaped from axion_data) have shape (n_mass, n_g).
+      - g_unique comes from the first n_g rows and mass_unique from every n_g-th row.
+
+    Uses tolerance-based matching (via np.isclose) to assign each result (with a pair [p₀, E_c])
+    into its proper grid cell.
+    """
+
+    # Remove the specified source, if provided.
+    if remove_source_label is not None:
+        if remove_source_label in all_results:
+            del all_results[remove_source_label]
+        else:
+            print(f"Source '{remove_source_label}' not found in the results.")
+
+    # Extract all filter labels from the first remaining source.
+    first_source = next(iter(all_results.values()))
+    filtering_methods = list(first_source.keys())  # e.g. ["snr_3", "snr_5", "snr_10"] or ["week", "month"]
+
+    # Build the (m_a, g_a) mesh
+    ma_mesh, g_mesh = np.meshgrid(m_masked, g_masked, indexing='ij')
+
+    for filter_label in filtering_methods:
+        # -- 1) Compute mean Δχ² for this filter_label --
+        mean_delta_chi2_grid = compute_mean_delta_chi2_grid(
+            all_results=all_results,
+            dataset_labels=dataset_labels,
+            filter_label=filter_label,
+            p0_masked=p0_masked,
+            ec_masked=ec_masked
+        )
+
+        print(np.min(mean_delta_chi2_grid))
+        print(np.max(mean_delta_chi2_grid))
+        # Set up colormap.
+        vmin, vmax = -10, 25
+        num_colors = 30
+        boundaries = np.linspace(vmin, vmax, num_colors + 1)
+        cmap = plt.get_cmap('gnuplot2', num_colors)
+        norm = mcolors.BoundaryNorm(boundaries=boundaries, ncolors=num_colors, clip=True)
+
+        ma_mesh, g_mesh = np.meshgrid(m_masked, g_masked, indexing='ij')
+
+        plt.figure(figsize=(10, 6))
+        heatmap = plt.pcolormesh(ma_mesh / 1e-9, g_mesh, mean_delta_chi2_grid,
+                                 cmap=cmap, norm=norm, shading='auto')
+
+        # Overlay No_Filtering contour if provided and if we aren't plotting No_Filtering itself.
+        if (no_filtering_grid is not None) and (filter_label != "No_Filtering"):
+            if np.any(no_filtering_grid <= -6.2):
+                plt.contour(ma_mesh / 1e-9, g_mesh, no_filtering_grid,
+                            levels=[-6.2], colors='#f16913', linewidths=2)
+        if np.any(mean_delta_chi2_grid <= -6.2):
+            plt.contour(ma_mesh / 1e-9, g_mesh, mean_delta_chi2_grid,
+                        levels=[-6.2], colors='#78c679', linewidths=2)
+        if np.any(mean_delta_chi2_grid >= 6.2):
+            plt.contour(ma_mesh / 1e-9, g_mesh, mean_delta_chi2_grid,
+                        levels=[6.2], colors='red', linewidths=2)
+
+        cbar = plt.colorbar(heatmap, ticks=np.linspace(vmin, vmax, 11))
+        cbar.set_label(r'$\langle \Delta \chi^2 \rangle$', fontsize=15)
+        plt.xlabel(r'$m_a$ [neV]', fontsize=15)
+        plt.ylabel(r'$g_{a\gamma}$ [GeV$^{-1}$]', fontsize=15)
+        plt.title(f'Mean $\Delta \chi^2$ Heatmap for {filter_label} in ($m_a$, $g_{{a\gamma}}$) Space', fontsize=15)
+        plt.xscale('log')
+        plt.yscale('log')
+        plt.xticks(fontsize=15)
+        plt.yticks(fontsize=15)
+        ax = plt.gca()
+        ax.xaxis.set_major_formatter(ticker.FormatStrFormatter("%g"))
+        ax.set_xlim(0.3, 10)
+        plt.tight_layout()
+        plt.savefig(f'{path_to_save_heatmap_m_g}{png_naming}_{filter_label}_ma_ga.png', dpi=300)
+        plt.close()
+
+        print(f"Finished plotting for filter: {filter_label}")
+
 
 with open("all_results_none_32_curve_fit_nodivbin.pkl", "rb") as file:
     all_results_none = pickle.load(file)
@@ -203,3 +287,21 @@ with open("all_results_snr_32_curve_fit_nodivbin.pkl", "rb") as file:
 
 no_filtering_sources = list(all_results_none.keys()) 
 plot_individual_delta_chi2_heatmap_with_pdf(all_results_none, no_filtering_sources, " ", filtering_methods="No_Filtering", pdf_filename="indv_heatmaps_no_filter.pdf")
+
+print('Plotting mean chi-squared heatmap!')
+no_filtering_sources = list(all_results_none.keys())  # e.g. ["No_Filtering"] or sometimes multiple sources
+
+no_filtering_grid = compute_mean_delta_chi2_grid(
+    all_results=all_results_none,
+    dataset_labels=no_filtering_sources,
+    filter_label="No_Filtering",
+    p0_masked=p0_masked,
+    ec_masked=ec_masked
+) 
+
+plot_mean_delta_chi2_heatmap(all_results_none, list(all_results_none.keys()), "mean", remove_source_label="4FGL J2314.0+1445")
+# For LIN filtering ("week" and "month")
+plot_mean_delta_chi2_heatmap(all_results_lin, list(all_results_lin.keys()), "mean_", no_filtering_grid=no_filtering_grid, remove_source_label="4FGL J2314.0+1445")
+
+# For SNR filtering ("snr_3", "snr_5", "snr_10")
+plot_mean_delta_chi2_heatmap(all_results_snr, list(all_results_snr.keys()), "mean_", no_filtering_grid=no_filtering_grid, remove_source_label="4FGL J2314.0+1445")
