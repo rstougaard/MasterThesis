@@ -176,6 +176,7 @@ def plot_individual_delta_chi2_heatmap_with_pdf(all_results, dataset_labels, png
                 formatter = ticker.ScalarFormatter()
                 formatter.set_scientific(False)  # Disable scientific notation.
                 ax.xaxis.set_major_formatter(formatter)
+                ax.set_xlim(0.3, 10)
                 plt.xticks(fontsize=15)
                 plt.yticks(fontsize=15)
                 plt.tight_layout()
