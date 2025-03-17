@@ -174,7 +174,7 @@ def plot_individual_delta_chi2_heatmap_with_pdf(all_results, dataset_labels, png
                 plt.yscale('log')
                 ax = plt.gca()
                 ax.xaxis.set_major_formatter(ticker.FormatStrFormatter("%g"))
-                ax.set_xlim(0.3, 10)
+                ax.set_xlim(0.3, 9)
                 plt.xticks(fontsize=15)
                 plt.yticks(fontsize=15)
                 plt.tight_layout()
