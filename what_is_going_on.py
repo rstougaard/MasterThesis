@@ -300,9 +300,9 @@ no_filtering_grid = compute_mean_delta_chi2_grid(
     ec_masked=ec_masked
 ) 
 
-plot_mean_delta_chi2_heatmap(all_results_none, list(all_results_none.keys()), "mean", remove_source_label=None)
+plot_mean_delta_chi2_heatmap(all_results_none, list(all_results_none.keys()), "mean", remove_source_label="4FGL J1013.7+3444")
 # For LIN filtering ("week" and "month")
-plot_mean_delta_chi2_heatmap(all_results_lin, list(all_results_lin.keys()), "mean_", no_filtering_grid=no_filtering_grid, remove_source_label=None)
+plot_mean_delta_chi2_heatmap(all_results_lin, list(all_results_lin.keys()), "mean_", no_filtering_grid=no_filtering_grid, remove_source_label="4FGL J1013.7+3444")
 
 # For SNR filtering ("snr_3", "snr_5", "snr_10")
-plot_mean_delta_chi2_heatmap(all_results_snr, list(all_results_snr.keys()), "mean_", no_filtering_grid=no_filtering_grid, remove_source_label=None)
+plot_mean_delta_chi2_heatmap(all_results_snr, list(all_results_snr.keys()), "mean_", no_filtering_grid=no_filtering_grid, remove_source_label="4FGL J1013.7+3444")
