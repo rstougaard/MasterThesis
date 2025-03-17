@@ -166,19 +166,32 @@ def fit_data(x, y, y_err, emin, emax, p0, E_c, k, source_name, dataset_label, us
 
         # Compute Δχ²
         delta_chi2 = chi2_axion - chi2_base
-    '''
-    print("LogPar:\n")
-    for param, value, error in zip(["Norm", "alpha_", "beta_"], popt_logpar, perr_logpar):
-        print(f"  {param}: {value:.2e} ± {error:.2e}\n")
-    print(f'χ² / dof: {chi2_logpar:.2f} / {dof_logpar}\n\n')
-    print("Axion:\n")
-    for param, value, error in zip(["Norm", "alpha_", "beta_", "w"], popt_axion, perr_axion):
-        print(f"  {param}: {value:.2e} ± {error:.2e}\n")  
-    print( f"χ² / dof: {chi2_axion:.2f} / {dof_axion}\n\n")
+    if useEBL and basefunc == "logpar":
+        print("LogPar:\n")
+        for param, value, error in zip(["Norm", "alpha_", "beta_"], popt_base, perr_base):
+            print(f"  {param}: {value:.2e} ± {error:.2e}\n")
+        print(f'χ² / dof: {chi2_base:.2f} / {dof_base}\n\n')
+        print("Axion:\n")
+        for param, value, error in zip(["Norm", "alpha_", "beta_", "w"], popt_axion, perr_axion):
+            print(f"  {param}: {value:.2e} ± {error:.2e}\n")  
+        print( f"χ² / dof: {chi2_axion:.2f} / {dof_axion}\n\n")
 
-    print(f"Δχ² (Axion - LogPar): {delta_chi2:.2f}")
-    print('--------------------------------------------------------------------------------------')
-    '''
+        print(f"Δχ² (Axion - LogPar): {delta_chi2:.2f}")
+        print('--------------------------------------------------------------------------------------')
+
+    elif useEBL and basefunc == "cutoff":
+        print("Cut Off:\n")
+        for param, value, error in zip(["Norm", "l1", "l2"], popt_base, perr_base):
+            print(f"  {param}: {value:.2e} ± {error:.2e}\n")
+        print(f'χ² / dof: {chi2_base:.2f} / {dof_base}\n\n')
+        print("Axion:\n")
+        for param, value, error in zip(["Norm", "l1", "l2", "w"], popt_axion, perr_axion):
+            print(f"  {param}: {value:.2e} ± {error:.2e}\n")  
+        print( f"χ² / dof: {chi2_axion:.2f} / {dof_axion}\n\n")
+
+        print(f"Δχ² (Axion - Cut Off): {delta_chi2:.2f}")
+        print('--------------------------------------------------------------------------------------')
+
     # Return fit results
     return {
         "Base": {
@@ -767,23 +780,7 @@ with open(f'Source_ra_dec_specin.txt', 'r') as file:
                     print("(p0, Ec) Heatmaps done!")
                     '''
 '''
-print('Plotting mean chi-squared heatmap!')
-no_filtering_sources = list(all_results_none.keys())  # e.g. ["No_Filtering"] or sometimes multiple sources
 
-no_filtering_grid = compute_mean_delta_chi2_grid(
-    all_results=all_results_none,
-    dataset_labels=no_filtering_sources,
-    filter_label="No_Filtering",
-    p0_masked=p0_masked,
-    ec_masked=ec_masked
-) 
-
-plot_mean_delta_chi2_heatmap3(all_results_none, list(all_results_none.keys()), "mean")
-# For LIN filtering ("week" and "month")
-plot_mean_delta_chi2_heatmap3(all_results_lin, list(all_results_lin.keys()), "mean_", no_filtering_grid=no_filtering_grid)
-
-# For SNR filtering ("snr_3", "snr_5", "snr_10")
-plot_mean_delta_chi2_heatmap3(all_results_snr, list(all_results_snr.keys()), "mean_", no_filtering_grid=no_filtering_grid)
 
 
 
