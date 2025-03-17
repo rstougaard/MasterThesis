@@ -1,6 +1,7 @@
 import pickle
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
+import matplotlib.ticker as ticker
 import numpy as np
 from matplotlib.backends.backend_pdf import PdfPages
 
@@ -33,7 +34,7 @@ mass_unique = axion_data[::n_g, 0]     # length = n_mass
 # Define your desired start and stop values
 m_start_val = 3e-10
 g_start_val = 7e-13
-m_stop_val  = 1.25e-8
+m_stop_val  = 1.1e-8
 g_stop_val  = 1e-11
 
 # Find the row (mass) and column (g) indices closest to the desired start values.
@@ -171,6 +172,10 @@ def plot_individual_delta_chi2_heatmap_with_pdf(all_results, dataset_labels, png
                 plt.title(f'{source_name} | {filter_label} Δχ² Heatmap in ($m_a$, $g_{{a\gamma}}$) Space', fontsize=15)
                 plt.xscale('log')
                 plt.yscale('log')
+                ax = plt.gca()
+                formatter = ticker.ScalarFormatter()
+                formatter.set_scientific(False)  # Disable scientific notation.
+                ax.xaxis.set_major_formatter(formatter)
                 plt.xticks(fontsize=15)
                 plt.yticks(fontsize=15)
                 plt.tight_layout()
