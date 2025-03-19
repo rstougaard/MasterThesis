@@ -23,7 +23,7 @@ def lc_plotting(vars, snrratios=None, time_intervals=None):
 
     for loop_item, color in zip(loop_items, colors):
         if method == 'SNR':
-            lc = f'./groups/pheno/sqd515/MasterThesis/data/{source_name_cleaned}/{method}/lc_snr{loop_item}.fits'
+            lc = f'./data/{source_name_cleaned}/{method}/lc_snr{loop_item}.fits'
             plot_file = f'./data/{source_name_cleaned}/{method}/lc_snr{loop_item}.png'
             
         elif method == 'LIN':
@@ -121,8 +121,8 @@ def lc_plotting(vars, snrratios=None, time_intervals=None):
         print(f"Plot saved as: {plot_file}")
 
     return
-vars_snr = ("4FGL J0319.8+413", None, None, "SNR", None, None, None, 100, 1000000)
-vars_lin = ("4FGL J0319.8+413", None, None, "LIN", None, None, None, 100, 1000000)
+vars_snr = ("4FGL J0319.8+4130", None, None, "SNR", None, None, None, 100, 1000000)
+vars_lin = ("4FGL J0319.8+4130", None, None, "LIN", None, None, None, 100, 1000000)
 snrratios = [10, 5, 3]
 time_intervals = ["week","month"]
 lc_plotting(vars_snr, snrratios=snrratios)
