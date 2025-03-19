@@ -80,7 +80,7 @@ def lc_plotting(vars, snrratios=None, time_intervals=None):
         plt.rcParams['xtick.labelsize'] = 16
         plt.rcParams['ytick.labelsize'] = 16
 
-        plt.figure(figsize=(12, 8))
+        plt.figure(figsize=(10, 6))
 
         # Plot data
         plt.errorbar(X_bin, Y_bin, xerr=x_error_bin, yerr=y_error_bin, fmt='o', capsize=5, color=color, alpha=0.3, label=f'Data')
