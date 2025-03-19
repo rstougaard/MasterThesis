@@ -104,7 +104,7 @@ def lc_plotting(vars, snrratios=None, time_intervals=None):
         plt.grid(True, which="both", linestyle="--", linewidth=0.5)
 
         # Explicitly set tick params
-        plt.tick_params(axis='both', which='major', labelsize=20)
+        plt.tick_params(axis='both', which='major', labelsize=16)
 
         # Move the legend outside the plot
         plt.legend(fontsize=16, ncol=3, loc='upper left', frameon=True)
