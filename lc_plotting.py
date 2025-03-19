@@ -103,16 +103,16 @@ def lc_plotting(vars, snrratios=None, time_intervals=None):
         plt.yscale('log')
         plt.grid(True, which="both", linestyle="--", linewidth=0.5)
         if method == 'SNR':
-            plt.ylim(7e-8, 3e-6)
+            plt.ylim(7e-8, 3.5e-6)
         elif method == 'LIN':
-            plt.ylim(1e-7, 1.5e-6)
+            plt.ylim(1e-7, 2e-6)
 
         # Explicitly set tick params
         plt.tick_params(axis='both', which='major', labelsize=18, width=2, length=8, color='black', direction='inout')
         plt.tick_params(axis='both', which='minor', labelsize=18, width=1.5, length=5, color='black', direction='in')
 
         # Move the legend outside the plot
-        plt.legend(fontsize=18, ncol=3, loc='upper left', frameon=True)
+        plt.legend(fontsize=18, ncol=2, loc='upper left', frameon=True)
 
         # Save or display the plot
         plt.tight_layout()
