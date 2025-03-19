@@ -75,49 +75,43 @@ def lc_plotting(vars, snrratios=None, time_intervals=None):
         flare_intervals = np.column_stack((flare_intervals_start, flare_intervals_stop))
 
 
-        #np.savetxt(output_file_flares, flare_intervals, delimiter=' ')
-        #print(f"File saved as: {output_file_flares}")
-
-            # Create a new figure for this file
-        plt.figure(figsize=(12, 8))
         plt.rcParams["font.family"] = "serif"
         plt.rcParams["mathtext.fontset"] = "cm"
+        plt.rcParams['xtick.labelsize'] = 20
+        plt.rcParams['ytick.labelsize'] = 20
 
-        # Plot original data
+        plt.figure(figsize=(12, 8))
+
+        # Plot data
         plt.errorbar(X_bin, Y_bin, xerr=x_error_bin, yerr=y_error_bin, fmt='o', capsize=5, color=color, alpha=0.3, label=f'Data')
 
         # Highlight removed points
         for i, (removed_x, removed_y) in enumerate(removed_points):
             plt.scatter(removed_x, removed_y, color='black', edgecolors='black')
 
-        # Plot means and thresholds for each round
+        # Plot means and thresholds
         plt.axhline(round_means[0], color='grey', linestyle='--', linewidth=3, alpha=1, label=f'Mean unfiltered')
         plt.axhline(thresholds[0], color='grey', linestyle='-', linewidth=3, alpha=1, label=f'Threshold unfiltered')
         plt.axhline(round_means[-1], color='black', linestyle='--', linewidth=3, alpha=1, label=f'Mean round {len(round_means)}')
         plt.axhline(thresholds[-1], color='black', linestyle='-', linewidth=3, alpha=1, label=f'Threshold round {len(round_means)}')
 
         # Customize plot
-        plt.ylabel('Flux [photons/cm²/s]',fontsize=18)
+        plt.ylabel('Flux [photons/cm²/s]', fontsize=18)
         plt.xlabel('Time [s]', fontsize=18)
         plt.title(f'Lightcurve for {method}: {loop_item}', fontsize=20)
         plt.xscale('log')
         plt.yscale('log')
         plt.grid(True, which="both", linestyle="--", linewidth=0.5)
-        plt.xticks(fontsize=20)
-        plt.yticks(fontsize=20)
+
+        # Explicitly set tick params
+        plt.tick_params(axis='both', which='major', labelsize=20)
 
         # Move the legend outside the plot
-        plt.legend(
-            fontsize=16,
-            ncol=3,  # Number of columns in the legend
-            loc='upper left',  # Position the legend to the left center of the bounding box
-            frameon=True,  # Add a box around the legend
-        )
+        plt.legend(fontsize=16, ncol=3, loc='upper left', frameon=True)
 
-        # Save the plot or display it
-
-        plt.tight_layout()  # Adjust layout to prevent clipping
-        plt.savefig(plot_file, bbox_inches='tight', dpi=300)  # Save with adjusted bounding box
+        # Save or display the plot
+        plt.tight_layout()
+        plt.savefig(plot_file, bbox_inches='tight', dpi=300)
         print(f"Plot saved as: {plot_file}")
 
     return
