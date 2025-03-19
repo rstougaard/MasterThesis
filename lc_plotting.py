@@ -79,7 +79,7 @@ def lc_plotting(vars, snrratios=None, time_intervals=None):
         #print(f"File saved as: {output_file_flares}")
 
             # Create a new figure for this file
-        plt.figure(figsize=(10, 6))
+        plt.figure(figsize=(12, 8))
         plt.rcParams["font.family"] = "serif"
         plt.rcParams["mathtext.fontset"] = "cm"
 
@@ -109,7 +109,7 @@ def lc_plotting(vars, snrratios=None, time_intervals=None):
         # Move the legend outside the plot
         plt.legend(
             fontsize=16,
-            ncol=1,  # Number of columns in the legend
+            ncol=3,  # Number of columns in the legend
             loc='upper left',  # Position the legend to the left center of the bounding box
             frameon=True,  # Add a box around the legend
         )
