@@ -77,8 +77,8 @@ def lc_plotting(vars, snrratios=None, time_intervals=None):
 
         plt.rcParams["font.family"] = "serif"
         plt.rcParams["mathtext.fontset"] = "cm"
-        plt.rcParams['xtick.labelsize'] = 16
-        plt.rcParams['ytick.labelsize'] = 16
+        plt.rcParams['xtick.labelsize'] = 18
+        plt.rcParams['ytick.labelsize'] = 18
 
         plt.figure(figsize=(10, 6))
 
@@ -96,8 +96,8 @@ def lc_plotting(vars, snrratios=None, time_intervals=None):
         plt.axhline(thresholds[-1], color='black', linestyle='-', linewidth=3, alpha=1, label=f'Threshold round {len(round_means)}')
 
         # Customize plot
-        plt.ylabel('Flux [photons/cm²/s]', fontsize=18)
-        plt.xlabel('Time [s]', fontsize=18)
+        plt.ylabel('Flux [photons/cm²/s]', fontsize=20)
+        plt.xlabel('Time [s]', fontsize=20)
         plt.title(f'Lightcurve for {method}: {loop_item}', fontsize=20)
         plt.xscale('log')
         plt.yscale('log')
@@ -108,11 +108,11 @@ def lc_plotting(vars, snrratios=None, time_intervals=None):
             plt.ylim(1e-7, 1.5e-6)
 
         # Explicitly set tick params
-        plt.tick_params(axis='both', which='major', labelsize=16, width=2, length=8, color='black', direction='inout')
-        plt.tick_params(axis='both', which='minor', labelsize=16, width=1.5, length=5, color='black', direction='in')
+        plt.tick_params(axis='both', which='major', labelsize=18, width=2, length=8, color='black', direction='inout')
+        plt.tick_params(axis='both', which='minor', labelsize=18, width=1.5, length=5, color='black', direction='in')
 
         # Move the legend outside the plot
-        plt.legend(fontsize=16, ncol=3, loc='upper left', frameon=True)
+        plt.legend(fontsize=18, ncol=3, loc='upper left', frameon=True)
 
         # Save or display the plot
         plt.tight_layout()
