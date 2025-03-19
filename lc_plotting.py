@@ -6,27 +6,7 @@ def lc_plotting(vars, snrratios=None, time_intervals=None):
     # Extract variables
     source_name, ra, dec, method, specin, _, _, minimal_energy, maximal_energy = vars
     source_name_cleaned = source_name.replace(" ", "").replace(".", "dot").replace("+", "plus").replace("-", "minus")
-    # Set the lc filename based on the method
-    if method == 'SNR':
-        lc = f'./data/{source_name_cleaned}/{method}/lc_snr{loop_item}.fits'
-        output_file_flares = f'./data/{source_name_cleaned}/{method}/flare_intervals_snr{loop_item}.txt'
-        plot_file = f'./data/{source_name_cleaned}/{method}/lc_snr{loop_item}.png'
-        tmp_gti_noflares = f'./data/{source_name_cleaned}/{method}/temp_git_snr{loop_item}.fits'
-        gti_noflares = f'./data/{source_name_cleaned}/{method}/gti_noflares_snr{loop_item}.fits'
-    elif method == 'LIN':
-        lc = f'./data/{source_name_cleaned}/{method}/lc_{loop_item}.fits'
-        output_file_flares = f'./data/{source_name_cleaned}/{method}/flare_intervals_{loop_item}.txt'
-        plot_file = f'./data/{source_name_cleaned}/{method}/lc_{loop_item}.png'
-        tmp_gti_noflares = f'./data/{source_name_cleaned}/{method}/temp_git_{loop_item}.fits'
-        gti_noflares = f'./data/{source_name_cleaned}/{method}/gti_noflares_{loop_item}.fits'    
-
-    initial_means = []
-    final_means = []
-    final_thresholds = []
-    valid_intervals_list = []
-    invalid_intervals_list = []
-
-     # Determine the loop items based on the method
+      # Determine the loop items based on the method
     loop_items = snrratios if method == "SNR" else time_intervals
     if method == 'SNR':
             lc = f'./data/{source_name_cleaned}/{method}/lc_snr{loop_item}.fits'
@@ -35,7 +15,23 @@ def lc_plotting(vars, snrratios=None, time_intervals=None):
         lc = f'./data/{source_name_cleaned}/{method}/lc_{loop_item}.fits'
         colors = ['purple', 'brown']
 
+    initial_means = []
+    final_means = []
+    final_thresholds = []
+    valid_intervals_list = []
+    invalid_intervals_list = []
+
+
+
     for loop_item, color in zip(loop_items, colors):
+        if method == 'SNR':
+            lc = f'./data/{source_name_cleaned}/{method}/lc_snr{loop_item}.fits'
+            plot_file = f'./data/{source_name_cleaned}/{method}/lc_snr{loop_item}.png'
+            
+        elif method == 'LIN':
+            lc = f'./data/{source_name_cleaned}/{method}/lc_{loop_item}.fits'
+            plot_file = f'./data/{source_name_cleaned}/{method}/lc_{loop_item}.png'
+                
         f_bin = fits.open(lc)
         bin_data = f_bin[1].data
 
@@ -82,7 +78,7 @@ def lc_plotting(vars, snrratios=None, time_intervals=None):
 
 
         #np.savetxt(output_file_flares, flare_intervals, delimiter=' ')
-        print(f"File saved as: {output_file_flares}")
+        #print(f"File saved as: {output_file_flares}")
 
             # Create a new figure for this file
         plt.figure(figsize=(10, 6))
