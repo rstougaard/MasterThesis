@@ -15,16 +15,20 @@ def lc_plotting(vars, snrratios=None, time_intervals=None):
     valid_intervals_list = []
     invalid_intervals_list = []
     
+    if method == 'SNR':
+        colors = ['blue', 'orange', 'green']
+    elif method == 'LIN':
+        colors = ['purple', 'brown']
+
+
     for loop_item, color in zip(loop_items, colors):
         if method == 'SNR':
-            colors = ['blue', 'orange', 'green']
             lc = f'./data/{source_name_cleaned}/{method}/lc_snr{loop_item}.fits'
             plot_file = f'./data/{source_name_cleaned}/{method}/lc_snr{loop_item}.png'
             
         elif method == 'LIN':
             lc = f'./data/{source_name_cleaned}/{method}/lc_{loop_item}.fits'
             plot_file = f'./data/{source_name_cleaned}/{method}/lc_{loop_item}.png'
-            colors = ['purple', 'brown']
                 
         f_bin = fits.open(lc)
         bin_data = f_bin[1].data
