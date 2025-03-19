@@ -103,7 +103,7 @@ def lc_plotting(vars, snrratios=None, time_intervals=None):
         plt.yscale('log')
         plt.grid(True, which="both", linestyle="--", linewidth=0.5)
         if method == 'SNR':
-            plt.ylim(7e-8, 3.5e-6)
+            plt.ylim(7e-8, 5e-6)
         elif method == 'LIN':
             plt.ylim(1e-7, 2e-6)
 
