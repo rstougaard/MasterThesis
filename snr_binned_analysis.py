@@ -256,6 +256,8 @@ def filtering(vars, snrratios=None, time_intervals=None):
 
                 # Create a new figure for this file
             plt.figure(figsize=(10, 6))
+            plt.rcParams["font.family"] = "serif"
+            plt.rcParams["mathtext.fontset"] = "cm"
 
             # Plot original data
             plt.errorbar(X_bin, Y_bin, xerr=x_error_bin, yerr=y_error_bin, fmt='o', capsize=5, color=color, alpha=0.3, label=f'Data')
@@ -271,18 +273,18 @@ def filtering(vars, snrratios=None, time_intervals=None):
             plt.axhline(thresholds[-1], color='black', linestyle='-', linewidth=3, alpha=1, label=f'Threshold round {len(round_means)}')
 
             # Customize plot
-            plt.ylabel('Flux [photons/cm²/s]',fontsize=16)
-            plt.xlabel('Time [s]', fontsize=16)
-            plt.title(f'Lightcurve for {method}: {loop_item}', fontsize=18)
+            plt.ylabel('Flux [photons/cm²/s]',fontsize=18)
+            plt.xlabel('Time [s]', fontsize=18)
+            plt.title(f'Lightcurve for {method}: {loop_item}', fontsize=20)
             plt.xscale('log')
             plt.yscale('log')
             plt.grid(True, which="both", linestyle="--", linewidth=0.5)
-            plt.xticks(fontsize=14)
-            plt.yticks(fontsize=14)
+            plt.xticks(fontsize=16)
+            plt.yticks(fontsize=16)
 
             # Move the legend outside the plot
             plt.legend(
-                fontsize=14,
+                fontsize=16,
                 ncol=1,  # Number of columns in the legend
                 loc='upper left',  # Position the legend to the left center of the bounding box
                 frameon=True,  # Add a box around the legend
