@@ -77,8 +77,8 @@ def lc_plotting(vars, snrratios=None, time_intervals=None):
 
         plt.rcParams["font.family"] = "serif"
         plt.rcParams["mathtext.fontset"] = "cm"
-        plt.rcParams['xtick.labelsize'] = 20
-        plt.rcParams['ytick.labelsize'] = 20
+        plt.rcParams['xtick.labelsize'] = 16
+        plt.rcParams['ytick.labelsize'] = 16
 
         plt.figure(figsize=(12, 8))
 
