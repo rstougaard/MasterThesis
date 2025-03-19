@@ -103,8 +103,8 @@ def lc_plotting(vars, snrratios=None, time_intervals=None):
         plt.xscale('log')
         plt.yscale('log')
         plt.grid(True, which="both", linestyle="--", linewidth=0.5)
-        plt.xticks(fontsize=16)
-        plt.yticks(fontsize=16)
+        plt.xticks(fontsize=20)
+        plt.yticks(fontsize=20)
 
         # Move the legend outside the plot
         plt.legend(
