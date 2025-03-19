@@ -8,29 +8,23 @@ def lc_plotting(vars, snrratios=None, time_intervals=None):
     source_name_cleaned = source_name.replace(" ", "").replace(".", "dot").replace("+", "plus").replace("-", "minus")
       # Determine the loop items based on the method
     loop_items = snrratios if method == "SNR" else time_intervals
-    if method == 'SNR':
-            lc = f'./data/{source_name_cleaned}/{method}/lc_snr{loop_item}.fits'
-            colors = ['blue', 'orange', 'green']
-    elif method == 'LIN':
-        lc = f'./data/{source_name_cleaned}/{method}/lc_{loop_item}.fits'
-        colors = ['purple', 'brown']
-
+    
     initial_means = []
     final_means = []
     final_thresholds = []
     valid_intervals_list = []
     invalid_intervals_list = []
-
-
-
+    
     for loop_item, color in zip(loop_items, colors):
         if method == 'SNR':
+            colors = ['blue', 'orange', 'green']
             lc = f'./data/{source_name_cleaned}/{method}/lc_snr{loop_item}.fits'
             plot_file = f'./data/{source_name_cleaned}/{method}/lc_snr{loop_item}.png'
             
         elif method == 'LIN':
             lc = f'./data/{source_name_cleaned}/{method}/lc_{loop_item}.fits'
             plot_file = f'./data/{source_name_cleaned}/{method}/lc_{loop_item}.png'
+            colors = ['purple', 'brown']
                 
         f_bin = fits.open(lc)
         bin_data = f_bin[1].data
