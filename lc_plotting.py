@@ -102,7 +102,10 @@ def lc_plotting(vars, snrratios=None, time_intervals=None):
         plt.xscale('log')
         plt.yscale('log')
         plt.grid(True, which="both", linestyle="--", linewidth=0.5)
-        plt.ylim(1e-7, 1.5e-6)
+        if method == 'SNR':
+            plt.ylim(9e-8, 2e-6)
+        elif method == 'LIN':
+            plt.ylim(1e-7, 1.5e-6)
 
         # Explicitly set tick params
         plt.tick_params(axis='both', which='major', labelsize=16, width=2, length=8, color='black', direction='inout')
