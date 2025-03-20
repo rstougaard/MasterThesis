@@ -145,7 +145,7 @@ def plot_individual_delta_chi2_heatmap_with_pdf(all_results, dataset_labels, sys
                 
                 # Set up colormap parameters.
                 vmin, vmax = int(np.min(mean_delta_chi2_grid)), int(np.max(mean_delta_chi2_grid))
-                num_colors = 30
+                num_colors = 60
                 boundaries = np.linspace(vmin, vmax, num_colors + 1)
                 cmap = plt.get_cmap('gnuplot2', num_colors)
                 norm = mcolors.BoundaryNorm(boundaries=boundaries, ncolors=num_colors, clip=True)
@@ -237,7 +237,7 @@ def plot_mean_delta_chi2_heatmap(all_results, all_results_sys, dataset_labels, p
         # Set up colormap.
         #vmin, vmax = -10, 25
         vmin, vmax = int(np.min(mean_delta_chi2_grid)), int(np.max(mean_delta_chi2_grid))
-        num_colors = 30
+        num_colors = 60
         boundaries = np.linspace(vmin, vmax, num_colors + 1)
         cmap = plt.get_cmap('gnuplot2', num_colors)
         norm = mcolors.BoundaryNorm(boundaries=boundaries, ncolors=num_colors, clip=True)
@@ -321,7 +321,7 @@ def plot_mean_delta_chi2_heatmap_limit(all_results, all_results_sys, dataset_lab
         # Set up colormap.
         #vmin, vmax = -10, 25
         vmin, vmax = -10, 25
-        num_colors = 30
+        num_colors = 60
         boundaries = np.linspace(vmin, vmax, num_colors + 1)
         cmap = plt.get_cmap('gnuplot2', num_colors)
         norm = mcolors.BoundaryNorm(boundaries=boundaries, ncolors=num_colors, clip=True)
