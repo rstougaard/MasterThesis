@@ -306,25 +306,28 @@ with open("all_results_snr_32_logpar_sys_error.pkl", "rb") as file:
     all_results_snr_sys = pickle.load(file)
 
 no_filtering_sources_sys = list(all_results_none_sys.keys()) 
-plot_individual_delta_chi2_heatmap_with_pdf(all_results_none_sys, no_filtering_sources_sys, " ", filtering_methods="No_Filtering", pdf_filename="indv_heatmaps_no_filter_logpar_sys_error.pdf")
-plot_individual_delta_chi2_heatmap_with_pdf(all_results_lin_sys, no_filtering_sources_sys, " ", filtering_methods="month", pdf_filename="indv_heatmaps_month_logpar_sys_error.pdf")
+plot_individual_delta_chi2_heatmap_with_pdf(all_results_none_sys, no_filtering_sources_sys, None, " ", filtering_methods="No_Filtering", pdf_filename="indv_heatmaps_no_filter_logpar_sys_error.pdf")
+plot_individual_delta_chi2_heatmap_with_pdf(all_results_lin_sys, no_filtering_sources_sys, None, " ", filtering_methods="week", pdf_filename="indv_heatmaps_week_logpar_sys_error.pdf")
+plot_individual_delta_chi2_heatmap_with_pdf(all_results_lin_sys, no_filtering_sources_sys, None, " ", filtering_methods="month", pdf_filename="indv_heatmaps_month_logpar_sys_error.pdf")
 
+plot_individual_delta_chi2_heatmap_with_pdf(all_results_snr_sys, no_filtering_sources_sys, None, " ", filtering_methods="snr_3", pdf_filename="indv_heatmaps_snr3_logpar_sys_error.pdf")
+plot_individual_delta_chi2_heatmap_with_pdf(all_results_snr_sys, no_filtering_sources_sys, None, " ", filtering_methods="snr_5", pdf_filename="indv_heatmaps_snr5_logpar_sys_error.pdf")
+plot_individual_delta_chi2_heatmap_with_pdf(all_results_snr_sys, no_filtering_sources_sys, None, " ", filtering_methods="snr_10", pdf_filename="indv_heatmaps_snr10_logpar_sys_error.pdf")
 print('Plotting mean chi-squared heatmap!')
-no_filtering_sources_sys = list(all_results_none_sys.keys())  # e.g. ["No_Filtering"] or sometimes multiple sources
 
-no_filtering_grid = compute_mean_delta_chi2_grid(
+no_filtering_grid_sys = compute_mean_delta_chi2_grid(
     all_results=all_results_none_sys,
     dataset_labels=no_filtering_sources_sys,
     filter_label="No_Filtering",
     p0_masked=p0_masked,
     ec_masked=ec_masked
 ) 
-plot_mean_delta_chi2_heatmap(all_results_none_sys, list(all_results_none_sys.keys()), "mean_sys_", remove_source_label=None)
+plot_mean_delta_chi2_heatmap(all_results_none_sys, None,list(all_results_none_sys.keys()), "mean_sys_", remove_source_label=None)
 # For LIN filtering ("week" and "month")
-plot_mean_delta_chi2_heatmap(all_results_lin_sys, list(all_results_lin_sys.keys()), "mean_sys_", no_filtering_grid=no_filtering_grid, remove_source_label=None)
+plot_mean_delta_chi2_heatmap(all_results_lin_sys, None,list(all_results_lin_sys.keys()), "mean_sys_", no_filtering_grid=no_filtering_grid_sys, remove_source_label=None)
 
 # For SNR filtering ("snr_3", "snr_5", "snr_10")
-plot_mean_delta_chi2_heatmap(all_results_snr_sys, list(all_results_snr_sys.keys()), "mean_sys_", no_filtering_grid=no_filtering_grid, remove_source_label=None)
+plot_mean_delta_chi2_heatmap(all_results_snr_sys, None, list(all_results_snr_sys.keys()), "mean_sys_", no_filtering_grid=no_filtering_grid_sys, remove_source_label=None)
 '''
 plot_mean_delta_chi2_heatmap(all_results_none, list(all_results_none.keys()), "mean", remove_source_label="4FGL J2314.0+1445")
 # For LIN filtering ("week" and "month")
@@ -345,51 +348,8 @@ with open("all_results_snr_32_logpar_no_sys_error.pkl", "rb") as file:
     all_results_snr = pickle.load(file)
 
 no_filtering_sources = list(all_results_none.keys())
-no_filtering_sys_grid = compute_mean_delta_chi2_grid(
-    all_results=all_results_none_sys,
-    dataset_labels=no_filtering_sources,
-    filter_label="No_Filtering",
-    p0_masked=p0_masked,
-    ec_masked=ec_masked
-) 
-lin_month_sys_grid = compute_mean_delta_chi2_grid(
-    all_results=all_results_lin_sys,
-    dataset_labels=no_filtering_sources,
-    filter_label="month",
-    p0_masked=p0_masked,
-    ec_masked=ec_masked
-) 
-lin_week_sys_grid = compute_mean_delta_chi2_grid(
-    all_results=all_results_lin_sys,
-    dataset_labels=no_filtering_sources,
-    filter_label="week",
-    p0_masked=p0_masked,
-    ec_masked=ec_masked
-) 
-snr_3_sys_grid = compute_mean_delta_chi2_grid(
-    all_results=all_results_snr_sys,
-    dataset_labels=no_filtering_sources,
-    filter_label="snr_3",
-    p0_masked=p0_masked,
-    ec_masked=ec_masked
-) 
-snr_5_sys_grid = compute_mean_delta_chi2_grid(
-    all_results=all_results_snr_sys,
-    dataset_labels=no_filtering_sources,
-    filter_label="snr_5",
-    p0_masked=p0_masked,
-    ec_masked=ec_masked)
-
-snr_10_sys_grid = compute_mean_delta_chi2_grid(
-    all_results=all_results_snr_sys,
-    dataset_labels=no_filtering_sources,
-    filter_label="snr_10",
-    p0_masked=p0_masked,
-    ec_masked=ec_masked)
-
-
-no_filtering_sources = list(all_results_none.keys()) 
 plot_individual_delta_chi2_heatmap_with_pdf(all_results_none, no_filtering_sources, all_results_none_sys, " ", filtering_methods="No_Filtering", pdf_filename="indv_heatmaps_no_filter_logpar_no_sys_error.pdf")
+plot_individual_delta_chi2_heatmap_with_pdf(all_results_lin, no_filtering_sources, all_results_lin_sys, " ", filtering_methods="week", pdf_filename="indv_heatmaps_week_logpar_no_sys_error.pdf")
 plot_individual_delta_chi2_heatmap_with_pdf(all_results_lin, no_filtering_sources, all_results_lin_sys, " ", filtering_methods="month", pdf_filename="indv_heatmaps_month_logpar_no_sys_error.pdf")
 plot_individual_delta_chi2_heatmap_with_pdf(all_results_snr, no_filtering_sources, all_results_snr_sys, " ", filtering_methods="snr_3", pdf_filename="indv_heatmaps_snr3_logpar_no_sys_error.pdf")
 plot_individual_delta_chi2_heatmap_with_pdf(all_results_snr, no_filtering_sources, all_results_snr_sys, " ", filtering_methods="snr_5", pdf_filename="indv_heatmaps_snr5_logpar_no_sys_error.pdf")
@@ -404,9 +364,9 @@ no_filtering_grid = compute_mean_delta_chi2_grid(
     ec_masked=ec_masked
 ) 
 
-plot_mean_delta_chi2_heatmap(all_results_none, list(all_results_none.keys()), "mean",  remove_source_label=None)
+plot_mean_delta_chi2_heatmap(all_results_none, all_results_none_sys, list(all_results_none.keys()), "mean",  remove_source_label=None)
 # For LIN filtering ("week" and "month")
-plot_mean_delta_chi2_heatmap(all_results_lin, list(all_results_lin.keys()), "mean_", no_filtering_grid=no_filtering_grid, remove_source_label=None)
+plot_mean_delta_chi2_heatmap(all_results_lin, all_results_lin_sys, list(all_results_lin.keys()), "mean_", no_filtering_grid=no_filtering_grid, remove_source_label=None)
 
 # For SNR filtering ("snr_3", "snr_5", "snr_10")
-plot_mean_delta_chi2_heatmap(all_results_snr, list(all_results_snr.keys()), "mean_", no_filtering_grid=no_filtering_grid, remove_source_label=None)
+plot_mean_delta_chi2_heatmap(all_results_snr, all_results_snr_sys, list(all_results_snr.keys()), "mean_", no_filtering_grid=no_filtering_grid, remove_source_label=None)
