@@ -169,8 +169,7 @@ def fit_data(x, y, y_err, emin, emax, p0, E_c, k, source_name, dataset_label, us
     perr_base = np.sqrt(np.diag(pcov_base))
 
     popt_axion, pcov_axion = curve_fit(
-        axion_func, x_filtered, y_filtered, sigma=y_err_eff, p0=p0_alp, bounds=bounds_alp, absolute_sigma=True
-    )
+        axion_func, x_filtered, y_filtered, sigma=y_err_eff, p0=p0_alp, bounds=bounds_alp, absolute_sigma=True, maxfev=100000)
     y_fit_axion = axion_func(x_filtered, *popt_axion)
     chi2_axion, dof_axion = reduced_chi_square(y_filtered, y_fit_axion, y_err_eff, len(popt_axion))
 
