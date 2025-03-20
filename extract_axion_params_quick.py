@@ -86,23 +86,36 @@ def reduced_chi_square(y_obs, y_fit, y_err, num_params):
     dof = len(y_obs) - num_params  # Degrees of freedom
     return chi2 , dof
 
-def fit_data(x, y, y_err, emin, emax, p0, E_c, k, source_name, dataset_label, useEBL=True, fitting_method="iminuit", basefunc = "cutoff"):
+def fit_data(x, y, y_err, emin, emax, p0, E_c, k, source_name, dataset_label, useEBL=True, fitting_method="no_sys_error", basefunc = "cutoff"):
     # Filter out points where y is zero
-    mask = y != 0
+    mask = (y != 0) & (np.abs(y) >= 1e-13)
     x_filtered, y_filtered, y_err_filtered, emin_f, emax_f  = x[mask], y[mask], y_err[mask], emin[mask], emax[mask]
 
     e_lowers = x_filtered - emin_f
     e_uppers = emax_f - x_filtered
-    
-    # Check if the last point was filtered out
-    if not mask[-1]:  # If the last point was removed (y[-1] == 0)
-        y_err_eff = y_err_filtered + 0.03 * y_filtered  # Only add 3% to errors
-    else:  # Otherwise, handle the normal case
-        y_err_eff0 = y_err_filtered[:-1] + 0.03 * y_filtered[:-1]
-        y_err_eff1 = y_err_filtered[-1] + 0.10 * y_filtered[-1]
-        y_err_eff = np.append(y_err_eff0, y_err_eff1)
+    if fitting_method == "with_sys_error":
+        # Case 1: Both first and last points were filtered out
+        if not mask[0] and not mask[-1]:
+            # Do something special when both endpoints are filtered out
+            # For example, add only 3% error to all points:
+            y_err_eff = y_err_filtered + 0.03 * y_filtered
 
-    y_err_eff = np.array(y_err_eff)
+        # Case 2: Either the first or the last point was filtered out (but not both)
+        elif not mask[0] or not mask[-1]:
+            # Here, we apply a 3% error to all points
+            y_err_eff = y_err_filtered + 0.03 * y_filtered
+
+        # Case 3: Neither the first nor the last point was filtered out
+        else:
+            # Apply 3% error to all points except the last, where we add 10%
+            y_err_eff0 = y_err_filtered[:-1] + 0.03 * y_filtered[:-1]
+            y_err_eff1 = y_err_filtered[-1] + 0.10 * y_filtered[-1]
+            y_err_eff = np.append(y_err_eff0, y_err_eff1)
+
+        y_err_eff = np.array(y_err_eff)
+    elif fitting_method == "no_sys_error":
+        y_err_eff = y_err_filtered
+
 
     if useEBL and basefunc == "logpar":
         with fits.open('table-4LAC-DR3-h.fits') as f:
@@ -145,27 +158,28 @@ def fit_data(x, y, y_err, emin, emax, p0, E_c, k, source_name, dataset_label, us
         bounds_alp = ([1e-12, -5.0, -5.0, -np.pi], [1e-7, 5.0, 5.0, np.pi])  # Lower and upper bounds
         p0_alp= [1e-9, 2.0, 2.0, np.pi/2]
 
-    if fitting_method == "curve_fit":
+    
         
-        popt_base, pcov_base = curve_fit(
-            base, x_filtered, y_filtered, sigma=y_err_eff, p0=p0_base, bounds=bounds_base, absolute_sigma=True, maxfev=100000)
-        y_fit_base = base(x_filtered, *popt_base)
-        chi2_base, dof_base = reduced_chi_square(y_filtered, y_fit_base, y_err_eff, len(popt_base))
+    popt_base, pcov_base = curve_fit(
+        base, x_filtered, y_filtered, sigma=y_err_eff, p0=p0_base, bounds=bounds_base, absolute_sigma=True, maxfev=100000)
+    y_fit_base = base(x_filtered, *popt_base)
+    chi2_base, dof_base = reduced_chi_square(y_filtered, y_fit_base, y_err_eff, len(popt_base))
 
-        # Extract parameter uncertainties
-        perr_base = np.sqrt(np.diag(pcov_base))
+    # Extract parameter uncertainties
+    perr_base = np.sqrt(np.diag(pcov_base))
 
-        popt_axion, pcov_axion = curve_fit(
-            axion_func, x_filtered, y_filtered, sigma=y_err_eff, p0=p0_alp, bounds=bounds_alp, absolute_sigma=True
-        )
-        y_fit_axion = axion_func(x_filtered, *popt_axion)
-        chi2_axion, dof_axion = reduced_chi_square(y_filtered, y_fit_axion, y_err_eff, len(popt_axion))
+    popt_axion, pcov_axion = curve_fit(
+        axion_func, x_filtered, y_filtered, sigma=y_err_eff, p0=p0_alp, bounds=bounds_alp, absolute_sigma=True
+    )
+    y_fit_axion = axion_func(x_filtered, *popt_axion)
+    chi2_axion, dof_axion = reduced_chi_square(y_filtered, y_fit_axion, y_err_eff, len(popt_axion))
 
-        # Extract parameter uncertainties
-        perr_axion = np.sqrt(np.diag(pcov_axion))
+    # Extract parameter uncertainties
+    perr_axion = np.sqrt(np.diag(pcov_axion))
 
-        # Compute Δχ²
-        delta_chi2 = chi2_axion - chi2_base
+    # Compute Δχ²
+    delta_chi2 = chi2_axion - chi2_base
+
     if useEBL and basefunc == "logpar":
         print("LogPar:\n")
         for param, value, error in zip(["Norm", "alpha_", "beta_"], popt_base, perr_base):
@@ -211,7 +225,7 @@ def fit_data(x, y, y_err, emin, emax, p0, E_c, k, source_name, dataset_label, us
         "y_fit_Axion": y_fit_axion,
     }
 
-def nested_fits(datasets, source_name, useEBL=True, fitting_method="iminuit"):
+def nested_fits(datasets, source_name, useEBL=True, fitting_method="no_sys_error"):
     results = {}
     # Here we assume p0_masked and ec_masked are defined globally (or accessible in this scope)
     # and have the same shape (n_mass_masked, n_g_masked) corresponding to your m, g grid.
@@ -647,7 +661,7 @@ def process_chunk(i, j_start, j_end, x, y, y_err, emin, emax, source_name, datas
         "fit_result": results_chunk[idx]
     } for idx in range(len(p0_chunk))]
 
-def nested_fits_combined(datasets, source_name, useEBL=True, fitting_method="iminuit", basefunc = "cutoff", chunk_size=10):
+def nested_fits_combined(datasets, source_name, useEBL=True, fitting_method="no_sys_error", basefunc = "cutoff", chunk_size=10):
     """
     This function processes each row (mass) of the masked (p0, Ec) grid.
     Each row is split into chunks (to minimize overhead) and processed in parallel.
@@ -684,6 +698,9 @@ def nested_fits_combined(datasets, source_name, useEBL=True, fitting_method="imi
 all_results_none = {}
 all_results_snr = {}
 all_results_lin = {}
+all_results_none_sys = {}
+all_results_snr_sys = {}
+all_results_lin_sys = {}
 with open(f'Source_ra_dec_specin.txt', 'r') as file:
                 for line in file:
                 
@@ -750,23 +767,41 @@ with open(f'Source_ra_dec_specin.txt', 'r') as file:
                     datasets_lin = {f"week": (sorted_data_lin_week['geometric_mean'], sorted_data_lin_week['flux_tot_value'], sorted_data_lin_week['flux_tot_error'], sorted_data_lin_week['emin'], sorted_data_lin_week['emax'] ),
                                     f"month": (sorted_data_lin_month['geometric_mean'], sorted_data_lin_month['flux_tot_value'], sorted_data_lin_month['flux_tot_error'], sorted_data_lin_month['emin'], sorted_data_lin_month['emax'] )}
                     print(source_name)
-
-                    results = nested_fits_combined(datasets, source_name, useEBL=True, fitting_method="curve_fit", basefunc = "cutoff", chunk_size=10)
-                    results_snr = nested_fits_combined(datasets_snr, source_name, useEBL=True, fitting_method="curve_fit", basefunc = "cutoff", chunk_size=10)
-                    results_lin= nested_fits_combined(datasets_lin, source_name, useEBL=True, fitting_method="curve_fit", basefunc = "cutoff", chunk_size=10)
+                    #No systematic errors added
+                    results = nested_fits_combined(datasets, source_name, useEBL=True, fitting_method="no_sys_error", basefunc = "logpar", chunk_size=10)
+                    results_snr = nested_fits_combined(datasets_snr, source_name, useEBL=True, fitting_method="no_sys_error", basefunc = "logpar", chunk_size=10)
+                    results_lin= nested_fits_combined(datasets_lin, source_name, useEBL=True, fitting_method="no_sys_error", basefunc = "logpar", chunk_size=10)
                     
 
                     all_results_none[source_name] = results
-                    with open("all_results_none_32_curve_fit_nodivbin_cutoff.pkl", "wb") as file:
+                    with open("all_results_none_32_logpar_no_sys_error.pkl", "wb") as file:
                         pickle.dump(all_results_none, file)
                       
                     all_results_snr[source_name] = results_snr
-                    with open("all_results_snr_32_curve_fit_nodivbin_cutoff.pkl", "wb") as file:
+                    with open("all_results_snr_32_logpar_no_sys_error.pkl", "wb") as file:
                         pickle.dump(all_results_snr, file)
 
                     all_results_lin[source_name] = results_lin
-                    with open("all_results_lin_32_curve_fit_nodivbin_cutoff.pkl", "wb") as file:
+                    with open("all_results_lin_32_logpar_no_sys_error.pkl", "wb") as file:
                         pickle.dump(all_results_lin, file)
+
+                    #With systematic errors added
+                    results_sys = nested_fits_combined(datasets, source_name, useEBL=True, fitting_method="sys_error", basefunc = "logpar", chunk_size=10)
+                    results_snr_sys = nested_fits_combined(datasets_snr, source_name, useEBL=True, fitting_method="sys_error", basefunc = "logpar", chunk_size=10)
+                    results_lin_sys= nested_fits_combined(datasets_lin, source_name, useEBL=True, fitting_method="sys_error", basefunc = "logpar", chunk_size=10)
+                    
+
+                    all_results_none_sys[source_name] = results_sys
+                    with open("all_results_none_32_logpar_sys_error.pkl", "wb") as file:
+                        pickle.dump(all_results_none_sys, file)
+                      
+                    all_results_snr_sys[source_name] = results_snr_sys
+                    with open("all_results_snr_32_logpar_sys_error.pkl", "wb") as file:
+                        pickle.dump(all_results_snr_sys, file)
+
+                    all_results_lin_sys[source_name] = results_lin_sys
+                    with open("all_results_lin_32_logpar_sys_error.pkl", "wb") as file:
+                        pickle.dump(all_results_lin_sys, file)
 
                     ''' 
                     plot_delta_chi2_heatmap(results, dataset_label="No_Filtering", png_naming =f"{source_name_cleaned}")
