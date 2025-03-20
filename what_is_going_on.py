@@ -145,7 +145,7 @@ def plot_individual_delta_chi2_heatmap_with_pdf(all_results, dataset_labels, sys
                 
                 # Set up colormap parameters.
                 vmin, vmax = int(np.min(mean_delta_chi2_grid)), int(np.max(mean_delta_chi2_grid))
-                num_colors = 60
+                num_colors = 120
                 boundaries = np.linspace(vmin, vmax, num_colors + 1)
                 cmap = plt.get_cmap('gnuplot2', num_colors)
                 norm = mcolors.BoundaryNorm(boundaries=boundaries, ncolors=num_colors, clip=True)
@@ -237,7 +237,7 @@ def plot_mean_delta_chi2_heatmap(all_results, all_results_sys, dataset_labels, p
         # Set up colormap.
         #vmin, vmax = -10, 25
         vmin, vmax = int(np.min(mean_delta_chi2_grid)), int(np.max(mean_delta_chi2_grid))
-        num_colors = 60
+        num_colors = 120
         boundaries = np.linspace(vmin, vmax, num_colors + 1)
         cmap = plt.get_cmap('gnuplot2', num_colors)
         norm = mcolors.BoundaryNorm(boundaries=boundaries, ncolors=num_colors, clip=True)
@@ -321,7 +321,7 @@ def plot_mean_delta_chi2_heatmap_limit(all_results, all_results_sys, dataset_lab
         # Set up colormap.
         #vmin, vmax = -10, 25
         vmin, vmax = -10, 25
-        num_colors = 60
+        num_colors = 120
         boundaries = np.linspace(vmin, vmax, num_colors + 1)
         cmap = plt.get_cmap('gnuplot2', num_colors)
         norm = mcolors.BoundaryNorm(boundaries=boundaries, ncolors=num_colors, clip=True)
@@ -379,6 +379,7 @@ with open("all_results_snr_32_logpar_sys_error.pkl", "rb") as file:
     all_results_snr_sys = pickle.load(file)
 
 no_filtering_sources_sys = list(all_results_none_sys.keys()) 
+'''
 plot_individual_delta_chi2_heatmap_with_pdf(all_results_none_sys, no_filtering_sources_sys, None, " ", filtering_methods="No_Filtering", pdf_filename="indv_heatmaps_no_filter_logpar_sys_error.pdf")
 plot_individual_delta_chi2_heatmap_with_pdf(all_results_lin_sys, no_filtering_sources_sys, None, " ", filtering_methods="week", pdf_filename="indv_heatmaps_week_logpar_sys_error.pdf")
 plot_individual_delta_chi2_heatmap_with_pdf(all_results_lin_sys, no_filtering_sources_sys, None, " ", filtering_methods="month", pdf_filename="indv_heatmaps_month_logpar_sys_error.pdf")
@@ -386,6 +387,7 @@ plot_individual_delta_chi2_heatmap_with_pdf(all_results_lin_sys, no_filtering_so
 plot_individual_delta_chi2_heatmap_with_pdf(all_results_snr_sys, no_filtering_sources_sys, None, " ", filtering_methods="snr_3", pdf_filename="indv_heatmaps_snr3_logpar_sys_error.pdf")
 plot_individual_delta_chi2_heatmap_with_pdf(all_results_snr_sys, no_filtering_sources_sys, None, " ", filtering_methods="snr_5", pdf_filename="indv_heatmaps_snr5_logpar_sys_error.pdf")
 plot_individual_delta_chi2_heatmap_with_pdf(all_results_snr_sys, no_filtering_sources_sys, None, " ", filtering_methods="snr_10", pdf_filename="indv_heatmaps_snr10_logpar_sys_error.pdf")
+'''
 print('Plotting mean chi-squared heatmap!')
 
 no_filtering_grid_sys = compute_mean_delta_chi2_grid(
@@ -421,12 +423,14 @@ with open("all_results_snr_32_logpar_no_sys_error.pkl", "rb") as file:
     all_results_snr = pickle.load(file)
 
 no_filtering_sources = list(all_results_none.keys())
+'''
 plot_individual_delta_chi2_heatmap_with_pdf(all_results_none, no_filtering_sources, None, " ", filtering_methods="No_Filtering", pdf_filename="indv_heatmaps_no_filter_logpar_no_sys_error.pdf")
 plot_individual_delta_chi2_heatmap_with_pdf(all_results_lin, no_filtering_sources, None, " ", filtering_methods="week", pdf_filename="indv_heatmaps_week_logpar_no_sys_error.pdf")
 plot_individual_delta_chi2_heatmap_with_pdf(all_results_lin, no_filtering_sources, None, " ", filtering_methods="month", pdf_filename="indv_heatmaps_month_logpar_no_sys_error.pdf")
 plot_individual_delta_chi2_heatmap_with_pdf(all_results_snr, no_filtering_sources, None, " ", filtering_methods="snr_3", pdf_filename="indv_heatmaps_snr3_logpar_no_sys_error.pdf")
 plot_individual_delta_chi2_heatmap_with_pdf(all_results_snr, no_filtering_sources, None, " ", filtering_methods="snr_5", pdf_filename="indv_heatmaps_snr5_logpar_no_sys_error.pdf")
 plot_individual_delta_chi2_heatmap_with_pdf(all_results_snr, no_filtering_sources, None, " ", filtering_methods="snr_10", pdf_filename="indv_heatmaps_snr10_logpar_no_sys_error.pdf")
+''''
 print('Plotting mean chi-squared heatmap!') # e.g. ["No_Filtering"] or sometimes multiple sources
 
 no_filtering_grid = compute_mean_delta_chi2_grid(
