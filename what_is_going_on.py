@@ -132,13 +132,14 @@ def plot_individual_delta_chi2_heatmap_with_pdf(all_results, dataset_labels, sys
                     p0_masked=p0_masked,
                     ec_masked=ec_masked
                 )
-                mean_systematic_results = compute_mean_delta_chi2_grid(
-                    all_results=systematic_results,  
-                    dataset_labels=dataset_labels,
-                    filter_label=filter_label,
-                    p0_masked=p0_masked,
-                    ec_masked=ec_masked
-                )
+                if (systematic_results != None):
+                    mean_systematic_results = compute_mean_delta_chi2_grid(
+                        all_results=systematic_results,  
+                        dataset_labels=dataset_labels,
+                        filter_label=filter_label,
+                        p0_masked=p0_masked,
+                        ec_masked=ec_masked
+                    )
                                 
                 print(f"Source: {source_name} | Filter: {filter_label} | min: {np.min(mean_delta_chi2_grid)}, max: {np.max(mean_delta_chi2_grid)}")
                 
@@ -155,9 +156,10 @@ def plot_individual_delta_chi2_heatmap_with_pdf(all_results, dataset_labels, sys
                 heatmap = plt.pcolormesh(ma_mesh / 1e-9, g_mesh, mean_delta_chi2_grid,
                                          cmap=cmap, norm=norm, shading='auto')
                 
-                if np.any(mean_systematic_results >= 6.2):
-                    plt.contour(ma_mesh / 1e-9, g_mesh, mean_systematic_results,
-                                    levels=[6.2], colors='#3690c0', linewidths=2)
+                if (systematic_results != None):
+                    if np.any(mean_systematic_results >= 6.2):
+                        plt.contour(ma_mesh / 1e-9, g_mesh, mean_systematic_results,
+                                        levels=[6.2], colors='#3690c0', linewidths=2)
                 # Overlay no_filtering_grid contour if provided and if we aren't plotting "No_Filtering" itself.
                 if (no_filtering_grid is not None) and (filter_label != "No_Filtering"):
                     if np.any(no_filtering_grid <= -6.2):
