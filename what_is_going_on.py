@@ -94,7 +94,7 @@ def compute_mean_delta_chi2_grid(all_results, dataset_labels, filter_label,
     print("Maximum sum Δχ²:", np.nanmax(sum_grid))
     return sum_grid
 
-def plot_individual_delta_chi2_heatmap_with_pdf(all_results, dataset_labels, png_naming, filtering_methods="No_Filtering", pdf_filename="heatmaps.pdf", no_filtering_grid=None):
+def plot_individual_delta_chi2_heatmap_with_pdf(all_results, dataset_labels, systematic_grid=None ,png_naming, filtering_methods="No_Filtering", pdf_filename="heatmaps.pdf", no_filtering_grid=None):
     """
     Generates individual Δχ² heatmaps for each source for the specified filtering method(s) in (mₐ, gₐ) space,
     saves each as a PNG file, and collects all plots into a single PDF.
@@ -148,6 +148,10 @@ def plot_individual_delta_chi2_heatmap_with_pdf(all_results, dataset_labels, png
                 heatmap = plt.pcolormesh(ma_mesh / 1e-9, g_mesh, mean_delta_chi2_grid,
                                          cmap=cmap, norm=norm, shading='auto')
                 
+                if (systematic_grid is not None):
+                    if np.any(systematic_grid >= 6.2):
+                        plt.contour(ma_mesh / 1e-9, g_mesh, systematic_grid,
+                                    levels=[6.2], colors='#3690c0', linewidths=2)
                 # Overlay no_filtering_grid contour if provided and if we aren't plotting "No_Filtering" itself.
                 if (no_filtering_grid is not None) and (filter_label != "No_Filtering"):
                     if np.any(no_filtering_grid <= -6.2):
@@ -190,7 +194,7 @@ def plot_individual_delta_chi2_heatmap_with_pdf(all_results, dataset_labels, png
     print(f"All plots have been saved to the PDF: {pdf_filename}")
     return
 
-def plot_mean_delta_chi2_heatmap(all_results, dataset_labels, png_naming, no_filtering_grid=None, remove_source_label=None):
+def plot_mean_delta_chi2_heatmap(all_results, all_results_sys, dataset_labels, png_naming, no_filtering_grid=None, remove_source_label=None):
     """
     Generates mean Δχ² heatmaps for each filtering category in two spaces:
       (E_c, p₀) and (mₐ, gₐ).
@@ -226,7 +230,13 @@ def plot_mean_delta_chi2_heatmap(all_results, dataset_labels, png_naming, no_fil
             p0_masked=p0_masked,
             ec_masked=ec_masked
         )
-
+        systematic_grid = compute_mean_delta_chi2_grid(
+            all_results=all_results_sys,
+            dataset_labels=dataset_labels,
+            filter_label=filter_label,
+            p0_masked=p0_masked,
+            ec_masked=ec_masked
+        )
         print(np.min(mean_delta_chi2_grid))
         print(np.max(mean_delta_chi2_grid))
         # Set up colormap.
@@ -243,20 +253,26 @@ def plot_mean_delta_chi2_heatmap(all_results, dataset_labels, png_naming, no_fil
         heatmap = plt.pcolormesh(ma_mesh / 1e-9, g_mesh, mean_delta_chi2_grid,
                                  cmap=cmap, norm=norm, shading='auto')
 
-        # Overlay No_Filtering contour if provided and if we aren't plotting No_Filtering itself.
+
+        if np.any(systematic_grid >= 6.2):
+            plt.contour(ma_mesh / 1e-9, g_mesh, systematic_grid,
+                                    levels=[6.2], colors='#3690c0', linewidths=2)
+            
         if (no_filtering_grid is not None) and (filter_label != "No_Filtering"):
             if np.any(no_filtering_grid <= -6.2):
                 plt.contour(ma_mesh / 1e-9, g_mesh, no_filtering_grid,
                             levels=[-6.2], colors='#f16913', linewidths=2)
+                
         if np.any(mean_delta_chi2_grid <= -6.2):
             plt.contour(ma_mesh / 1e-9, g_mesh, mean_delta_chi2_grid,
                         levels=[-6.2], colors='#78c679', linewidths=2)
+            
         if np.any(mean_delta_chi2_grid >= 6.2):
             plt.contour(ma_mesh / 1e-9, g_mesh, mean_delta_chi2_grid,
                         levels=[6.2], colors='red', linewidths=2)
 
         cbar = plt.colorbar(heatmap, ticks=np.linspace(vmin, vmax, 11))
-        cbar.set_label(r'$\langle \Delta \chi^2 \rangle$', fontsize=15)
+        cbar.set_label(r'$ \Delta \chi^2 $', fontsize=15)
         plt.xlabel(r'$m_a$ [neV]', fontsize=15)
         plt.ylabel(r'$g_{a\gamma}$ [GeV$^{-1}$]', fontsize=15)
         plt.title(f'Mean $\Delta \chi^2$ Heatmap for {filter_label} in ($m_a$, $g_{{a\gamma}}$) Space', fontsize=15)
@@ -322,12 +338,57 @@ with open("all_results_lin_32_logpar_no_sys_error.pkl", "rb") as file:
 with open("all_results_snr_32_logpar_no_sys_error.pkl", "rb") as file:
     all_results_snr = pickle.load(file)
 
-no_filtering_sources = list(all_results_none.keys()) 
-plot_individual_delta_chi2_heatmap_with_pdf(all_results_none, no_filtering_sources, " ", filtering_methods="No_Filtering", pdf_filename="indv_heatmaps_no_filter_logpar_no_sys_error.pdf")
-plot_individual_delta_chi2_heatmap_with_pdf(all_results_lin, no_filtering_sources, " ", filtering_methods="month", pdf_filename="indv_heatmaps_month_logpar_no_sys_error.pdf")
+no_filtering_sources = list(all_results_none.keys())
+no_filtering_sys_grid = compute_mean_delta_chi2_grid(
+    all_results=all_results_none_sys,
+    dataset_labels=no_filtering_sources,
+    filter_label="No_Filtering",
+    p0_masked=p0_masked,
+    ec_masked=ec_masked
+) 
+lin_month_sys_grid = compute_mean_delta_chi2_grid(
+    all_results=all_results_lin_sys,
+    dataset_labels=no_filtering_sources,
+    filter_label="month",
+    p0_masked=p0_masked,
+    ec_masked=ec_masked
+) 
+lin_week_sys_grid = compute_mean_delta_chi2_grid(
+    all_results=all_results_lin_sys,
+    dataset_labels=no_filtering_sources,
+    filter_label="week",
+    p0_masked=p0_masked,
+    ec_masked=ec_masked
+) 
+snr_3_sys_grid = compute_mean_delta_chi2_grid(
+    all_results=all_results_snr_sys,
+    dataset_labels=no_filtering_sources,
+    filter_label="snr_3",
+    p0_masked=p0_masked,
+    ec_masked=ec_masked
+) 
+snr_5_sys_grid = compute_mean_delta_chi2_grid(
+    all_results=all_results_snr_sys,
+    dataset_labels=no_filtering_sources,
+    filter_label="snr_5",
+    p0_masked=p0_masked,
+    ec_masked=ec_masked)
 
-print('Plotting mean chi-squared heatmap!')
-no_filtering_sources = list(all_results_none.keys())  # e.g. ["No_Filtering"] or sometimes multiple sources
+snr_10_sys_grid = compute_mean_delta_chi2_grid(
+    all_results=all_results_snr_sys,
+    dataset_labels=no_filtering_sources,
+    filter_label="snr_10",
+    p0_masked=p0_masked,
+    ec_masked=ec_masked)
+
+
+no_filtering_sources = list(all_results_none.keys()) 
+plot_individual_delta_chi2_heatmap_with_pdf(all_results_none, no_filtering_sources, no_filtering_sys_grid, " ", filtering_methods="No_Filtering", pdf_filename="indv_heatmaps_no_filter_logpar_no_sys_error.pdf")
+plot_individual_delta_chi2_heatmap_with_pdf(all_results_lin, no_filtering_sources, lin_month_sys_grid, " ", filtering_methods="month", pdf_filename="indv_heatmaps_month_logpar_no_sys_error.pdf")
+plot_individual_delta_chi2_heatmap_with_pdf(all_results_snr, no_filtering_sources, snr_3_sys_grid, " ", filtering_methods="snr_3", pdf_filename="indv_heatmaps_snr3_logpar_no_sys_error.pdf")
+plot_individual_delta_chi2_heatmap_with_pdf(all_results_snr, no_filtering_sources, snr_5_sys_grid, " ", filtering_methods="snr_5", pdf_filename="indv_heatmaps_snr5_logpar_no_sys_error.pdf")
+plot_individual_delta_chi2_heatmap_with_pdf(all_results_snr, no_filtering_sources, snr_10_sys_grid, " ", filtering_methods="snr_10", pdf_filename="indv_heatmaps_snr10_logpar_no_sys_error.pdf")
+print('Plotting mean chi-squared heatmap!') # e.g. ["No_Filtering"] or sometimes multiple sources
 
 no_filtering_grid = compute_mean_delta_chi2_grid(
     all_results=all_results_none,
@@ -337,7 +398,7 @@ no_filtering_grid = compute_mean_delta_chi2_grid(
     ec_masked=ec_masked
 ) 
 
-plot_mean_delta_chi2_heatmap(all_results_none, list(all_results_none.keys()), "mean", remove_source_label=None)
+plot_mean_delta_chi2_heatmap(all_results_none, list(all_results_none.keys()), "mean",  remove_source_label=None)
 # For LIN filtering ("week" and "month")
 plot_mean_delta_chi2_heatmap(all_results_lin, list(all_results_lin.keys()), "mean_", no_filtering_grid=no_filtering_grid, remove_source_label=None)
 
