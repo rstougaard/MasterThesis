@@ -430,7 +430,7 @@ plot_individual_delta_chi2_heatmap_with_pdf(all_results_lin, no_filtering_source
 plot_individual_delta_chi2_heatmap_with_pdf(all_results_snr, no_filtering_sources, None, " ", filtering_methods="snr_3", pdf_filename="indv_heatmaps_snr3_logpar_no_sys_error.pdf")
 plot_individual_delta_chi2_heatmap_with_pdf(all_results_snr, no_filtering_sources, None, " ", filtering_methods="snr_5", pdf_filename="indv_heatmaps_snr5_logpar_no_sys_error.pdf")
 plot_individual_delta_chi2_heatmap_with_pdf(all_results_snr, no_filtering_sources, None, " ", filtering_methods="snr_10", pdf_filename="indv_heatmaps_snr10_logpar_no_sys_error.pdf")
-''''
+'''
 print('Plotting mean chi-squared heatmap!') # e.g. ["No_Filtering"] or sometimes multiple sources
 
 no_filtering_grid = compute_mean_delta_chi2_grid(
