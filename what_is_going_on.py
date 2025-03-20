@@ -94,7 +94,7 @@ def compute_mean_delta_chi2_grid(all_results, dataset_labels, filter_label,
     print("Maximum sum Δχ²:", np.nanmax(sum_grid))
     return sum_grid
 
-def plot_individual_delta_chi2_heatmap_with_pdf(all_results, dataset_labels, systematic_grid=None ,png_naming, filtering_methods="No_Filtering", pdf_filename="heatmaps.pdf", no_filtering_grid=None):
+def plot_individual_delta_chi2_heatmap_with_pdf(all_results, dataset_labels, systematic_grid=None ,png_naming="", filtering_methods="No_Filtering", pdf_filename="heatmaps.pdf", no_filtering_grid=None):
     """
     Generates individual Δχ² heatmaps for each source for the specified filtering method(s) in (mₐ, gₐ) space,
     saves each as a PNG file, and collects all plots into a single PDF.
