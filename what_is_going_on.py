@@ -238,13 +238,14 @@ def plot_mean_delta_chi2_heatmap(all_results, all_results_sys, dataset_labels, p
             p0_masked=p0_masked,
             ec_masked=ec_masked
         )
-        systematic_grid = compute_mean_delta_chi2_grid(
-            all_results=all_results_sys,
-            dataset_labels=dataset_labels,
-            filter_label=filter_label,
-            p0_masked=p0_masked,
-            ec_masked=ec_masked
-        )
+        if (all_results_sys != None):
+            systematic_grid = compute_mean_delta_chi2_grid(
+                all_results=all_results_sys,
+                dataset_labels=dataset_labels,
+                filter_label=filter_label,
+                p0_masked=p0_masked,
+                ec_masked=ec_masked
+            )
         print(np.min(mean_delta_chi2_grid))
         print(np.max(mean_delta_chi2_grid))
         # Set up colormap.
@@ -261,10 +262,10 @@ def plot_mean_delta_chi2_heatmap(all_results, all_results_sys, dataset_labels, p
         heatmap = plt.pcolormesh(ma_mesh / 1e-9, g_mesh, mean_delta_chi2_grid,
                                  cmap=cmap, norm=norm, shading='auto')
 
-
-        if np.any(systematic_grid >= 6.2):
-            plt.contour(ma_mesh / 1e-9, g_mesh, systematic_grid,
-                                    levels=[6.2], colors='#3690c0', linewidths=2)
+        if (all_results_sys != None):
+            if np.any(systematic_grid >= 6.2):
+                plt.contour(ma_mesh / 1e-9, g_mesh, systematic_grid,
+                                        levels=[6.2], colors='#3690c0', linewidths=2)
             
         if (no_filtering_grid is not None) and (filter_label != "No_Filtering"):
             if np.any(no_filtering_grid <= -6.2):
