@@ -91,23 +91,18 @@ def fit_data(x, y, y_err, emin, emax, p0, E_c, k, source_name, dataset_label, us
     mask = (y != 0) & (np.abs(y) >= 1e-13)
     x_filtered, y_filtered, y_err_filtered, emin_f, emax_f  = x[mask], y[mask], y_err[mask], emin[mask], emax[mask]
 
-    e_lowers = x_filtered - emin_f
-    e_uppers = emax_f - x_filtered
-    if fitting_method == "with_sys_error":
+    if fitting_method in ["with_sys_error", "sys_error"]:
         # Case 1: Both first and last points were filtered out
         if not mask[0] and not mask[-1]:
             # Do something special when both endpoints are filtered out
-            # For example, add only 3% error to all points:
             y_err_eff = y_err_filtered + 0.03 * y_filtered
 
         # Case 2: Either the first or the last point was filtered out (but not both)
         elif not mask[0] or not mask[-1]:
-            # Here, we apply a 3% error to all points
             y_err_eff = y_err_filtered + 0.03 * y_filtered
 
         # Case 3: Neither the first nor the last point was filtered out
         else:
-            # Apply 3% error to all points except the last, where we add 10%
             y_err_eff0 = y_err_filtered[:-1] + 0.03 * y_filtered[:-1]
             y_err_eff1 = y_err_filtered[-1] + 0.10 * y_filtered[-1]
             y_err_eff = np.append(y_err_eff0, y_err_eff1)
@@ -115,6 +110,8 @@ def fit_data(x, y, y_err, emin, emax, p0, E_c, k, source_name, dataset_label, us
         y_err_eff = np.array(y_err_eff)
     elif fitting_method == "no_sys_error":
         y_err_eff = y_err_filtered
+    else:
+        raise ValueError(f"Unknown fitting_method: {fitting_method}")
 
 
     if useEBL and basefunc == "logpar":
