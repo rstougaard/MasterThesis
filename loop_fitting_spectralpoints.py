@@ -7,9 +7,13 @@ from iminuit.cost import LeastSquares
 from iminuit import Minuit
 from matplotlib.backends.backend_pdf import PdfPages
 
+
 def simple_plot(dataset_none, dataset_snr, colors_snr, dataset_lin, colors_lin, source, png_naming=""):
     # Create a new figure
     fig = plt.figure(figsize=(8, 10))
+    plt.rcParams["font.family"] = "serif"
+    plt.rcParams["mathtext.fontset"] = "cm"
+    
 
     # Top subplot: Spectrum - SNR Ratios
     ax1 = fig.add_subplot(2, 1, 1)
@@ -77,7 +81,7 @@ def simple_plot(dataset_none, dataset_snr, colors_snr, dataset_lin, colors_lin, 
 
     # Optionally save the figure as a PNG
     #png_name = f'fit_results/speactral_points/{dataset_label}{png_naming}.png'
-    #fig.savefig("./hpc_results/NGC1275/spectral_points.png", dpi=600)
+    fig.savefig("./hpc_results/NGC1275/spectral_points.png", dpi=600)
 
     return fig
 
@@ -375,8 +379,8 @@ def fit_data(method, datasets, png_naming="", residual_colors=None):
         print(f"  Δχ² (Axion - LogPar): {result['DeltaChi2']:.2f}\n")
 
     return results
-'''
-source_name = "4FGL J0319.8+4130"
+
+source_name = "4FGL J1116.6+2915"
 
 source_name_cleaned = (
     source_name.replace(" ", "")
@@ -396,29 +400,43 @@ bin_data_lin = f_bin_lin[1].data
 # Sort the data by the 'emin' column
 sorted_indices = np.argsort(bin_data['emin'])  # Get sorted indices
 sorted_data_none = bin_data[sorted_indices]  # Reorder the data using sorted indices
-#print(sorted_data_none)
+print("No filtering")
+print(sorted_data_none)
+print()
 
 snr3 = bin_data_snr[bin_data_snr['loop_item'] == '3']
 sorted_indices_snr3 = np.argsort(snr3['emin'])  # Get sorted indices
 sorted_data_snr3 = snr3[sorted_indices_snr3]
-#print(sorted_data_snr3)
+print("SNR 3")
+print(sorted_data_snr3)
+print()
 
 snr5 = bin_data_snr[bin_data_snr['loop_item'] == '5']
 sorted_indices_snr5 = np.argsort(snr5['emin'])  # Get sorted indices
 sorted_data_snr5 = snr5[sorted_indices_snr5]
-#print(sorted_data_snr5)
+print("SNR 5")
+print(sorted_data_snr5)
+print()
 
 snr10 = bin_data_snr[bin_data_snr['loop_item'] == '10']
 sorted_indices_snr10 = np.argsort(snr10['emin'])  # Get sorted indices
 sorted_data_snr10 = snr10[sorted_indices_snr10]
-#print(sorted_data_snr10)
+print("SNR 10")
+print(sorted_data_snr10)
+print()
 
 week = bin_data_lin[bin_data_lin['loop_item'] == 'week']
 sorted_indices_lin_week = np.argsort(week['emin'])  # Get sorted indices
 sorted_data_lin_week = week[sorted_indices_lin_week]
+print("week")
+print(sorted_data_lin_week)
+print()
 month = bin_data_lin[bin_data_lin['loop_item'] == 'month']
 sorted_indices_lin_month = np.argsort(month['emin'])  # Get sorted indices
 sorted_data_lin_month = month[sorted_indices_lin_month]
+print("month")
+print(sorted_data_lin_month)
+print()
 
 colors_snr = ['blue', 'orange', 'green']
 colors_lin = ['purple', 'brown']
@@ -512,7 +530,7 @@ with PdfPages('./fit_results/spetral_points.pdf') as pdf:
                         pdf.savefig(fig)
                         plt.close(fig)
 
-'''  
+ 
                 for when I need example walk throug of NGC 1275
                     print()
                     print(f"CURVE FIT for {source_name}")
