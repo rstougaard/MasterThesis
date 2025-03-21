@@ -251,20 +251,22 @@ def plot_mean_delta_chi2_heatmap(all_results, all_results_sys, dataset_labels, p
         if (all_results_sys != None):
             if np.any(systematic_grid >= 6.2):
                 plt.contour(ma_mesh / 1e-9, g_mesh, systematic_grid,
-                                        levels=[6.2], colors='#3690c0', linewidths=2)
+                                        levels=[6.2], colors='#069AF3', linewidths=2, linestyles='solid')
+                
+        if np.any(mean_delta_chi2_grid >= 6.2):
+            plt.contour(ma_mesh / 1e-9, g_mesh, mean_delta_chi2_grid,
+                        levels=[6.2], colors='#EF4026', linewidths=2, linestyles='solid')
             
         if (no_filtering_grid is not None) and (filter_label != "No_Filtering"):
             if np.any(no_filtering_grid <= -6.2):
                 plt.contour(ma_mesh / 1e-9, g_mesh, no_filtering_grid,
-                            levels=[-6.2], colors='#f16913', linewidths=2)
+                            levels=[-6.2], colors='black', linewidths=2, linestyles='dashed')
                 
         if np.any(mean_delta_chi2_grid <= -6.2):
             plt.contour(ma_mesh / 1e-9, g_mesh, mean_delta_chi2_grid,
-                        levels=[-6.2], colors='#78c679', linewidths=2)
+                        levels=[-6.2], colors='#00FF00', linewidths=2, linestyles='dashed')
             
-        if np.any(mean_delta_chi2_grid >= 6.2):
-            plt.contour(ma_mesh / 1e-9, g_mesh, mean_delta_chi2_grid,
-                        levels=[6.2], colors='red', linewidths=2)
+       
 
         cbar = plt.colorbar(heatmap, ticks=np.linspace(vmin, vmax, 11))
         cbar.set_label(r'$ \Delta \chi^2 $', fontsize=15)
@@ -342,13 +344,14 @@ def plot_mean_delta_chi2_heatmap_limit(all_results, all_results_sys, dataset_lab
                 plt.contour(ma_mesh / 1e-9, g_mesh, no_filtering_grid,
                             levels=[-6.2], colors='#f16913', linewidths=2)
                 
-        if np.any(mean_delta_chi2_grid <= -6.2):
-            plt.contour(ma_mesh / 1e-9, g_mesh, mean_delta_chi2_grid,
-                        levels=[-6.2], colors='#78c679', linewidths=2)
             
         if np.any(mean_delta_chi2_grid >= 6.2):
             plt.contour(ma_mesh / 1e-9, g_mesh, mean_delta_chi2_grid,
                         levels=[6.2], colors='red', linewidths=2)
+            
+        if np.any(mean_delta_chi2_grid <= -6.2):
+            plt.contour(ma_mesh / 1e-9, g_mesh, mean_delta_chi2_grid,
+                        levels=[-6.2], colors='#78c679', linewidths=2)
 
         cbar = plt.colorbar(heatmap, ticks=np.linspace(vmin, vmax, 11))
         cbar.set_label(r'$ \Delta \chi^2 $', fontsize=15)
