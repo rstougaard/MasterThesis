@@ -44,7 +44,7 @@ mass_unique = axion_data[::n_g, 0]     # length = n_mass
 
 # Define your desired start and stop values
 m_start_val = 3e-10
-g_start_val = 7e-13
+g_start_val = 1e-13 #1e-13
 m_stop_val  = 2e-8
 g_stop_val  = 1e-11
 
@@ -92,16 +92,8 @@ def fit_data(x, y, y_err, emin, emax, p0, E_c, k, source_name, dataset_label, us
     x_filtered, y_filtered, y_err_filtered, emin_f, emax_f  = x[mask], y[mask], y_err[mask], emin[mask], emax[mask]
 
     if fitting_method in ["with_sys_error", "sys_error"]:
-        # Case 1: Both first and last points were filtered out
-        if not mask[0] and not mask[-1]:
-            # Do something special when both endpoints are filtered out
+        if not mask[-1]:
             y_err_eff = y_err_filtered + 0.03 * y_filtered
-
-        # Case 2: Either the first or the last point was filtered out (but not both)
-        elif not mask[0] or not mask[-1]:
-            y_err_eff = y_err_filtered + 0.03 * y_filtered
-
-        # Case 3: Neither the first nor the last point was filtered out
         else:
             y_err_eff0 = y_err_filtered[:-1] + 0.03 * y_filtered[:-1]
             y_err_eff1 = y_err_filtered[-1] + 0.10 * y_filtered[-1]
@@ -764,39 +756,39 @@ with open(f'Source_ra_dec_specin.txt', 'r') as file:
                                     f"month": (sorted_data_lin_month['geometric_mean'], sorted_data_lin_month['flux_tot_value'], sorted_data_lin_month['flux_tot_error'], sorted_data_lin_month['emin'], sorted_data_lin_month['emax'] )}
                     print(source_name)
                     #No systematic errors added
-                    results = nested_fits_combined(datasets, source_name, useEBL=True, fitting_method="no_sys_error", basefunc = "logpar", chunk_size=10)
-                    results_snr = nested_fits_combined(datasets_snr, source_name, useEBL=True, fitting_method="no_sys_error", basefunc = "logpar", chunk_size=10)
-                    results_lin= nested_fits_combined(datasets_lin, source_name, useEBL=True, fitting_method="no_sys_error", basefunc = "logpar", chunk_size=10)
+                    results = nested_fits_combined(datasets, source_name, useEBL=True, fitting_method="no_sys_error", basefunc = "logpar", chunk_size=30)
+                    results_snr = nested_fits_combined(datasets_snr, source_name, useEBL=True, fitting_method="no_sys_error", basefunc = "logpar", chunk_size=30)
+                    results_lin= nested_fits_combined(datasets_lin, source_name, useEBL=True, fitting_method="no_sys_error", basefunc = "logpar", chunk_size=30)
                     
 
                     all_results_none[source_name] = results
-                    with open("all_results_none_32_logpar_no_sys_error.pkl", "wb") as file:
+                    with open("all_results_none_31_logpar_no_sys_error.pkl", "wb") as file:
                         pickle.dump(all_results_none, file)
                       
                     all_results_snr[source_name] = results_snr
-                    with open("all_results_snr_32_logpar_no_sys_error.pkl", "wb") as file:
+                    with open("all_results_snr_31_logpar_no_sys_error.pkl", "wb") as file:
                         pickle.dump(all_results_snr, file)
 
                     all_results_lin[source_name] = results_lin
-                    with open("all_results_lin_32_logpar_no_sys_error.pkl", "wb") as file:
+                    with open("all_results_lin_31_logpar_no_sys_error.pkl", "wb") as file:
                         pickle.dump(all_results_lin, file)
 
                     #With systematic errors added
-                    results_sys = nested_fits_combined(datasets, source_name, useEBL=True, fitting_method="sys_error", basefunc = "logpar", chunk_size=10)
-                    results_snr_sys = nested_fits_combined(datasets_snr, source_name, useEBL=True, fitting_method="sys_error", basefunc = "logpar", chunk_size=10)
-                    results_lin_sys= nested_fits_combined(datasets_lin, source_name, useEBL=True, fitting_method="sys_error", basefunc = "logpar", chunk_size=10)
+                    results_sys = nested_fits_combined(datasets, source_name, useEBL=True, fitting_method="sys_error", basefunc = "logpar", chunk_size=30)
+                    results_snr_sys = nested_fits_combined(datasets_snr, source_name, useEBL=True, fitting_method="sys_error", basefunc = "logpar", chunk_size=30)
+                    results_lin_sys= nested_fits_combined(datasets_lin, source_name, useEBL=True, fitting_method="sys_error", basefunc = "logpar", chunk_size=30)
                     
 
                     all_results_none_sys[source_name] = results_sys
-                    with open("all_results_none_32_logpar_sys_error.pkl", "wb") as file:
+                    with open("all_results_none_31_logpar_sys_error.pkl", "wb") as file:
                         pickle.dump(all_results_none_sys, file)
                       
                     all_results_snr_sys[source_name] = results_snr_sys
-                    with open("all_results_snr_32_logpar_sys_error.pkl", "wb") as file:
+                    with open("all_results_snr_31_logpar_sys_error.pkl", "wb") as file:
                         pickle.dump(all_results_snr_sys, file)
 
                     all_results_lin_sys[source_name] = results_lin_sys
-                    with open("all_results_lin_32_logpar_sys_error.pkl", "wb") as file:
+                    with open("all_results_lin_31_logpar_sys_error.pkl", "wb") as file:
                         pickle.dump(all_results_lin_sys, file)
 
                     ''' 
