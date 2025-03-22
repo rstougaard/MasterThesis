@@ -358,7 +358,7 @@ def plot_mean_delta_chi2_heatmap_sys_base(all_results, all_results_sys, dataset_
             p0_masked=p0_masked,
             ec_masked=ec_masked
         )
-        if (all_results_sys != None):
+        if (all_results != None):
             systematic_grid = compute_mean_delta_chi2_grid(
                 all_results=all_results,
                 dataset_labels=dataset_labels,
@@ -389,7 +389,7 @@ def plot_mean_delta_chi2_heatmap_sys_base(all_results, all_results_sys, dataset_
                 'label': 'No systematics',
                 # For this group we use solid lines for both +6.2 and -6.2
                 'linestyle_pos': 'solid',
-                'linestyle_neg': 'solid'
+                'linestyle_neg': 'dashed'
             })
 
         # Group 2: No systematics (paired: solid for +6.2, dashed for –6.2)
@@ -417,19 +417,9 @@ def plot_mean_delta_chi2_heatmap_sys_base(all_results, all_results_sys, dataset_
                 'linestyle_neg': 'dashed'
             })
 
-        # --- Now plot each group ---
         for group in contour_groups:
             for grid in group['grids']:
-                # Plot positive level: +6.2
-                if np.any(grid >= 6.2):
-                    plt.contour(
-                        ma_mesh / 1e-9, g_mesh, grid,
-                        levels=[6.2],
-                        colors=group['color'],
-                        linewidths=2,
-                        linestyles=group['linestyle_pos']
-                    )
-                # Plot negative level: -6.2
+                # Always plot the negative (–6.2) level if it exists
                 if np.any(grid <= -6.2):
                     plt.contour(
                         ma_mesh / 1e-9, g_mesh, grid,
@@ -437,6 +427,16 @@ def plot_mean_delta_chi2_heatmap_sys_base(all_results, all_results_sys, dataset_
                         colors=group['color'],
                         linewidths=2,
                         linestyles=group['linestyle_neg']
+                    )
+
+                # Plot the positive (+6.2) level only if this is NOT the “No filtering” group
+                if group['label'] != 'No filtering' and np.any(grid >= 6.2):
+                    plt.contour(
+                        ma_mesh / 1e-9, g_mesh, grid,
+                        levels=[6.2],
+                        colors=group['color'],
+                        linewidths=2,
+                        linestyles=group['linestyle_pos']
                     )
 
         # --- Create a legend with one entry per group ---
