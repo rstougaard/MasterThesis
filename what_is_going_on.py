@@ -379,72 +379,67 @@ def plot_mean_delta_chi2_heatmap_sys_base(all_results, all_results_sys, dataset_
         plt.figure(figsize=(10, 6))
         heatmap = plt.pcolormesh(ma_mesh / 1e-9, g_mesh, mean_delta_chi2_grid,
                                  cmap=cmap, norm=norm, shading='auto')
-        contour_groups = []
+        plot_specs = []
 
-        # Group 1: With systematics (both positive and negative levels drawn solid)
-        if systematic_grid is not None:
-            contour_groups.append({
-                'grids': [systematic_grid],
-                'color': '#069AF3',
-                'label': 'No systematics',
-                # For this group we use solid lines for both +6.2 and -6.2
-                'linestyle_pos': 'solid',
-                'linestyle_neg': 'dashed'
-            })
-
-        # Group 2: No systematics (paired: solid for +6.2, dashed for –6.2)
+        # — Mean (filtered) —
         if mean_delta_chi2_grid is not None:
-            contour_groups.append({
-                'grids': [mean_delta_chi2_grid],
-                'color': '#EF4026',
+            plot_specs.append({
+                'grid': mean_delta_chi2_grid,
                 'label': 'With systematics',
-                'linestyle_pos': 'solid',
-                'linestyle_neg': 'dashed'
+                'color_pos': 'red',   'linestyle_pos': 'solid',
+                'color_neg': 'blue',  'linestyle_neg': 'solid'
             })
 
-        # Group 3: No filtering (if either grid is provided, combine them)
-        no_filtering_grids = []
+        # — Mean (no filtering) —
         if no_filtering_grid is not None:
-            no_filtering_grids.append(no_filtering_grid)
-        if no_filtering_grid_other is not None:
-            no_filtering_grids.append(no_filtering_grid_other)
-        if no_filtering_grids:
-            contour_groups.append({
-                'grids': no_filtering_grids,
-                'color': 'black',
+            plot_specs.append({
+                'grid': no_filtering_grid,
                 'label': 'No filtering',
-                'linestyle_pos': 'solid',
-                'linestyle_neg': 'dashed'
+                'color_neg': 'white', 'linestyle_neg': 'solid'
             })
 
-        for group in contour_groups:
-            for grid in group['grids']:
-                # Always plot the negative (–6.2) level if it exists
-                if np.any(grid <= -6.2):
-                    plt.contour(
-                        ma_mesh / 1e-9, g_mesh, grid,
-                        levels=[-6.2],
-                        colors=group['color'],
-                        linewidths=2,
-                        linestyles=group['linestyle_neg']
-                    )
+        # — Systematics (filtered) —
+        if systematic_grid is not None:
+            plot_specs.append({
+                'grid': systematic_grid,
+                'label': 'No systematics',
+                'color_pos': 'red',   'linestyle_pos': 'dashed',
+                'color_neg': 'blue',  'linestyle_neg': 'dashed'
+            })
 
-                # Plot the positive (+6.2) level only if this is NOT the “No filtering” group
-                if group['label'] != 'No filtering' and np.any(grid >= 6.2):
-                    plt.contour(
-                        ma_mesh / 1e-9, g_mesh, grid,
-                        levels=[6.2],
-                        colors=group['color'],
-                        linewidths=2,
-                        linestyles=group['linestyle_pos']
-                    )
+        # — Systematics (no filtering) —
+        if no_filtering_grid_other is not None:
+            plot_specs.append({
+                'grid': no_filtering_grid_other,
+                'label': 'No filtering',
+                'color_neg': 'white', 'linestyle_neg': 'dashed'
+            })
 
-        # --- Create a legend with one entry per group ---
-        legend_handles = [
-            Line2D([0], [0], color=grp['color'], lw=2, label=grp['label'])
-            for grp in contour_groups
-        ]
-        plt.legend(handles=legend_handles, loc='upper right', fontsize=14)
+        # Plot everything
+        for spec in plot_specs:
+            grid = spec['grid']
+            x = ma_mesh / 1e-9
+            y = g_mesh
+
+            # Positive +6.2 (only if defined in spec)
+            if spec.get('color_pos') and np.any(grid >= 6.2):
+                plt.contour(x, y, grid,
+                            levels=[6.2],
+                            colors=spec['color_pos'],
+                            linestyles=spec['linestyle_pos'],
+                            linewidths=2,
+                            label=spec['label'])
+
+            # Negative –6.2 (always plotted for every spec that has color_neg)
+            if spec.get('color_neg') and np.any(grid <= -6.2):
+                plt.contour(x, y, grid,
+                            levels=[-6.2],
+                            colors=spec['color_neg'],
+                            linestyles=spec['linestyle_neg'],
+                            linewidths=2,
+                            label=spec['label'])
+        
+        plt.legend(loc='upper right')
        
 
         cbar = plt.colorbar(heatmap, ticks=np.linspace(vmin, vmax, 11))
