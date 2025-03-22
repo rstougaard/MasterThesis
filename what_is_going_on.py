@@ -251,7 +251,7 @@ def plot_mean_delta_chi2_heatmap_nosys_base(all_results, all_results_sys, datase
         contour_groups = []
 
         # Group 1: With systematics (both positive and negative levels drawn solid)
-        if systematic_grid is not None:
+        if (all_results_sys != None):
             contour_groups.append({
                 'grids': [systematic_grid],
                 'color': '#069AF3',
