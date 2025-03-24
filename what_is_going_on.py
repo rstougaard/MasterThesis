@@ -203,17 +203,21 @@ def plot_individual_delta_chi2_heatmap_with_pdf(all_results, dataset_labels, sys
     print(f"All plots have been saved to the PDF: {pdf_filename}")
     return
 
-def plot_mean_delta_chi2_heatmap_nosys_base(all_results, all_results_sys, dataset_labels, png_naming, no_filtering_grid=None, no_filtering_grid_other=None, remove_source_label=None):
+def plot_mean_delta_chi2_heatmap_nosys_base(all_results,
+    all_results_sys,
+    dataset_labels,
+    png_naming,
+    no_filtering_grid=None,
+    no_filtering_grid_other=None,
+    remove_source_label=None
+):
     # Remove the specified source, if provided.
     if remove_source_label is not None:
-        if remove_source_label in all_results:
-            del all_results[remove_source_label]
-        else:
-            print(f"Source '{remove_source_label}' not found in the results.")
+        all_results.pop(remove_source_label, None)
 
     # Extract all filter labels from the first remaining source.
     first_source = next(iter(all_results.values()))
-    filtering_methods = list(first_source.keys())  # e.g. ["snr_3", "snr_5", "snr_10"] or ["week", "month"]
+    filtering_methods = list(first_source.keys())
 
     # Build the (m_a, g_a) mesh
     ma_mesh, g_mesh = np.meshgrid(m_masked, g_masked, indexing='ij')
@@ -227,16 +231,15 @@ def plot_mean_delta_chi2_heatmap_nosys_base(all_results, all_results_sys, datase
             p0_masked=p0_masked,
             ec_masked=ec_masked
         )
-        if (all_results_sys != None):
-            systematic_grid = compute_mean_delta_chi2_grid(
-                all_results=all_results_sys,
-                dataset_labels=dataset_labels,
-                filter_label=filter_label,
-                p0_masked=p0_masked,
-                ec_masked=ec_masked
-            )
+        systematic_grid = (compute_mean_delta_chi2_grid(
+            all_results=all_results_sys,
+            dataset_labels=dataset_labels,
+            filter_label=filter_label,
+            p0_masked=p0_masked,
+            ec_masked=ec_masked
+        ) if all_results_sys else None)
+
         # Set up colormap.
-        #vmin, vmax = -10, 25
         vmin, vmax = int(np.min(mean_delta_chi2_grid)), int(np.max(mean_delta_chi2_grid))
         num_colors = 120
         boundaries = np.linspace(vmin, vmax, num_colors + 1)
@@ -248,86 +251,95 @@ def plot_mean_delta_chi2_heatmap_nosys_base(all_results, all_results_sys, datase
         plt.figure(figsize=(10, 6))
         heatmap = plt.pcolormesh(ma_mesh / 1e-9, g_mesh, mean_delta_chi2_grid,
                                  cmap=cmap, norm=norm, shading='auto')
-        contour_groups = []
 
-        # Group 1: With systematics (both positive and negative levels drawn solid)
-        if (all_results_sys != None):
-            contour_groups.append({
-                'grids': [systematic_grid],
-                'color': '#069AF3',
-                'label': 'With systematics',
-                # For this group we use solid lines for both +6.2 and -6.2
-                'linestyle_pos': 'solid',
-                'linestyle_neg': 'solid'
-            })
-
-        # Group 2: No systematics (paired: solid for +6.2, dashed for –6.2)
+        plot_specs = []
+        # — Mean (filtered) —
         if mean_delta_chi2_grid is not None:
-            contour_groups.append({
-                'grids': [mean_delta_chi2_grid],
-                'color': '#EF4026',
-                'label': 'No systematics',
-                'linestyle_pos': 'solid',
-                'linestyle_neg': 'dashed'
+            plot_specs.append({
+                'grid': mean_delta_chi2_grid,
+                'label': 'Without systematics',
+                'color_pos': 'red',   'linestyle_pos': 'solid',
+                'color_neg': 'blue',  'linestyle_neg': 'solid'
             })
 
-        # Group 3: No filtering (if either grid is provided, combine them)
-        no_filtering_grids = []
+        # — Mean (no filtering) —
         if no_filtering_grid is not None:
-            no_filtering_grids.append(no_filtering_grid)
-        if no_filtering_grid_other is not None:
-            no_filtering_grids.append(no_filtering_grid_other)
-        if no_filtering_grids:
-            contour_groups.append({
-                'grids': no_filtering_grids,
-                'color': 'black',
+            plot_specs.append({
+                'grid': no_filtering_grid,
                 'label': 'No filtering',
-                'linestyle_pos': 'solid',
-                'linestyle_neg': 'dashed'
+                'color_neg': 'white', 'linestyle_neg': 'solid'
             })
 
-        # --- Now plot each group ---
-        for group in contour_groups:
-            for grid in group['grids']:
-                # Plot positive level: +6.2
-                if np.any(grid >= 6.2):
-                    plt.contour(
-                        ma_mesh / 1e-9, g_mesh, grid,
-                        levels=[6.2],
-                        colors=group['color'],
-                        linewidths=2,
-                        linestyles=group['linestyle_pos']
-                    )
-                # Plot negative level: -6.2
-                if np.any(grid <= -6.2):
-                    plt.contour(
-                        ma_mesh / 1e-9, g_mesh, grid,
-                        levels=[-6.2],
-                        colors=group['color'],
-                        linewidths=2,
-                        linestyles=group['linestyle_neg']
-                    )
+        # — Systematics (filtered) —
+        if systematic_grid is not None:
+            plot_specs.append({
+                'grid': systematic_grid,
+                'label': 'With systematics',
+                'color_pos': 'red',   'linestyle_pos': 'dashed',
+                'color_neg': 'blue',  'linestyle_neg': 'dashed'
+            })
 
-        # --- Create a legend with one entry per group ---
-        legend_handles = [
-            Line2D([0], [0], color=grp['color'], lw=2, label=grp['label'])
-            for grp in contour_groups
+        # — Systematics (no filtering) —
+        if no_filtering_grid_other is not None:
+            plot_specs.append({
+                'grid': no_filtering_grid_other,
+                'label': 'No filtering',
+                'color_neg': 'white', 'linestyle_neg': 'dashed'
+            })
+
+        # --- Plot contours (remove label= from contour calls) ---
+        for spec in plot_specs:
+            grid = spec['grid']
+            x = ma_mesh / 1e-9
+            y = g_mesh
+
+            if spec.get('color_pos') and np.any(grid >= 6.2):
+                plt.contour(x, y, grid,
+                            levels=[6.2],
+                            colors=spec['color_pos'],
+                            linestyles=spec['linestyle_pos'],
+                            linewidths=2)
+
+            if spec.get('color_neg') and np.any(grid <= -6.2):
+                plt.contour(x, y, grid,
+                            levels=[-6.2],
+                            colors=spec['color_neg'],
+                            linestyles=spec['linestyle_neg'],
+                            linewidths=2)
+
+        # --- Build proxy legend handles for both aspects ---
+
+        # 1. Legend for threshold (color) mapping:
+        color_handles = [
+            Line2D([0], [0], color='red', linestyle='-', linewidth=2, label='> 6.2'),
+            Line2D([0], [0], color='blue', linestyle='-', linewidth=2, label='< -6.2'),
+            # For "No filtering" the color is white. Use a marker with a black edge to make it visible.
+            Line2D([0], [0], marker='s', markersize=8, markerfacecolor='white', 
+                   markeredgecolor='black', linestyle='-', linewidth=2, label='No filtering (white)')
         ]
-        plt.legend(handles=legend_handles, loc='upper right', fontsize=14)
-       
+
+        # 2. Legend for systematics (line style) mapping:
+        linestyle_handles = [
+            Line2D([0], [0], color='black', linestyle='solid', linewidth=2, label='Without systematics'),
+            Line2D([0], [0], color='black', linestyle='dashed', linewidth=2, label='With systematics')
+        ]
+
+        # Create the two legends. Add the first legend to the axes so that the second does not overwrite it.
+        legend1 = plt.legend(handles=color_handles, loc='upper right', title="Threshold")
+        plt.gca().add_artist(legend1)
+        plt.legend(handles=linestyle_handles, loc='lower right', title="Systematics")
 
         cbar = plt.colorbar(heatmap, ticks=np.linspace(vmin, vmax, 11))
         cbar.set_label(r'$\sum \Delta \chi^2$', fontsize=15)
         plt.xlabel(r'$m_a$ [neV]', fontsize=15)
         plt.ylabel(r'$g_{a\gamma}$ [GeV$^{-1}$]', fontsize=15)
-        plt.title(f'Sum $\Delta \chi^2$ Heatmap for {filter_label} in ($m_a$, $g_{{a\gamma}}$) Space', fontsize=15)
+        plt.title(f'Mean $\Delta \chi^2$ Heatmap for {filter_label}', fontsize=15)
         plt.xscale('log')
         plt.yscale('log')
         plt.xticks(fontsize=15)
         plt.yticks(fontsize=15)
-        ax = plt.gca()
-        ax.xaxis.set_major_formatter(ticker.FormatStrFormatter("%g"))
-        ax.set_xlim(0.3, 10)
+        plt.gca().xaxis.set_major_formatter(ticker.FormatStrFormatter("%g"))
+        plt.xlim(0.3, 10)
         plt.tight_layout()
         plt.savefig(f'{path_to_save_heatmap_m_g}{png_naming}_{filter_label}_ma_ga.png', dpi=300)
         plt.close()
@@ -552,9 +564,9 @@ no_filtering_grid = compute_mean_delta_chi2_grid(
     ec_masked=ec_masked
 ) 
 #Testing on sys base plotting function.. changes has to be done for the nosys plotting function 
-#plot_mean_delta_chi2_heatmap_nosys_base(all_results_none, all_results_none_sys, list(all_results_none.keys()), "base_nosys_",  remove_source_label=None)
-#plot_mean_delta_chi2_heatmap_nosys_base(all_results_lin, all_results_lin_sys, list(all_results_lin.keys()), "base_nosys_", no_filtering_grid=no_filtering_grid, no_filtering_grid_other=no_filtering_grid_sys, remove_source_label=None)
-#plot_mean_delta_chi2_heatmap_nosys_base(all_results_snr, all_results_snr_sys, list(all_results_snr.keys()), "base_nosys_", no_filtering_grid=no_filtering_grid, no_filtering_grid_other=no_filtering_grid_sys,remove_source_label=None)
+plot_mean_delta_chi2_heatmap_nosys_base(all_results_none, all_results_none_sys, list(all_results_none.keys()), "base_nosys_",  remove_source_label=None)
+plot_mean_delta_chi2_heatmap_nosys_base(all_results_lin, all_results_lin_sys, list(all_results_lin.keys()), "base_nosys_", no_filtering_grid=no_filtering_grid, no_filtering_grid_other=no_filtering_grid_sys, remove_source_label=None)
+plot_mean_delta_chi2_heatmap_nosys_base(all_results_snr, all_results_snr_sys, list(all_results_snr.keys()), "base_nosys_", no_filtering_grid=no_filtering_grid, no_filtering_grid_other=no_filtering_grid_sys,remove_source_label=None)
 
 plot_mean_delta_chi2_heatmap_sys_base(all_results_none, all_results_none_sys, list(all_results_none.keys()), "base_sys_",  remove_source_label=None)
 plot_mean_delta_chi2_heatmap_sys_base(all_results_lin, all_results_lin_sys, list(all_results_lin.keys()), "base_sys_", no_filtering_grid=no_filtering_grid_sys,no_filtering_grid_other=no_filtering_grid, remove_source_label=None)
