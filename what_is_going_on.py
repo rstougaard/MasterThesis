@@ -381,65 +381,38 @@ def plot_mean_delta_chi2_heatmap_sys_base(all_results, all_results_sys, dataset_
                                  cmap=cmap, norm=norm, shading='auto')
         plot_specs = []
 
-        # — Mean (filtered) —
-        if mean_delta_chi2_grid is not None:
-            plot_specs.append({
-                'grid': mean_delta_chi2_grid,
-                'label': 'With systematics',
-                'color_pos': 'red',   'linestyle_pos': 'solid',
-                'color_neg': 'blue',  'linestyle_neg': 'solid'
-            })
-
-        # — Mean (no filtering) —
-        if no_filtering_grid is not None:
-            plot_specs.append({
-                'grid': no_filtering_grid,
-                'label': 'No filtering',
-                'color_neg': 'white', 'linestyle_neg': 'solid'
-            })
-
-        # — Systematics (filtered) —
-        if systematic_grid is not None:
-            plot_specs.append({
-                'grid': systematic_grid,
-                'label': 'No systematics',
-                'color_pos': 'red',   'linestyle_pos': 'dashed',
-                'color_neg': 'blue',  'linestyle_neg': 'dashed'
-            })
-
-        # — Systematics (no filtering) —
-        if no_filtering_grid_other is not None:
-            plot_specs.append({
-                'grid': no_filtering_grid_other,
-                'label': 'No filtering',
-                'color_neg': 'white', 'linestyle_neg': 'dashed'
-            })
-
-        # Plot everything
+       # — Plot everything (no labels on contour) —
         for spec in plot_specs:
             grid = spec['grid']
             x = ma_mesh / 1e-9
             y = g_mesh
 
-            # Positive +6.2 (only if defined in spec)
             if spec.get('color_pos') and np.any(grid >= 6.2):
-                plt.contour(x, y, grid,
-                            levels=[6.2],
-                            colors=spec['color_pos'],
-                            linestyles=spec['linestyle_pos'],
-                            linewidths=2,
-                            label=spec['label'])
+                plt.contour(
+                    x, y, grid, levels=[6.2],
+                    colors=spec['color_pos'],
+                    linestyles=spec['linestyle_pos'],
+                    linewidths=2
+                )
 
-            # Negative –6.2 (always plotted for every spec that has color_neg)
             if spec.get('color_neg') and np.any(grid <= -6.2):
-                plt.contour(x, y, grid,
-                            levels=[-6.2],
-                            colors=spec['color_neg'],
-                            linestyles=spec['linestyle_neg'],
-                            linewidths=2,
-                            label=spec['label'])
-        
-        plt.legend(loc='upper right')
+                plt.contour(
+                    x, y, grid, levels=[-6.2],
+                    colors=spec['color_neg'],
+                    linestyles=spec['linestyle_neg'],
+                    linewidths=2
+                )
+
+        # — Build proxy legend handles —    
+        legend_handles = []
+        for spec in plot_specs:
+            color    = spec.get('color_pos') or spec.get('color_neg')
+            linestyle = spec.get('linestyle_pos') or spec.get('linestyle_neg')
+            legend_handles.append(
+                Line2D([0], [0], color=color, linestyle=linestyle, label=spec['label'])
+            )
+
+        plt.legend(handles=legend_handles, loc='upper right')
        
 
         cbar = plt.colorbar(heatmap, ticks=np.linspace(vmin, vmax, 11))
