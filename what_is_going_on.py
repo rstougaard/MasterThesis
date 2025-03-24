@@ -35,7 +35,7 @@ mass_unique = axion_data[::n_g, 0]     # length = n_mass
 # Define your desired start and stop values
 m_start_val = 3e-10
 g_start_val = 1e-13
-m_stop_val  = 6e-7
+m_stop_val  = 1.1e-8
 g_stop_val  = 1e-11
 
 # Find the row (mass) and column (g) indices closest to the desired start values.
@@ -339,7 +339,7 @@ def plot_mean_delta_chi2_heatmap_nosys_base(all_results,
         plt.xticks(fontsize=15)
         plt.yticks(fontsize=15)
         plt.gca().xaxis.set_major_formatter(ticker.FormatStrFormatter("%g"))
-        plt.xlim(0.3, 6)
+        plt.xlim(0.3, 10)
         plt.tight_layout()
         plt.savefig(f'{path_to_save_heatmap_m_g}{png_naming}_{filter_label}_ma_ga.png', dpi=300)
         plt.close()
@@ -483,7 +483,7 @@ def plot_mean_delta_chi2_heatmap_sys_base(
         plt.xticks(fontsize=15)
         plt.yticks(fontsize=15)
         plt.gca().xaxis.set_major_formatter(ticker.FormatStrFormatter("%g"))
-        plt.xlim(0.3, 6)
+        plt.xlim(0.3, 10)
         plt.tight_layout()
         plt.savefig(f'{path_to_save_heatmap_m_g}{png_naming}_{filter_label}_ma_ga.png', dpi=300)
         plt.close()
