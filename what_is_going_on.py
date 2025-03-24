@@ -447,7 +447,7 @@ def plot_mean_delta_chi2_heatmap_sys_base(
             Line2D([0], [0], color='blue', linestyle='-', linewidth=2, label='< -6.2'),
             # For "No filtering" the color is white. Use a marker with a black edge to make it visible.
             Line2D([0], [0], marker='s', markersize=8, markerfacecolor='white', 
-                   markeredgecolor='black', linestyle='-', linewidth=2, label='No filtering (color)')
+                   markeredgecolor='black', linestyle='-', linewidth=2, label='No filtering (white)')
         ]
 
         # 2. Legend for systematics (line style) mapping:
