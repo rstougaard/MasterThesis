@@ -347,12 +347,15 @@ def plot_mean_delta_chi2_heatmap_sys_base(
     if remove_source_label is not None:
         all_results.pop(remove_source_label, None)
 
+    # Extract all filter labels from the first remaining source.
     first_source = next(iter(all_results.values()))
     filtering_methods = list(first_source.keys())
 
+    # Build the (m_a, g_a) mesh
     ma_mesh, g_mesh = np.meshgrid(m_masked, g_masked, indexing='ij')
 
     for filter_label in filtering_methods:
+        # -- 1) Compute mean Δχ² for this filter_label --
         mean_delta_chi2_grid = compute_mean_delta_chi2_grid(
             all_results=all_results_sys,
             dataset_labels=dataset_labels,
@@ -360,26 +363,29 @@ def plot_mean_delta_chi2_heatmap_sys_base(
             p0_masked=p0_masked,
             ec_masked=ec_masked
         )
-        systematic_grid = compute_mean_delta_chi2_grid(
+        systematic_grid = (compute_mean_delta_chi2_grid(
             all_results=all_results,
             dataset_labels=dataset_labels,
             filter_label=filter_label,
             p0_masked=p0_masked,
             ec_masked=ec_masked
-        ) if all_results else None
+        ) if all_results else None)
 
+        # Set up colormap.
         vmin, vmax = int(np.min(mean_delta_chi2_grid)), int(np.max(mean_delta_chi2_grid))
-        boundaries = np.linspace(vmin, vmax, 121)
-        cmap = plt.get_cmap('gnuplot2', 120)
-        norm = mcolors.BoundaryNorm(boundaries, ncolors=120, clip=True)
+        num_colors = 120
+        boundaries = np.linspace(vmin, vmax, num_colors + 1)
+        cmap = plt.get_cmap('gnuplot2', num_colors)
+        norm = mcolors.BoundaryNorm(boundaries=boundaries, ncolors=num_colors, clip=True)
+
+        ma_mesh, g_mesh = np.meshgrid(m_masked, g_masked, indexing='ij')
 
         plt.figure(figsize=(10, 6))
-        heatmap = plt.pcolormesh(
-            ma_mesh / 1e-9, g_mesh, mean_delta_chi2_grid,
-            cmap=cmap, norm=norm, shading='auto'
-        )
+        heatmap = plt.pcolormesh(ma_mesh / 1e-9, g_mesh, mean_delta_chi2_grid,
+                                 cmap=cmap, norm=norm, shading='auto')
 
         plot_specs = []
+        # — Mean (filtered) —
         if mean_delta_chi2_grid is not None:
             plot_specs.append({
                 'grid': mean_delta_chi2_grid,
@@ -387,12 +393,16 @@ def plot_mean_delta_chi2_heatmap_sys_base(
                 'color_pos': 'red',   'linestyle_pos': 'solid',
                 'color_neg': 'blue',  'linestyle_neg': 'solid'
             })
+
+        # — Mean (no filtering) —
         if no_filtering_grid is not None:
             plot_specs.append({
                 'grid': no_filtering_grid,
                 'label': 'No filtering',
                 'color_neg': 'white', 'linestyle_neg': 'solid'
             })
+
+        # — Systematics (filtered) —
         if systematic_grid is not None:
             plot_specs.append({
                 'grid': systematic_grid,
@@ -400,6 +410,8 @@ def plot_mean_delta_chi2_heatmap_sys_base(
                 'color_pos': 'red',   'linestyle_pos': 'dashed',
                 'color_neg': 'blue',  'linestyle_neg': 'dashed'
             })
+
+        # — Systematics (no filtering) —
         if no_filtering_grid_other is not None:
             plot_specs.append({
                 'grid': no_filtering_grid_other,
@@ -407,52 +419,60 @@ def plot_mean_delta_chi2_heatmap_sys_base(
                 'color_neg': 'white', 'linestyle_neg': 'dashed'
             })
 
-        # — Plot contours (no label=) —
+        # --- Plot contours (remove label= from contour calls) ---
         for spec in plot_specs:
+            grid = spec['grid']
             x = ma_mesh / 1e-9
             y = g_mesh
-            grid = spec['grid']
 
             if spec.get('color_pos') and np.any(grid >= 6.2):
-                plt.contour(x, y, grid, levels=[6.2],
+                plt.contour(x, y, grid,
+                            levels=[6.2],
                             colors=spec['color_pos'],
                             linestyles=spec['linestyle_pos'],
                             linewidths=2)
 
             if spec.get('color_neg') and np.any(grid <= -6.2):
-                plt.contour(x, y, grid, levels=[-6.2],
+                plt.contour(x, y, grid,
+                            levels=[-6.2],
                             colors=spec['color_neg'],
                             linestyles=spec['linestyle_neg'],
                             linewidths=2)
 
-        # — Build proxy legend handles —
-        legend_handles = []
-        seen = set()
-        for spec in plot_specs:
-            if spec['label'] in seen:
-                continue
-            seen.add(spec['label'])
-            color = spec.get('color_pos') or spec.get('color_neg')
-            linestyle = spec.get('linestyle_pos') or spec.get('linestyle_neg')
-            legend_handles.append(
-                Line2D([0], [0], color=color, linestyle=linestyle, label=spec['label'])
-            )
+        # --- Build proxy legend handles for both aspects ---
 
-        plt.legend(handles=legend_handles, loc='upper right')
+        # 1. Legend for threshold (color) mapping:
+        color_handles = [
+            Line2D([0], [0], color='red', linestyle='-', linewidth=2, label='> 6.2'),
+            Line2D([0], [0], color='blue', linestyle='-', linewidth=2, label='< -6.2'),
+            # For "No filtering" the color is white. Use a marker with a black edge to make it visible.
+            Line2D([0], [0], marker='s', markersize=8, markerfacecolor='white', 
+                   markeredgecolor='black', linestyle='-', linewidth=2, label='No filtering (color)')
+        ]
+
+        # 2. Legend for systematics (line style) mapping:
+        linestyle_handles = [
+            Line2D([0], [0], color='black', linestyle='solid', linewidth=2, label='With systematics'),
+            Line2D([0], [0], color='black', linestyle='dashed', linewidth=2, label='Without systematics')
+        ]
+
+        # Create the two legends. Add the first legend to the axes so that the second does not overwrite it.
+        legend1 = plt.legend(handles=color_handles, loc='upper right', title="Threshold")
+        plt.gca().add_artist(legend1)
+        plt.legend(handles=linestyle_handles, loc='lower right', title="Systematics")
 
         cbar = plt.colorbar(heatmap, ticks=np.linspace(vmin, vmax, 11))
         cbar.set_label(r'$\sum \Delta \chi^2$', fontsize=15)
-
         plt.xlabel(r'$m_a$ [neV]', fontsize=15)
         plt.ylabel(r'$g_{a\gamma}$ [GeV$^{-1}$]', fontsize=15)
         plt.title(f'Mean $\Delta \chi^2$ Heatmap for {filter_label}', fontsize=15)
         plt.xscale('log')
         plt.yscale('log')
-        plt.xticks(fontsize=15); plt.yticks(fontsize=15)
+        plt.xticks(fontsize=15)
+        plt.yticks(fontsize=15)
         plt.gca().xaxis.set_major_formatter(ticker.FormatStrFormatter("%g"))
         plt.xlim(0.3, 10)
         plt.tight_layout()
-
         plt.savefig(f'{path_to_save_heatmap_m_g}{png_naming}_{filter_label}_ma_ga.png', dpi=300)
         plt.close()
 
