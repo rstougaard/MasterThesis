@@ -221,9 +221,9 @@ def simple_plot_fit(dataset_none, fit_results_none, source, png_naming=""):
     return fig_best, fig_worst
 
 
-with open("all_results_none_31_logpar_no_sys_error.pkl", "rb") as file:
+with open("all_results_none_31_logpar_sys_error.pkl", "rb") as file:
     all_results_none = pickle.load(file)
-output_pdf = "./fit_results/best_worst_fits.pdf"
+output_pdf = "./fit_results/best_worst_fits_withsys.pdf"
 
 with PdfPages(output_pdf) as pdf:
     for source in all_results_none.keys():
