@@ -176,43 +176,25 @@ def simple_plot_fit(dataset_none, fit_results_none, source, png_naming=""):
         ax_top.errorbar(eav[1:], fl[1:], yerr=[-dfl0[1:],dfl1[1:]], fmt='o', uplims=ul[1:], label="gll_psc_v35")
         for label,(x,y,y_err,emin_arr,emax_arr) in dataset_none.items():
             ax_top.errorbar(x,y,xerr=[x-emin_arr,emax_arr-x], yerr=y_err, fmt='o', color="black", capsize=3, label=label)
-        ax_top.plot(x_grid, spec["base"], color="green", label=f"{tag.capitalize()} Base", linewidth=2)
-        ax_top.plot(x_grid, spec["axion"], linestyle="--", color="orange", label=f"{tag.capitalize()} Axion", linewidth=2)
+        ax_top.plot(x_grid, spec["base"], label=f"{tag.capitalize()} Base", linewidth=2)
+        ax_top.plot(x_grid, spec["axion"], linestyle="--", label=f"{tag.capitalize()} Axion", linewidth=2)
         ax_top.set_ylabel('dN/dE')
         ax_top.set_yscale('log'); ax_top.legend(loc='upper right')
         ax_top.grid(True, which='both', linestyle='--')
 
 
-        # Base residuals
-        base_params = best["fit_result"]["Base"]["params"] if tag=="best" else worst["fit_result"]["Base"]["params"]
-        resid_base = (y_masked - logpar_base(x_masked, *base_params)) / yerr_masked
+                # Axion residuals
+        base_resid = (y_masked - logpar_base(x_masked, *spec['params_base'])) / yerr_masked
+        axion_resid = (y_masked - axion_func(x_masked, *spec['params_axion'], spec['p0'], spec['ec'])) / yerr_masked
 
-        # Axion residuals
-        axion_params = spec["params"]
-        resid_axion = (
-            y_masked
-            - axion_func(x_masked, *axion_params,
-                        (p0_best if tag=="best" else p0_worst),
-                        (ec_best if tag=="best" else ec_worst))
-        ) / yerr_masked
-
-        ax_bot.errorbar(x_masked, resid_base, fmt='s', color="green", label='Base residuals')
-        ax_bot.errorbar(x_masked, resid_axion, fmt='o', color="orange", label='Axion residuals')
+        ax_bot.errorbar(x_masked, base_resid, fmt='s', color="green", label='Base residuals')
+        ax_bot.errorbar(x_masked, axion_resid, fmt='o', color="orange", label='Axion residuals')
         for level,style in zip([0,1,-1,2,-2], ['-','--','--',':',':']):
             ax_bot.axhline(level, linestyle=style)
         ax_bot.set_xscale('log'); ax_bot.set_ylim(-3,3)
         ax_bot.set_xlabel('Energy [MeV]'); ax_bot.set_ylabel('Residuals')
         ax_bot.grid(True, which='both', linestyle='--')
-        # Pull fit‑stats
-        fit = best["fit_result"] if tag=="best" else worst["fit_result"]
-        base_chi2, base_dof = fit["Base"]["chi2"], fit["Base"]["dof"]
-        axion_chi2, axion_dof = fit["Axion"]["chi2"], fit["Axion"]["dof"]
-        delta = spec["delta"]
-
-        # Include p0 & E_c
-        p0_val = spec["p0"]
-        ec_val = spec["ec"]
-
+        
         textstr = (
             f"Base χ²/dof = {spec['chi2_base']:.2f}/{spec['dof_base']}\n"
             f"Axion χ²/dof = {spec['chi2_axion']:.2f}/{spec['dof_axion']}\n"
