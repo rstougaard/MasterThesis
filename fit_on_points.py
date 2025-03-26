@@ -22,9 +22,6 @@ def logpar_base(x, Norm, alpha_, beta_):
     E_b = 1000  # Fixed E_b value
     return Norm * (x / E_b) ** (-(alpha_ + beta_ * np.log(x / E_b)))
 
-def axion_func(E, Norm, alpha_, beta_, w):
-        return logpar_base(E, Norm, alpha_, beta_) * (1 - (p0 / (1 + (E_c / E) ** k)) * (1+0.2*np.tanh(w)))
-
 def find_best_worst_fits(fits):
     # Normalize into a flat list of result‑dicts
     if isinstance(fits, dict) and "fit_result" in fits:
@@ -88,17 +85,30 @@ def simple_plot_fit(dataset_none, fit_results_none, source, png_naming=""):
                 best_delta, best = delta, result
             if delta > worst_delta:
                 worst_delta, worst = delta, result
-
+    p0_best = best["p0"]
+    ec_best = best["E_c"]
+    p0_worst = worst["p0"]
+    ec_worst = worst["E_c"]
     # ——— PLOT BEST Base & WORST Axion ———
+    def axion_func(E, Norm, alpha_, beta_, w, p0, E_c, k=2.71):
+        return logpar_base(E, Norm, alpha_, beta_) * (1 - (p0 / (1 + (E_c / E) ** k)) * (1+0.2*np.tanh(w)))
     all_x = np.concatenate([np.array(vals[0]) for vals in dataset_none.values()])
     x_grid = np.logspace(np.log10(all_x.min()), np.log10(all_x.max()), 300)
 
-    y_best = logpar_base(x_grid, *best["fit_result"]["Base"]["params"])
-    ax1.plot(x_grid, y_best,
+    y_best_base = logpar_base(x_grid, *best["fit_result"]["Base"]["params"])
+    ax1.plot(x_grid, y_best_base,
              label=f"Best Base (Δχ²={best_delta:.2f})", linewidth=2)
+    
+    y_worst_base = logpar_base(x_grid, *worst["fit_result"]["Base"]["params"])
+    ax1.plot(x_grid, y_worst_base,
+             label=f"Worst Base (Δχ²={best_delta:.2f})", linewidth=2)
 
-    y_worst = axion_func(x_grid, *worst["fit_result"]["Axion"]["params"])
-    ax1.plot(x_grid, y_worst,
+    y_best_axion = axion_func(x_grid, *best["fit_result"]["Axion"]["params"], p0_best, ec_best)
+    ax1.plot(x_grid, y_best_axion,
+             linestyle="--", label=f"Best Axion (Δχ²={best_delta:.2f})", linewidth=2)
+    
+    y_worst_axion = axion_func(x_grid, *worst["fit_result"]["Axion"]["params"], p0_worst, ec_worst)
+    ax1.plot(x_grid, y_worst_axion,
              linestyle="--", label=f"Worst Axion (Δχ²={worst_delta:.2f})", linewidth=2)
 
     print("Best p0, E_c:", best["p0"], best["E_c"])
