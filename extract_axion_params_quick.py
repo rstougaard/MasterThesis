@@ -764,7 +764,7 @@ with open(f'Source_ra_dec_specin.txt', 'r') as file:
                     all_results_none[source_name] = results
                     with open("all_results_none_31_logpar_no_sys_error.pkl", "wb") as file:
                         pickle.dump(all_results_none, file)
-                     '''  
+                    '''  
                     all_results_snr[source_name] = results_snr
                     with open("all_results_snr_31_logpar_no_sys_error.pkl", "wb") as file:
                         pickle.dump(all_results_snr, file)
