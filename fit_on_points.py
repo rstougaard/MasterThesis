@@ -81,7 +81,7 @@ def simple_plot_fit(dataset_none, fit_results_none, source, png_naming=""):
     best, worst = None, None
     best_delta, worst_delta = np.inf, -np.inf
 
-    for row in fit_results_none[source]:
+    for row in fit_results_none[source]["No_Filtering"]:
         for result in row:
             delta = result["fit_result"]["DeltaChi2"]
             if delta < best_delta:
