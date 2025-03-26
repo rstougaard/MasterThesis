@@ -75,7 +75,7 @@ def simple_plot_fit(dataset_none, fit_results_none, source, png_naming=""):
         )
 
     # — Find & plot best/worst —
-    bw = find_best_worst_fits(fit_results_none)
+    bw = find_best_worst_fits(fit_results_none[source_name])
     all_x = np.concatenate([np.array(vals[0]) for vals in dataset_none.values()])
     x_grid = np.logspace(np.log10(all_x.min()), np.log10(all_x.max()), 300)
 
