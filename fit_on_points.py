@@ -7,6 +7,57 @@ from iminuit.cost import LeastSquares
 from iminuit import Minuit
 from matplotlib.backends.backend_pdf import PdfPages
 import pickle
+xion_data = np.load('./denys/Rikke/Data/scan12.npy')
+ma_all = axion_data[:,0] #eV
+g_all = axion_data[:,1] # GeV**-1
+ec_all = axion_data[:,2]/1e6 #MeV
+p0_all = axion_data[:,3]
+k_all = axion_data[:,4]
+k = np.mean(k_all)
+
+n_g = 40
+n_total = axion_data.shape[0]
+n_mass = n_total // n_g
+
+# For the (E_c, p₀) plot, we want the full grid.
+# Reshape the columns for E_c (converted to MeV) and p₀ into a (n_mass, n_g) grid.
+ec_all_full = (axion_data[:, 2] / 1e6).reshape(n_mass, n_g)
+p0_all_full = axion_data[:, 3].reshape(n_mass, n_g)
+
+# For the (mₐ, g) plot, extract the unique values.
+# g is assumed to be the same for every mass, taken from the first 40 rows.
+g_unique = axion_data[:n_g, 1]       # length = n_g
+# mₐ is taken from every 40th row (i.e. each new mass in the outer loop)
+mass_unique = axion_data[::n_g, 0]     # length = n_mass
+
+# Define your desired start and stop values
+m_start_val = 3e-10
+g_start_val = 1e-13
+m_stop_val  = 6e-9
+g_stop_val  = 1e-11
+
+# Find the row (mass) and column (g) indices closest to the desired start values.
+row_start = np.argmin(np.abs(mass_unique - m_start_val))
+col_start = np.argmin(np.abs(g_unique - g_start_val))
+
+# Similarly, find the indices closest to the desired stop values.
+row_stop  = np.argmin(np.abs(mass_unique - m_stop_val))
+col_stop  = np.argmin(np.abs(g_unique - g_stop_val))
+
+# For clarity, you can print out the selected values:
+print("Selected mass start:", mass_unique[row_start])
+print("Selected g start:", g_unique[col_start])
+print("Selected mass stop:", mass_unique[row_stop])
+print("Selected g stop:", g_unique[col_stop])
+
+# Now filter the full grid arrays.
+ec_masked = ec_all_full[row_start:row_stop+1, col_start:col_stop+1]
+p0_masked = p0_all_full[row_start:row_stop+1, col_start:col_stop+1]
+
+# Also filter the unique arrays.
+m_masked = mass_unique[row_start:row_stop+1]
+g_masked    = g_unique[col_start:col_stop+1]
+
 plt.rcParams.update({
     'font.family': 'serif',
     'mathtext.fontset': 'cm',
@@ -97,27 +148,55 @@ def simple_plot_fit(dataset_none, fit_results_none, source, png_naming=""):
 
     y_best_base = logpar_base(x_grid, *best["fit_result"]["Base"]["params"])
     ax1.plot(x_grid, y_best_base,
-             label=f"Best Base (Δχ²={best_delta:.2f})", linewidth=2)
+             label=f"Best Base", linewidth=2)
     
     y_worst_base = logpar_base(x_grid, *worst["fit_result"]["Base"]["params"])
     ax1.plot(x_grid, y_worst_base,
-             label=f"Worst Base (Δχ²={best_delta:.2f})", linewidth=2)
+             label=f"Worst Base", linewidth=2)
 
     y_best_axion = axion_func(x_grid, *best["fit_result"]["Axion"]["params"], p0_best, ec_best)
     ax1.plot(x_grid, y_best_axion,
-             linestyle="--", label=f"Best Axion (Δχ²={best_delta:.2f})", linewidth=2)
+             linestyle="--", label=f"Best Axion)", linewidth=2)
     
     y_worst_axion = axion_func(x_grid, *worst["fit_result"]["Axion"]["params"], p0_worst, ec_worst)
     ax1.plot(x_grid, y_worst_axion,
-             linestyle="--", label=f"Worst Axion (Δχ²={worst_delta:.2f})", linewidth=2)
+             linestyle="--", label=f"Worst Axion", linewidth=2)
+    
+    textstr = (
+    f"Best Δχ² = {best_delta:.2f}\n"
+    f"Worst Δχ² = {worst_delta:.2f}"
+    )
+
+    # Place a little box in the upper‑left corner of the axes
+    ax1.text(
+        0.05, 0.95, textstr,
+        transform=ax1.transAxes,
+        fontsize=10,
+        verticalalignment='top',
+        bbox=dict(boxstyle="round", facecolor="white", alpha=0.7)
+)
 
     print("Best p0, E_c:", best["p0"], best["E_c"])
     print("Worst p0, E_c:", worst["p0"], worst["E_c"])
+    # Find the grid‐cell indices for best fit
+    mask_best = np.isclose(p0_masked, p0_best) & np.isclose(ec_masked, ec_best)
+    i_best, j_best = np.where(mask_best)
+    m_best = m_masked[i_best[0]]
+    g_best = g_masked[j_best[0]]
 
-    ax1.legend(loc='upper right')
+    # Find the grid‐cell indices for worst fit
+    mask_worst = np.isclose(p0_masked, p0_worst) & np.isclose(ec_masked, ec_worst)
+    i_worst, j_worst = np.where(mask_worst)
+    m_worst = m_masked[i_worst[0]]
+    g_worst = g_masked[j_worst[0]]
+
+    print(f"Best fit → mass = {m_best}, coupling = {g_best}")
+    print(f"Worst fit → mass = {m_worst}, coupling = {g_worst}")
+
+    ax1.legend(loc='lower left')
     ax1.set_xscale('log'); ax1.set_yscale('log')
     ax1.set_ylabel('dN/dE [ photons/cm²/s/MeV ]')
-    ax1.set_title(f'{source} - SNR Ratios')
+    ax1.set_title(f'{source} - No filtering')
     ax1.grid(True, which="both", linestyle="--", linewidth=0.5)
     fig.tight_layout()
 
