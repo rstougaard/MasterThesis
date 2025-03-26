@@ -134,8 +134,13 @@ def simple_plot_fit(dataset_none, fit_results_none, source, png_naming=""):
     p0_best, ec_best = best["p0"], best["E_c"]
     p0_worst, ec_worst = worst["p0"], worst["E_c"]
 
+    mask = y_data > 1e-13
+    x_masked   = x_data[mask]
+    y_masked   = y_data[mask]
+    yerr_masked = y_err[mask]
+
     all_x = np.concatenate([np.array(vals[0]) for vals in dataset_none.values()])
-    x_grid = np.logspace(np.log10(all_x.min()), np.log10(all_x.max()), 300)
+    x_grid = np.logspace(np.log10(x_masked.min()), np.log10(x_masked.max()), 300)
 
     # Model functions
     def axion_func(E, Norm, alpha, beta, w, p0, E_c, k=2.71):
@@ -165,6 +170,7 @@ def simple_plot_fit(dataset_none, fit_results_none, source, png_naming=""):
         fig, (ax_top, ax_bot) = plt.subplots(2,1, sharex=True, figsize=(10,8), gridspec_kw={"height_ratios":[3,1]})
         spec = fitspec[tag]
 
+
         # Upper: data + fits
         ax_top.errorbar(eav[1:], fl[1:], yerr=[-dfl0[1:],dfl1[1:]], fmt='o', uplims=ul[1:], label="gll_psc_v35")
         for label,(x,y,y_err,emin_arr,emax_arr) in dataset_none.items():
@@ -175,16 +181,22 @@ def simple_plot_fit(dataset_none, fit_results_none, source, png_naming=""):
         ax_top.set_yscale('log'); ax_top.legend(loc='upper right')
         ax_top.grid(True, which='both', linestyle='--')
 
-        
+
+        # Base residuals
         base_params = best["fit_result"]["Base"]["params"] if tag=="best" else worst["fit_result"]["Base"]["params"]
-        resid_base = (y_data - logpar_base(x_data, *base_params)) / y_err
+        resid_base = (y_masked - logpar_base(x_masked, *base_params)) / yerr_masked
 
-        # Compute Axion residuals (as before)
+        # Axion residuals
         axion_params = spec["params"]
-        resid_axion = (y_data - axion_func(x_data, *axion_params, (p0_best if tag=="best" else p0_worst), (ec_best if tag=="best" else ec_worst))) / y_err
+        resid_axion = (
+            y_masked
+            - axion_func(x_masked, *axion_params,
+                        (p0_best if tag=="best" else p0_worst),
+                        (ec_best if tag=="best" else ec_worst))
+        ) / yerr_masked
 
-        ax_bot.errorbar(x_data, resid_base, fmt='s', color="green", label='Base residuals')
-        ax_bot.errorbar(x_data, resid_axion, fmt='o', color="orange", label='Axion residuals')
+        ax_bot.errorbar(x_masked, resid_base, fmt='s', color="green", label='Base residuals')
+        ax_bot.errorbar(x_masked, resid_axion, fmt='o', color="orange", label='Axion residuals')
         for level,style in zip([0,1,-1,2,-2], ['-','--','--',':',':']):
             ax_bot.axhline(level, linestyle=style)
         ax_bot.set_xscale('log'); ax_bot.set_ylim(-3,3)
