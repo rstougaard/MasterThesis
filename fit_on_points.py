@@ -200,7 +200,7 @@ def simple_plot_fit(dataset_none, fit_results_none, source, png_naming=""):
             f"Axion χ²/dof = {spec['chi2_axion']:.2f}/{spec['dof_axion']}\n"
             f"Δχ² = {spec['delta']:.2f}\n"
             f"p₀={spec['p0']:.3f}, E_c={spec['ec']:.1f}\n"
-            f"m={spec['m']:.3f}, g={spec['g']:.3e}"
+            f"m={spec['m']/1e-9:.3f}, g={spec['g']:.3e}"
         )
 
         ax_top.text(
