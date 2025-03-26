@@ -181,12 +181,14 @@ def simple_plot_fit(dataset_none, fit_results_none, source, png_naming=""):
     # Find the grid‐cell indices for best fit
     mask_best = np.isclose(p0_masked, p0_best) & np.isclose(ec_masked, ec_best)
     i_best, j_best = np.where(mask_best)
+    print(i_best, j_best)
     m_best = m_masked[i_best[0]]
     g_best = g_masked[j_best[0]]
 
     # Find the grid‐cell indices for worst fit
     mask_worst = np.isclose(p0_masked, p0_worst) & np.isclose(ec_masked, ec_worst)
     i_worst, j_worst = np.where(mask_worst)
+    print(i_worst, j_worst)
     m_worst = m_masked[i_worst[0]]
     g_worst = g_masked[j_worst[0]]
 
