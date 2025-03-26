@@ -32,8 +32,8 @@ mass_unique = axion_data[::n_g, 0]     # length = n_mass
 
 # Define your desired start and stop values
 m_start_val = 3e-10
-g_start_val = 1e-13
-m_stop_val  = 6e-9
+g_start_val = 6e-13
+m_stop_val  = 1e-8
 g_stop_val  = 1e-11
 
 # Find the row (mass) and column (g) indices closest to the desired start values.
@@ -186,10 +186,11 @@ def simple_plot_fit(dataset_none, fit_results_none, source, png_naming=""):
     g_best = g_masked[j_best[0]]
 
     # Find the grid‐cell indices for worst fit
-    dist2 = (p0_masked - p0_worst)**2 + (ec_masked - ec_worst)**2
-    i_worst, j_worst = np.unravel_index(np.argmin(dist2), p0_masked.shape)
-    m_worst = m_masked[i_worst]
-    g_worst = g_masked[j_worst]
+    mask_worst = np.isclose(p0_masked, p0_worst) & np.isclose(ec_masked, ec_worst)
+    i_worst, j_worst = np.where(mask_worst)
+    print(i_worst, j_worst)
+    m_worst = m_masked[i_worst[0]]
+    g_worst = g_masked[j_worst[0]]
 
     print(f"Best fit → mass = {m_best}, coupling = {g_best}")
     print(f"Worst fit → mass = {m_worst}, coupling = {g_worst}")
