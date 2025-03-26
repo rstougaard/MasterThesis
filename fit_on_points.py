@@ -164,7 +164,7 @@ def simple_plot_fit(dataset_none, fit_results_none, source, png_naming=""):
         # Upper: data + fits
         ax_top.errorbar(eav[1:], fl[1:], yerr=[-dfl0[1:],dfl1[1:]], fmt='o', uplims=ul[1:], label="gll_psc_v35")
         for label,(x,y,y_err,emin_arr,emax_arr) in dataset_none.items():
-            ax_top.errorbar(x,y,xerr=[x-emin_arr,emax_arr-x], yerr=y_err, fmt='o', capsize=3, label=label)
+            ax_top.errorbar(x,y,xerr=[x-emin_arr,emax_arr-x], yerr=y_err, fmt='o', color="black", capsize=3, label=label)
         ax_top.plot(x_grid, spec["base"], label=f"{tag.capitalize()} Base", linewidth=2)
         ax_top.plot(x_grid, spec["axion"], linestyle="--", label=f"{tag.capitalize()} Axion", linewidth=2)
         ax_top.set_yscale('log'); ax_top.legend(loc='upper right')
@@ -172,7 +172,7 @@ def simple_plot_fit(dataset_none, fit_results_none, source, png_naming=""):
 
         # Lower: normalized residuals vs Axion
         resid = (y_data - axion_func(x_data, *spec["params"], (p0_best if tag=='best' else p0_worst), (ec_best if tag=='best' else ec_worst))) / y_err
-        ax_bot.errorbar(x_data, resid, fmt='o')
+        ax_bot.errorbar(x_data, resid, fmt='o',color="black")
         for level,style in zip([0,1,-1,2,-2], ['-','--','--',':',':']):
             ax_bot.axhline(level, linestyle=style)
         ax_bot.set_xscale('log'); ax_bot.set_ylim(-3,3)
