@@ -25,11 +25,15 @@ def logpar_base(x, Norm, alpha_, beta_):
 def axion_func(E, Norm, alpha_, beta_, w):
         return logpar_base(E, Norm, alpha_, beta_) * (1 - (p0 / (1 + (E_c / E) ** k)) * (1+0.2*np.tanh(w)))
 
-def find_best_worst_fits(fit_results):
+def find_best_worst_fits(fits):
+    # If this is one fit (has "fit_result"), wrap it so we can iterate
+    if isinstance(fits, dict) and "fit_result" in fits:
+        fits = {"only": fits}
+
     best, worst = None, None
     best_delta, worst_delta = np.inf, -np.inf
 
-    for result in fit_results.values():
+    for result in fits.values():
         delta = result["fit_result"]["DeltaChi2"]
         if delta < best_delta:
             best_delta, best = delta, result
