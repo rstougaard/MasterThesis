@@ -143,18 +143,22 @@ def simple_plot_fit(dataset_none, fit_results_none, source, png_naming=""):
 
     # Compute fits
     fitspec = {
-        "best": {
-            "base": logpar_base(x_grid, *best["fit_result"]["Base"]["params"]),
-            "axion": axion_func(x_grid, *best["fit_result"]["Axion"]["params"], p0_best, ec_best),
-            "delta": best_delta,
-            "params": best["fit_result"]["Axion"]["params"]
-        },
-        "worst": {
-            "base": logpar_base(x_grid, *worst["fit_result"]["Base"]["params"]),
-            "axion": axion_func(x_grid, *worst["fit_result"]["Axion"]["params"], p0_worst, ec_worst),
-            "delta": worst_delta,
-            "params": worst["fit_result"]["Axion"]["params"]
-        }
+    "best": {
+        "base": logpar_base(x_grid, *best["fit_result"]["Base"]["params"]),
+        "axion": axion_func(x_grid, *best["fit_result"]["Axion"]["params"], p0_best, ec_best),
+        "delta": best_delta,
+        "params": best["fit_result"]["Axion"]["params"],
+        "p0": p0_best,
+        "ec": ec_best
+    },
+    "worst": {
+        "base": logpar_base(x_grid, *worst["fit_result"]["Base"]["params"]),
+        "axion": axion_func(x_grid, *worst["fit_result"]["Axion"]["params"], p0_worst, ec_worst),
+        "delta": worst_delta,
+        "params": worst["fit_result"]["Axion"]["params"],
+        "p0": p0_worst,
+        "ec": ec_worst
+    }
     }
 
     def make_figure(tag):
