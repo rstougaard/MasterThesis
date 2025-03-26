@@ -7,7 +7,7 @@ from iminuit.cost import LeastSquares
 from iminuit import Minuit
 from matplotlib.backends.backend_pdf import PdfPages
 import pickle
-xion_data = np.load('./denys/Rikke/Data/scan12.npy')
+axion_data = np.load('./denys/Rikke/Data/scan12.npy')
 ma_all = axion_data[:,0] #eV
 g_all = axion_data[:,1] # GeV**-1
 ec_all = axion_data[:,2]/1e6 #MeV
