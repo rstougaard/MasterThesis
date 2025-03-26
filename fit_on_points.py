@@ -44,7 +44,7 @@ def simple_plot_fit(dataset_none, fit_results_none, source, png_naming=""):
     plt.rcParams["font.family"] = "serif"
     plt.rcParams["mathtext.fontset"] = "cm"
 
-    f = fits.open('./data/gll_psc_v32.xml')
+    f = fits.open('./test/gll_psc_v35.fit')
     data = f[1].data
     ebounds = f[5].data
     emin = np.unique(ebounds['LowerEnergy'])
