@@ -54,13 +54,12 @@ def simple_plot_fit(dataset_none, fit_results_none, source, png_naming=""):
     plt.rcParams["font.family"] = "serif"
     plt.rcParams["mathtext.fontset"] = "cm"
 
+    # ——— your existing FITS loading + errorbar code ———
     f = fits.open('./test/gll_psc_v35.fit')
-    data = f[1].data
-    ebounds = f[5].data
+    data = f[1].data; ebounds = f[5].data
     emin = np.unique(ebounds['LowerEnergy'])
     emax = np.unique(ebounds['UpperEnergy'])
     eav = np.sqrt(emin * emax)
-
     ok = np.where(data["Source_Name"] == source)
     fl = data['Flux_Band'][ok][0]
     ratio0 = data['Unc_Flux_Band'][ok][0][:, 0] / fl
@@ -70,45 +69,50 @@ def simple_plot_fit(dataset_none, fit_results_none, source, png_naming=""):
     fl[ul] += 2 * dfl1[ul]
 
     ax1 = fig.add_subplot(1, 1, 1)
-    ax1.errorbar(
-        eav[1:], fl[1:], yerr=[-dfl0[1:], dfl1[1:]],
-        fmt='o', label="gll_psc_v35", color="pink", uplims=ul[1:], lw=2
-    )
+    ax1.errorbar(eav[1:], fl[1:], yerr=[-dfl0[1:], dfl1[1:]],
+                 fmt='o', label="gll_psc_v35", color="pink", uplims=ul[1:], lw=2)
 
     for label, (x, y, y_err, emin_arr, emax_arr) in dataset_none.items():
         x, y, y_err = map(np.array, (x, y, y_err))
-        ax1.errorbar(
-            x, y,
-            xerr=[x - emin_arr, emax_arr - x],
-            yerr=y_err,
-            fmt='o', capsize=5, color='black', label=label
-        )
+        ax1.errorbar(x, y, xerr=[x-emin_arr, emax_arr-x], yerr=y_err,
+                     fmt='o', capsize=5, color='black', label=label)
 
-    # — Find & plot best/worst —
-    bw = find_best_worst_fits(fit_results_none[source_name])
+    # ——— FIND BEST & WORST ΔChi2 ———
+    best, worst = None, None
+    best_delta, worst_delta = np.inf, -np.inf
+
+    for row in fit_results_none[source]:
+        for result in row:
+            delta = result["fit_result"]["DeltaChi2"]
+            if delta < best_delta:
+                best_delta, best = delta, result
+            if delta > worst_delta:
+                worst_delta, worst = delta, result
+
+    # ——— PLOT BEST Base & WORST Axion ———
     all_x = np.concatenate([np.array(vals[0]) for vals in dataset_none.values()])
     x_grid = np.logspace(np.log10(all_x.min()), np.log10(all_x.max()), 300)
 
-    for tag in ("best", "worst"):
-        res = bw[tag]
-        fit = res["fit_result"]
-        label = f"{tag.capitalize()} ({'Base' if tag=='best' else 'Axion'}) Δχ²={fit['DeltaChi2']:.2f}"
-        y = (logpar_base if tag=="best" else axion_func)(x_grid, *fit[tag.capitalize()]["params"])
-        style = "-" if tag=="best" else "--"
-        ax1.plot(x_grid, y, linestyle=style, linewidth=2, label=label)
+    y_best = logpar_base(x_grid, *best["fit_result"]["Base"]["params"])
+    ax1.plot(x_grid, y_best,
+             label=f"Best Base (Δχ²={best_delta:.2f})", linewidth=2)
 
-        # extract p0 & E_c
-        print(f"{tag.title()} p0 = {res['p0']}, E_c = {res['E_c']}")
+    y_worst = axion_func(x_grid, *worst["fit_result"]["Axion"]["params"])
+    ax1.plot(x_grid, y_worst,
+             linestyle="--", label=f"Worst Axion (Δχ²={worst_delta:.2f})", linewidth=2)
+
+    print("Best p0, E_c:", best["p0"], best["E_c"])
+    print("Worst p0, E_c:", worst["p0"], worst["E_c"])
 
     ax1.legend(loc='upper right')
     ax1.set_xscale('log'); ax1.set_yscale('log')
     ax1.set_ylabel('dN/dE [ photons/cm²/s/MeV ]')
     ax1.set_title(f'{source} - SNR Ratios')
     ax1.grid(True, which="both", linestyle="--", linewidth=0.5)
-
     fig.tight_layout()
-    #fig.savefig("./fit_results/spectral_points_fit.png", dpi=600)
+
     return fig
+
 
 
 source_name = "4FGL J0319.8+4130"
