@@ -188,16 +188,20 @@ def simple_plot_fit(dataset_none, fit_results_none, source, png_naming=""):
         ax_bot.grid(True, which='both', linestyle='--')
         # Pull fit‑stats
         fit = best["fit_result"] if tag=="best" else worst["fit_result"]
-        base_chi2 = fit["Base"]["chi2"]
-        base_dof  = fit["Base"]["dof"]
-        axion_chi2= fit["Axion"]["chi2"]
-        axion_dof = fit["Axion"]["dof"]
-        delta     = spec["delta"]
+        base_chi2, base_dof = fit["Base"]["chi2"], fit["Base"]["dof"]
+        axion_chi2, axion_dof = fit["Axion"]["chi2"], fit["Axion"]["dof"]
+        delta = spec["delta"]
+
+        # Include p0 & E_c
+        p0_val = spec["p0"]
+        ec_val = spec["ec"]
 
         textstr = (
             f"Base χ²/dof = {base_chi2:.2f}/{base_dof}\n"
             f"Axion χ²/dof = {axion_chi2:.2f}/{axion_dof}\n"
-            f"Δχ² = {delta:.2f}"
+            f"Δχ² = {delta:.2f}\n"
+            f"p₀ = {p0_val:.3f}\n"
+            f"E_c = {ec_val:.1f}"
         )
 
         ax_top.text(
