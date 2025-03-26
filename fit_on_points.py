@@ -159,5 +159,5 @@ with open("all_results_none_31_logpar_no_sys_error.pkl", "rb") as file:
 
 with PdfPages("./fit_results/best_worst_fits.pdf") as pdf:
     fig = simple_plot_fit(datasets, all_results_none, source_name, png_naming="")
-pdf.savefig(fig)
-plt.close(fig)
+    pdf.savefig(fig)
+    plt.close(fig)
