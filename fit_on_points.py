@@ -170,9 +170,11 @@ def simple_plot_fit(dataset_none, fit_results_none, source, png_naming=""):
         ax_top.set_yscale('log'); ax_top.legend(loc='upper right')
         ax_top.grid(True, which='both', linestyle='--')
 
-        # Lower: normalized residuals vs Axion
-        resid = (y_data - axion_func(x_data, *spec["params"], (p0_best if tag=='best' else p0_worst), (ec_best if tag=='best' else ec_worst))) / y_err
-        ax_bot.errorbar(x_data, resid, fmt='o',color="black")
+        
+        resid_base = (y_data - logpar_base(x_data, *spec["params"])) / y_err
+        resid_axion = (y_data - axion_func(x_data, *spec["params"], (p0_best if tag=='best' else p0_worst), (ec_best if tag=='best' else ec_worst))) / y_err
+        ax_bot.errorbar(x_data, resid_base, fmt='o',color="orange")
+        ax_bot.errorbar(x_data, resid_axion, fmt='o',color="orange")
         for level,style in zip([0,1,-1,2,-2], ['-','--','--',':',':']):
             ax_bot.axhline(level, linestyle=style)
         ax_bot.set_xscale('log'); ax_bot.set_ylim(-3,3)
