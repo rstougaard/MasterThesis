@@ -44,8 +44,8 @@ mass_unique = axion_data[::n_g, 0]     # length = n_mass
 
 # Define your desired start and stop values
 m_start_val = 1e-10
-g_start_val = 1e-13 #1e-13
-m_stop_val  = 2e-8
+g_start_val = 6e-13 #1e-13
+m_stop_val  = 1e-8
 g_stop_val  = 1e-11
 
 # Find the row (mass) and column (g) indices closest to the desired start values.
@@ -121,7 +121,7 @@ def fit_data(x, y, y_err, emin, emax, p0, E_c, k, source_name, dataset_label, us
         p0_base = [1e-9, 2.0, 0.1]  # Initial guesses
 
         def axion_func(E, Norm, alpha_, beta_, w):
-            return base(E, Norm, alpha_, beta_) * (1 - p0 / (1 + (E_c / E) ** k) * (1+0.2*np.tanh(w)))
+            return base(E, Norm, alpha_, beta_) * (1 - (p0 / (1 + (E_c / E) ** k)) * (1+0.2*np.tanh(w)))
         
         bounds_alp = ([1e-12, -1.0, -1.0, -np.pi], [1e-7, 5.0, 3.0, np.pi])  # Lower and upper bounds
         p0_alp= [1e-9, 2.0, 0.1, np.pi/2]
@@ -757,14 +757,14 @@ with open(f'Source_ra_dec_specin.txt', 'r') as file:
                     print(source_name)
                     #No systematic errors added
                     results = nested_fits_combined(datasets, source_name, useEBL=True, fitting_method="no_sys_error", basefunc = "logpar", chunk_size=30)
-                    results_snr = nested_fits_combined(datasets_snr, source_name, useEBL=True, fitting_method="no_sys_error", basefunc = "logpar", chunk_size=30)
-                    results_lin= nested_fits_combined(datasets_lin, source_name, useEBL=True, fitting_method="no_sys_error", basefunc = "logpar", chunk_size=30)
+                    #results_snr = nested_fits_combined(datasets_snr, source_name, useEBL=True, fitting_method="no_sys_error", basefunc = "logpar", chunk_size=30)
+                    #results_lin= nested_fits_combined(datasets_lin, source_name, useEBL=True, fitting_method="no_sys_error", basefunc = "logpar", chunk_size=30)
                     
 
                     all_results_none[source_name] = results
                     with open("all_results_none_31_logpar_no_sys_error.pkl", "wb") as file:
                         pickle.dump(all_results_none, file)
-                      
+                     '''  
                     all_results_snr[source_name] = results_snr
                     with open("all_results_snr_31_logpar_no_sys_error.pkl", "wb") as file:
                         pickle.dump(all_results_snr, file)
@@ -772,17 +772,17 @@ with open(f'Source_ra_dec_specin.txt', 'r') as file:
                     all_results_lin[source_name] = results_lin
                     with open("all_results_lin_31_logpar_no_sys_error.pkl", "wb") as file:
                         pickle.dump(all_results_lin, file)
-
+                    ''' 
                     #With systematic errors added
                     results_sys = nested_fits_combined(datasets, source_name, useEBL=True, fitting_method="sys_error", basefunc = "logpar", chunk_size=30)
-                    results_snr_sys = nested_fits_combined(datasets_snr, source_name, useEBL=True, fitting_method="sys_error", basefunc = "logpar", chunk_size=30)
-                    results_lin_sys= nested_fits_combined(datasets_lin, source_name, useEBL=True, fitting_method="sys_error", basefunc = "logpar", chunk_size=30)
+                    #results_snr_sys = nested_fits_combined(datasets_snr, source_name, useEBL=True, fitting_method="sys_error", basefunc = "logpar", chunk_size=30)
+                    #results_lin_sys= nested_fits_combined(datasets_lin, source_name, useEBL=True, fitting_method="sys_error", basefunc = "logpar", chunk_size=30)
                     
 
                     all_results_none_sys[source_name] = results_sys
                     with open("all_results_none_31_logpar_sys_error.pkl", "wb") as file:
                         pickle.dump(all_results_none_sys, file)
-                      
+                    '''   
                     all_results_snr_sys[source_name] = results_snr_sys
                     with open("all_results_snr_31_logpar_sys_error.pkl", "wb") as file:
                         pickle.dump(all_results_snr_sys, file)
@@ -791,7 +791,7 @@ with open(f'Source_ra_dec_specin.txt', 'r') as file:
                     with open("all_results_lin_31_logpar_sys_error.pkl", "wb") as file:
                         pickle.dump(all_results_lin_sys, file)
 
-                    ''' 
+                    
                     plot_delta_chi2_heatmap(results, dataset_label="No_Filtering", png_naming =f"{source_name_cleaned}")
                     
                     plot_delta_chi2_heatmap(results_snr, dataset_label="snr_3", png_naming =f"{source_name_cleaned}")
