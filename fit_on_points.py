@@ -171,15 +171,42 @@ def simple_plot_fit(dataset_none, fit_results_none, source, png_naming=""):
         ax_top.grid(True, which='both', linestyle='--')
 
         
-        resid_base = (y_data - logpar_base(x_data, *spec["params"])) / y_err
-        resid_axion = (y_data - axion_func(x_data, *spec["params"], (p0_best if tag=='best' else p0_worst), (ec_best if tag=='best' else ec_worst))) / y_err
-        ax_bot.errorbar(x_data, resid_base, fmt='o',color="orange")
-        ax_bot.errorbar(x_data, resid_axion, fmt='o',color="orange")
+        base_params = best["fit_result"]["Base"]["params"] if tag=="best" else worst["fit_result"]["Base"]["params"]
+        resid_base = (y_data - logpar_base(x_data, *base_params)) / y_err
+
+        # Compute Axion residuals (as before)
+        axion_params = spec["params"]
+        resid_axion = (y_data - axion_func(x_data, *axion_params, (p0_best if tag=="best" else p0_worst), (ec_best if tag=="best" else ec_worst))) / y_err
+
+        ax_bot.errorbar(x_data, resid_base, fmt='s', label='Base residuals')
+        ax_bot.errorbar(x_data, resid_axion, fmt='o', label='Axion residuals')
         for level,style in zip([0,1,-1,2,-2], ['-','--','--',':',':']):
             ax_bot.axhline(level, linestyle=style)
         ax_bot.set_xscale('log'); ax_bot.set_ylim(-3,3)
         ax_bot.set_xlabel('Energy [MeV]'); ax_bot.set_ylabel('Residuals')
         ax_bot.grid(True, which='both', linestyle='--')
+        # Pull fit‑stats
+        fit = best["fit_result"] if tag=="best" else worst["fit_result"]
+        base_chi2 = fit["Base"]["chi2"]
+        base_dof  = fit["Base"]["dof"]
+        axion_chi2= fit["Axion"]["chi2"]
+        axion_dof = fit["Axion"]["dof"]
+        delta     = spec["delta"]
+
+        textstr = (
+            f"Base χ²/dof = {base_chi2:.2f}/{base_dof}\n"
+            f"Axion χ²/dof = {axion_chi2:.2f}/{axion_dof}\n"
+            f"Δχ² = {delta:.2f}"
+        )
+
+        ax_top.text(
+            0.05, 0.05, textstr,
+            transform=ax_top.transAxes,
+            fontsize=10,
+            verticalalignment='bottom',
+            horizontalalignment='left',
+            bbox=dict(boxstyle="round", facecolor="white", alpha=0.7)
+        )
 
         ax_top.set_title(f"{source} — {tag.capitalize()} Fit (Δχ²={spec['delta']:.2f})")
         fig.tight_layout()
