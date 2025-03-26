@@ -131,5 +131,7 @@ print(source_name)
 with open("all_results_none_31_logpar_no_sys_error.pkl", "rb") as file:
     all_results_none = pickle.load(file)
 
+print(all_results_none[source_name])
+
 with PdfPages("./fit_results/best_worst_fits.pdf") as pdf:
     fig = simple_plot_fit(datasets, all_results_none, source_name, png_naming="")
