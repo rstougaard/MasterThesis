@@ -147,27 +147,25 @@ def simple_plot_fit(dataset_none, fit_results_none, source, png_naming=""):
         return logpar_base(E, Norm, alpha, beta) * (1 - (p0/(1+(E_c/E)**k))*(1+0.2*np.tanh(w)))
 
     fitspec = {}
-    for tag, res, p0, ec in [('best', best, p0_best, ec_best), ('worst', worst, p0_worst, ec_worst)]:
-        fit = res['fit_result']
-        base_curve = logpar_base(x_grid, *fit['Base']['params'])
-        axion_curve = axion_func(x_grid, *fit['Axion']['params'], p0, ec)
-        # find mass & coupling indices
-        mask = np.isclose(p0_masked, p0) & np.isclose(ec_masked, ec)
-        i,j = np.where(mask)
+    for tag, res, p0, ec in [("best", best, p0_best, ec_best), ("worst", worst, p0_worst, ec_worst)]:
+        fit = res["fit_result"]
+        base_curve = logpar_base(x_grid, *fit["Base"]["params"])
+        axion_curve = axion_func(x_grid, *fit["Axion"]["params"], p0, ec)
+        # find indices in grid
+        mask_grid = np.isclose(p0_masked, p0) & np.isclose(ec_masked, ec)
+        i, j = np.where(mask_grid)
         m_val = m_masked[i[0]] if i.size else np.nan
         g_val = g_masked[j[0]] if j.size else np.nan
         fitspec[tag] = {
-            'base': base_curve,
-            'axion': axion_curve,
-            'delta': res['fit_result']['DeltaChi2'],
-            'chi2_base': fit['Base']['chi2'], 'dof_base': fit['Base']['dof'],
-            'chi2_axion': fit['Axion']['chi2'], 'dof_axion': fit['Axion']['dof'],
-            'p0': p0, 'ec': ec,
-            'm': m_val, 'g': g_val,
-            'params_axion': fit['Axion']['params'],
-            'params_base': fit['Base']['params']
+            "base": base_curve,
+            "axion": axion_curve,
+            "delta": res["fit_result"]["DeltaChi2"],
+            "chi2_base": fit["Base"]["chi2"], "dof_base": fit["Base"]["dof"],
+            "chi2_axion": fit["Axion"]["chi2"], "dof_axion": fit["Axion"]["dof"],
+            "p0": p0, "ec": ec, "m": m_val, "g": g_val,
+            "params_axion": fit["Axion"]["params"],
+            "params_base": fit["Base"]["params"]
         }
-
 
     def make_figure(tag):
         fig, (ax_top, ax_bot) = plt.subplots(2,1, sharex=True, figsize=(10,8), gridspec_kw={"height_ratios":[3,1]})
@@ -214,11 +212,12 @@ def simple_plot_fit(dataset_none, fit_results_none, source, png_naming=""):
         # Include p0 & E_c
         p0_val = spec["p0"]
         ec_val = spec["ec"]
+
         textstr = (
             f"Base χ²/dof = {spec['chi2_base']:.2f}/{spec['dof_base']}\n"
             f"Axion χ²/dof = {spec['chi2_axion']:.2f}/{spec['dof_axion']}\n"
             f"Δχ² = {spec['delta']:.2f}\n"
-            f"p₀={spec['p0']:.3f}, Ec={spec['ec']:.1f}\n"
+            f"p₀={spec['p0']:.3f}, E_c={spec['ec']:.1f}\n"
             f"m={spec['m']:.3f}, g={spec['g']:.3e}"
         )
 
