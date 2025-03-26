@@ -167,6 +167,7 @@ def simple_plot_fit(dataset_none, fit_results_none, source, png_naming=""):
             ax_top.errorbar(x,y,xerr=[x-emin_arr,emax_arr-x], yerr=y_err, fmt='o', color="black", capsize=3, label=label)
         ax_top.plot(x_grid, spec["base"], label=f"{tag.capitalize()} Base", linewidth=2)
         ax_top.plot(x_grid, spec["axion"], linestyle="--", label=f"{tag.capitalize()} Axion", linewidth=2)
+        ax_top.set_ylabel('dN/dE')
         ax_top.set_yscale('log'); ax_top.legend(loc='upper right')
         ax_top.grid(True, which='both', linestyle='--')
 
@@ -217,41 +218,42 @@ def simple_plot_fit(dataset_none, fit_results_none, source, png_naming=""):
     return fig_best, fig_worst
 
 
-source_name = "4FGL J0319.8+4130"
-
-source_name_cleaned = (
-    source_name.replace(" ", "")
-    .replace(".", "dot")
-    .replace("+", "plus")
-    .replace("-", "minus")
-    .replace('"', '')  # Ensure no extra quotes remain
-)
-
-f_bin = fits.open(f'./fit_results/{source_name_cleaned}_fit_data_NONE.fits')
-bin_data = f_bin[1].data
-
-# Sort the data by the 'emin' column
-sorted_indices = np.argsort(bin_data['emin'])  # Get sorted indices
-sorted_data_none = bin_data[sorted_indices]  # Reorder the data using sorted indices
-print("No filtering")
-print(sorted_data_none)
-print()
-
-#print(sorted_data_snr5['geometric_mean'])
-#print( sorted_data_snr5['flux_tot_value'])
-
-datasets = {f"No_Filtering": (sorted_data_none['geometric_mean'], sorted_data_none['flux_tot_value'], sorted_data_none['flux_tot_error'], sorted_data_none['emin'], sorted_data_none['emax'] )}
-
-print(source_name)
-
 with open("all_results_none_31_logpar_no_sys_error.pkl", "rb") as file:
     all_results_none = pickle.load(file)
+output_pdf = "./fit_results/best_worst_fits.pdf"
 
-#print(all_results_none[source_name])
+with PdfPages(output_pdf) as pdf:
+    for source in all_results_none.keys():
+        # Clean filename exactly as you already do
+        cleaned = (
+            source.replace(" ", "")
+                  .replace(".", "dot")
+                  .replace("+", "plus")
+                  .replace("-", "minus")
+                  .replace('"', "")
+        )
 
-with PdfPages("./fit_results/best_worst_fits.pdf") as pdf:
-    fig1, fig2 = simple_plot_fit(datasets, all_results_none, source_name, png_naming="")
-    pdf.savefig(fig1)
-    plt.close(fig1)
-    pdf.savefig(fig2)
-    plt.close(fig2)
+        # Load & sort that source’s spectral‑points FITS
+        f_bin = fits.open(f'./fit_results/{cleaned}_fit_data_NONE.fits')
+        bin_data = f_bin[1].data
+        sorted_idx = np.argsort(bin_data['emin'])
+        sd = bin_data[sorted_idx]
+
+        # Build the single “No_Filtering” dataset dict
+        datasets = {
+            "No_Filtering": (
+                sd['geometric_mean'], sd['flux_tot_value'], sd['flux_tot_error'],
+                sd['emin'], sd['emax']
+            )
+        }
+
+        # Generate the two figures
+        fig_best, fig_worst = simple_plot_fit(datasets, all_results_none, source)
+
+        # Save each as a new page
+        pdf.savefig(fig_best)
+        plt.close(fig_best)
+        pdf.savefig(fig_worst)
+        plt.close(fig_worst)
+
+print(f"Saved all best/worst fits into {output_pdf}")
