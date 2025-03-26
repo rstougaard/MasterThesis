@@ -26,14 +26,20 @@ def axion_func(E, Norm, alpha_, beta_, w):
         return logpar_base(E, Norm, alpha_, beta_) * (1 - (p0 / (1 + (E_c / E) ** k)) * (1+0.2*np.tanh(w)))
 
 def find_best_worst_fits(fits):
-    # If this is one fit (has "fit_result"), wrap it so we can iterate
+    # Normalize into a flat list of result‑dicts
     if isinstance(fits, dict) and "fit_result" in fits:
-        fits = {"only": fits}
+        results = [fits]
+    elif isinstance(fits, list):
+        results = fits
+    elif isinstance(fits, dict):
+        results = list(fits.values())
+    else:
+        raise ValueError("find_best_worst_fits() got unsupported type")
 
     best, worst = None, None
     best_delta, worst_delta = np.inf, -np.inf
 
-    for result in fits.values():
+    for result in results:
         delta = result["fit_result"]["DeltaChi2"]
         if delta < best_delta:
             best_delta, best = delta, result
@@ -135,7 +141,7 @@ print(source_name)
 with open("all_results_none_31_logpar_no_sys_error.pkl", "rb") as file:
     all_results_none = pickle.load(file)
 
-print(all_results_none[source_name])
+#print(all_results_none[source_name])
 
 with PdfPages("./fit_results/best_worst_fits.pdf") as pdf:
     fig = simple_plot_fit(datasets, all_results_none, source_name, png_naming="")
