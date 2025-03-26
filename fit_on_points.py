@@ -186,11 +186,10 @@ def simple_plot_fit(dataset_none, fit_results_none, source, png_naming=""):
     g_best = g_masked[j_best[0]]
 
     # Find the grid‐cell indices for worst fit
-    mask_worst = np.isclose(p0_masked, p0_worst) & np.isclose(ec_masked, ec_worst)
-    i_worst, j_worst = np.where(mask_worst)
-    print(i_worst, j_worst)
-    m_worst = m_masked[i_worst[0]]
-    g_worst = g_masked[j_worst[0]]
+    dist2 = (p0_masked - p0_worst)**2 + (ec_masked - ec_worst)**2
+    i_worst, j_worst = np.unravel_index(np.argmin(dist2), p0_masked.shape)
+    m_worst = m_masked[i_worst]
+    g_worst = g_masked[j_worst]
 
     print(f"Best fit → mass = {m_best}, coupling = {g_best}")
     print(f"Worst fit → mass = {m_worst}, coupling = {g_worst}")
