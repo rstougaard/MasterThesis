@@ -187,8 +187,8 @@ def simple_plot_fit(dataset_none, fit_results_none, source, png_naming=""):
         base_resid = (y_masked - logpar_base(x_masked, *spec['params_base'])) / yerr_masked
         axion_resid = (y_masked - axion_func(x_masked, *spec['params_axion'], spec['p0'], spec['ec'])) / yerr_masked
 
-        ax_bot.errorbar(x_masked, base_resid, fmt='s', color="green", label='Base residuals')
-        ax_bot.errorbar(x_masked, axion_resid, fmt='o', color="orange", label='Axion residuals')
+        ax_bot.errorbar(x_masked, base_resid, fmt='s', color="orange", label='Base residuals')
+        ax_bot.errorbar(x_masked, axion_resid, fmt='o', color="green", label='Axion residuals')
         for level,style in zip([0,1,-1,2,-2], ['-','--','--',':',':']):
             ax_bot.axhline(level, linestyle=style)
         ax_bot.set_xscale('log'); ax_bot.set_ylim(-3,3)
