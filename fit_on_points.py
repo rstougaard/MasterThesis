@@ -194,13 +194,17 @@ def simple_plot_fit(dataset_none, fit_results_none, source, png_naming=""):
         ax_bot.set_xscale('log'); ax_bot.set_ylim(-3,3)
         ax_bot.set_xlabel('Energy [MeV]'); ax_bot.set_ylabel('Residuals')
         ax_bot.grid(True, which='both', linestyle='--')
-        
+        base_chi2, base_dof = spec['chi2_base'], spec['dof_base']
+        axion_chi2, axion_dof = spec['chi2_axion'], spec['dof_axion']
+        delta = spec['delta']
         textstr = (
-            f"Base χ²/dof = {spec['chi2_base']:.2f}/{spec['dof_base']}\n"
-            f"Axion χ²/dof = {spec['chi2_axion']:.2f}/{spec['dof_axion']}\n"
-            f"Δχ² = {spec['delta']:.2f}\n"
+            f"Base χ²/dof = {base_chi2:.2f}/{base_dof}\n"
+            f"Axion χ²/dof = {axion_chi2:.2f}/{axion_dof}\n"
+            f"Δχ² = {delta:.2f}\n"
+            f"Base params: {', '.join(f'{v:.3g}' for v in spec['params_base'])}\n"
+            f"Axion params: {', '.join(f'{v:.3g}' for v in spec['params_axion'])}\n\n"
             f"p₀={spec['p0']:.3f}, E_c={spec['ec']:.1f}\n"
-            f"m={spec['m']/1e-9:.3f}, g={spec['g']:.3e}"
+            f"m={spec['m']:.3f}, g={spec['g']:.3e}"
         )
 
         ax_top.text(
