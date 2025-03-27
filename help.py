@@ -31,11 +31,15 @@ for row in focus:
             "Axion χ²/dof": f"{ax['chi2']:.2f}/{ax['dof']}",
             "Δχ²": fr["DeltaChi2"]
         })
-
 df = pd.DataFrame(rows)
 
-# Write as plain‑text table
-with open("fit_summary_focus.txt", "w") as fout:
-    fout.write(df.to_string(index=False))
+# Format tuple columns to three significant figures
+for col in ["Base params", "Axion params"]:
+    df[col] = df[col].apply(lambda t: "(" + ", ".join(f"{x:.3g}" for x in t) + ")")
+
+# Write to plain-text file with 3 significant figures for floats
+output_path = "fit_summary_focus.txt"
+with open(output_path, "w") as fout:
+    fout.write(df.to_string(index=False, float_format=lambda x: f"{x:.3g}"))
 
 print("LaTeX table written to fit_summary_focus.txt")
