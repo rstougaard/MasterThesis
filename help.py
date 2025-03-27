@@ -33,12 +33,15 @@ for row in focus:
         })
 df = pd.DataFrame(rows)
 
+# Sort rows by p0 ascending
+df.sort_values(by="p0", inplace=True)
+
 # Format tuple columns to three significant figures
 for col in ["Base params", "Axion params"]:
     df[col] = df[col].apply(lambda t: "(" + ", ".join(f"{x:.3g}" for x in t) + ")")
 
 # Write to plain-text file with 3 significant figures for floats
-output_path = "fit_summary_focus.txt"
+output_path = "fit_summary_focus_newp0.txt"
 with open(output_path, "w") as fout:
     fout.write(df.to_string(index=False, float_format=lambda x: f"{x:.3g}"))
 
