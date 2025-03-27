@@ -11,7 +11,7 @@ import pickle
 import pandas as pd
 
 # Load your results
-with open("all_results_none_31_logpar_no_sys_error.pkl", "rb") as f:
+with open("all_results_none_31_logpar_no_sys_error_newp0.pkl", "rb") as f:
     all_results_none = pickle.load(f)
 
 focus = all_results_none["4FGL J0309.4-4000"]["No_Filtering"]
@@ -50,7 +50,7 @@ for col in ["Base params", "Axion params"]:
     df_summary[col] = df_summary[col].apply(lambda t: "(" + ", ".join(f"{x:.3g}" for x in t) + ")")
 
 # Write to plain-text file
-output_path = "fit_summary_focus_betap0_0.1.txt"
+output_path = "fit_summary_focus_betap0_0.001.txt"
 with open(output_path, "w") as fout:
     fout.write(df_summary.to_string(index=False, float_format=lambda x: f"{x:.3g}"))
 
