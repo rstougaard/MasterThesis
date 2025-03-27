@@ -118,13 +118,13 @@ def fit_data(x, y, y_err, emin, emax, p0, E_c, k, source_name, dataset_label, us
 
         base = LogPar_EBL
         bounds_base = ([1e-12, -1.0, -1.0], [1e-7, 5.0, 3.0])  # Lower and upper bounds
-        p0_base = [1e-9, 2.0, 0.1]  # Initial guesses
+        p0_base = [1e-9, 2.0, 0.001]  # Initial guesses
 
         def axion_func(E, Norm, alpha_, beta_, w):
             return base(E, Norm, alpha_, beta_) * (1 - (p0 / (1 + (E_c / E) ** k)) * (1+0.2*np.tanh(w)))
         
         bounds_alp = ([1e-12, -1.0, -1.0, -np.pi], [1e-7, 5.0, 3.0, np.pi])  # Lower and upper bounds
-        p0_alp= [1e-9, 2.0, 0.1, np.pi/2]
+        p0_alp= [1e-9, 2.0, 0.001, np.pi/2]
 
     elif useEBL and basefunc == "cutoff":
         with fits.open('table-4LAC-DR3-h.fits') as f:
@@ -142,7 +142,7 @@ def fit_data(x, y, y_err, emin, emax, p0, E_c, k, source_name, dataset_label, us
         p0_base = [1e-9, 2.0, 2.0]  # Initial guesses
 
         def axion_func(E, Norm, l1, l2, w):
-            return base(E, Norm, l1, l2) * (1 - p0 / (1 + (E_c / E) ** k) * (1+0.2*np.tanh(w)))
+            return base(E, Norm, l1, l2) * (1 - (p0 / (1 + (E_c / E) ** k)) * (1+0.2*np.tanh(w)))
         
         bounds_alp = ([1e-12, -5.0, -5.0, -np.pi], [1e-7, 5.0, 5.0, np.pi])  # Lower and upper bounds
         p0_alp= [1e-9, 2.0, 2.0, np.pi/2]
@@ -762,7 +762,7 @@ with open(f'Source_ra_dec_specin.txt', 'r') as file:
                     
 
                     all_results_none[source_name] = results
-                    with open("all_results_none_31_logpar_no_sys_error.pkl", "wb") as file:
+                    with open("all_results_none_31_logpar_no_sys_error_newp0.pkl", "wb") as file:
                         pickle.dump(all_results_none, file)
                     '''  
                     all_results_snr[source_name] = results_snr
@@ -780,7 +780,7 @@ with open(f'Source_ra_dec_specin.txt', 'r') as file:
                     
 
                     all_results_none_sys[source_name] = results_sys
-                    with open("all_results_none_31_logpar_sys_error.pkl", "wb") as file:
+                    with open("all_results_none_31_logpar_sys_error_newp0.pkl", "wb") as file:
                         pickle.dump(all_results_none_sys, file)
                     '''   
                     all_results_snr_sys[source_name] = results_snr_sys
