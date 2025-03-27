@@ -176,8 +176,8 @@ def simple_plot_fit(dataset_none, fit_results_none, source, png_naming=""):
         ax_top.errorbar(eav[1:], fl[1:], yerr=[-dfl0[1:],dfl1[1:]], fmt='o', uplims=ul[1:], label="gll_psc_v35")
         for label,(x,y,y_err,emin_arr,emax_arr) in dataset_none.items():
             ax_top.errorbar(x,y,xerr=[x-emin_arr,emax_arr-x], yerr=y_err, fmt='o', color="black", capsize=3, label=label)
-        ax_top.plot(x_grid, spec["base"], label=f"{tag.capitalize()} Base", linewidth=2)
-        ax_top.plot(x_grid, spec["axion"], linestyle="--", label=f"{tag.capitalize()} Axion", linewidth=2)
+        ax_top.plot(x_grid, spec["base"], label=f"{tag.capitalize()} Base", color="orange",linewidth=2)
+        ax_top.plot(x_grid, spec["axion"], linestyle="--", color="green",label=f"{tag.capitalize()} Axion", linewidth=2)
         ax_top.set_ylabel('dN/dE')
         ax_top.set_yscale('log'); ax_top.legend(loc='upper right')
         ax_top.grid(True, which='both', linestyle='--')
