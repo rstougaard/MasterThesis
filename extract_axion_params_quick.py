@@ -113,14 +113,15 @@ def fit_data(x, y, y_err, emin, emax, bin_size, p0, E_c, k, source_name, dataset
             data1 = f[1].data
         idx = (data1['Source_Name'] == source_name)
         z = data1['Redshift'][idx][0]
-        ebl = EblAbsorptionModel(z).transmission(x_filtered * u.MeV)
+        
         
         def LogPar_EBL(E, Norm, alpha_, beta_):
+            ebl = EblAbsorptionModel(z).transmission(E * u.MeV)
             return logpar_base(E, Norm, alpha_, beta_) * ebl
 
         base = LogPar_EBL
-        bounds_base = ([1e-12, -1.0, -1.0], [1e-7, 5.0, 3.0])  # Lower and upper bounds
-        p0_base = [1e-9, 2.0, 0.001]  # Initial guesses
+        bounds_base = ([1e-14, -1.0, -1.0], [1e-9, 5.0, 3.0])  # Lower and upper bounds
+        p0_base = [1e-11, 2.0, 0.001]  # Initial guesses
 
         def axion_func(E, Norm, alpha_, beta_, w):
             return base(E, Norm, alpha_, beta_) * (1 - (p0 / (1 + (E_c / E) ** k)) * (1+0.2*np.tanh(w)))
