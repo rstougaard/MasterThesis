@@ -134,7 +134,7 @@ def simple_plot_fit(dataset_none, fit_results_none, source, png_naming=""):
     p0_best, ec_best = best["p0"], best["E_c"]
     p0_worst, ec_worst = worst["p0"], worst["E_c"]
 
-    mask = y_data > 1e-13
+    mask = (y_data != 0) & (np.abs(y_data) >= 1e-13)
     x_masked   = x_data[mask]
     y_masked   = y_data[mask]
     yerr_masked = y_err[mask]
