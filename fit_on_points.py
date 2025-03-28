@@ -274,7 +274,7 @@ with PdfPages(output_pdf) as pdf:
             header = "geometric_mean flux_tot_value flux_tot_error emin emax"
             
             # Save the data to a text file. Adjust the format (here '%f') if you need different precision.
-            np.savetxt("output.txt", data, header=header, fmt='%f')
+            np.savetxt("output.txt", data, header=header, fmt='%s')
 
 
         # Generate the two figures
