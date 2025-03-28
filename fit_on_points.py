@@ -119,7 +119,8 @@ def simple_plot_fit(dataset_none, fit_results_none, source, png_naming=""):
     # Pick first dataset for residuals
     first = next(iter(dataset_none.values()))
     x_data, y_data, y_err, emin_arr, emax_arr = map(np.array, first)
-
+    bin_size = emax_arr - emin_arr
+    
     # ————— Find best & worst —————
     best, worst = None, None
     best_delta, worst_delta = np.inf, -np.inf
@@ -135,9 +136,11 @@ def simple_plot_fit(dataset_none, fit_results_none, source, png_naming=""):
     p0_worst, ec_worst = worst["p0"], worst["E_c"]
 
     mask = (y_data != 0) & (np.abs(y_data) >= 1e-13)
+    binsize_masked = bin_size[mask]
     x_masked   = x_data[mask]
-    y_masked   = y_data[mask]
-    yerr_masked = y_err[mask]
+    y_masked   = y_data[mask]/binsize_masked
+    yerr_masked = y_err[mask]/binsize_masked
+    
 
     all_x = np.concatenate([np.array(vals[0]) for vals in dataset_none.values()])
     x_grid = np.logspace(np.log10(x_masked.min()), np.log10(x_masked.max()), 300)
@@ -225,7 +228,7 @@ def simple_plot_fit(dataset_none, fit_results_none, source, png_naming=""):
     return fig_best, fig_worst
 
 
-with open("all_results_none_31_logpar_no_sys_error.pkl", "rb") as file:
+with open("all_results_none_31_logpar_no_sys_error_newp0.pkl", "rb") as file:
     all_results_none = pickle.load(file)
 output_pdf = "./fit_results/best_worst_fits.pdf"
 
