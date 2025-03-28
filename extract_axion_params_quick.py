@@ -86,10 +86,12 @@ def reduced_chi_square(y_obs, y_fit, y_err, num_params):
     dof = len(y_obs) - num_params  # Degrees of freedom
     return chi2 , dof
 
-def fit_data(x, y, y_err, emin, emax, p0, E_c, k, source_name, dataset_label, useEBL=True, fitting_method="no_sys_error", basefunc = "cutoff"):
+def fit_data(x, y, y_err, emin, emax, bin_size, p0, E_c, k, source_name, dataset_label, useEBL=True, fitting_method="no_sys_error", basefunc = "cutoff"):
     # Filter out points where y is zero
     mask = (y != 0) & (np.abs(y) >= 1e-13)
-    x_filtered, y_filtered, y_err_filtered, emin_f, emax_f  = x[mask], y[mask], y_err[mask], emin[mask], emax[mask]
+    x_filtered, y_filtered, y_err_filtered, emin_f, emax_f, bin_size_masked  = x[mask], y[mask], y_err[mask], emin[mask], emax[mask], bin_size[mask]
+    y_filtered = y_filtered/bin_size_masked
+    y_err_filtered = y_err_filtered/bin_size_masked
 
     if fitting_method in ["with_sys_error", "sys_error"]:
         if not mask[-1]:
@@ -614,7 +616,7 @@ results = nested_fits(datasets, source_name, useEBL=True)
 results_snr = nested_fits(datasets_snr, source_name, useEBL=True)
 results_lin= nested_fits(datasets_lin, source_name, useEBL=True)
 '''
-def process_chunk(i, j_start, j_end, x, y, y_err, emin, emax, source_name, dataset_label, useEBL, fitting_method, basefunc):
+def process_chunk(i, j_start, j_end, x, y, y_err, emin, emax, bin_size, source_name, dataset_label, useEBL, fitting_method, basefunc):
     # For row i, get a chunk of p0 and Ec values from the masked grid.
     p0_chunk = p0_masked[i, j_start:j_end]
     ec_chunk = ec_masked[i, j_start:j_end]
@@ -628,6 +630,7 @@ def process_chunk(i, j_start, j_end, x, y, y_err, emin, emax, source_name, datas
             y_err=np.array(y_err),
             emin=np.array(emin),
             emax=np.array(emax),
+            binsize=bin_size,
             p0=p0_val,
             E_c=ec_val,
             k=k,  # Ensure k is defined in the scope
@@ -649,7 +652,7 @@ def process_chunk(i, j_start, j_end, x, y, y_err, emin, emax, source_name, datas
         "fit_result": results_chunk[idx]
     } for idx in range(len(p0_chunk))]
 
-def nested_fits_combined(datasets, source_name, useEBL=True, fitting_method="no_sys_error", basefunc = "cutoff", chunk_size=10):
+def nested_fits_combined(datasets, bin_size, source_name, useEBL=True, fitting_method="no_sys_error", basefunc = "cutoff", chunk_size=10):
     """
     This function processes each row (mass) of the masked (p0, Ec) grid.
     Each row is split into chunks (to minimize overhead) and processed in parallel.
@@ -670,7 +673,7 @@ def nested_fits_combined(datasets, source_name, useEBL=True, fitting_method="no_
                 tasks.append(delayed(process_chunk)(
                     i, j_start, j_end, 
                     np.array(x), np.array(y), np.array(y_err),
-                    np.array(emin), np.array(emax),
+                    np.array(emin), np.array(emax), bin_size,
                     source_name, dataset_label, useEBL, fitting_method, basefunc
                 ))
             # Execute the tasks in parallel for row i.
@@ -748,15 +751,15 @@ with open(f'Source_ra_dec_specin.txt', 'r') as file:
                     bin_size = np.array(sorted_data_none['emax'])-np.array(sorted_data_none['emin'])
                     e_lowers = sorted_data_none['geometric_mean'] - sorted_data_none['emin']
                     e_uppers = sorted_data_none['emax'] - sorted_data_none['geometric_mean']
-                    datasets = {f"No_Filtering": (sorted_data_none['geometric_mean'], sorted_data_none['flux_tot_value']/bin_size, sorted_data_none['flux_tot_error'], sorted_data_none['emin'], sorted_data_none['emax'] )}
-                    datasets_snr = {f"snr_3": (sorted_data_snr3['geometric_mean'], sorted_data_snr3['flux_tot_value']/bin_size, sorted_data_snr3['flux_tot_error']/bin_size, sorted_data_snr3['emin'], sorted_data_snr3['emax'] ),
-                                    f"snr_5": (sorted_data_snr5['geometric_mean'], sorted_data_snr5['flux_tot_value']/bin_size, sorted_data_snr5['flux_tot_error']/bin_size, sorted_data_snr5['emin'], sorted_data_snr5['emax'] ),
-                                    f"snr_10": (sorted_data_snr10['geometric_mean'], sorted_data_snr10['flux_tot_value']/bin_size, sorted_data_snr10['flux_tot_error']/bin_size, sorted_data_snr10['emin'], sorted_data_snr10['emax'] )}
-                    datasets_lin = {f"week": (sorted_data_lin_week['geometric_mean'], sorted_data_lin_week['flux_tot_value']/bin_size, sorted_data_lin_week['flux_tot_error']/bin_size, sorted_data_lin_week['emin'], sorted_data_lin_week['emax'] ),
-                                    f"month": (sorted_data_lin_month['geometric_mean'], sorted_data_lin_month['flux_tot_value']/bin_size, sorted_data_lin_month['flux_tot_error']/bin_size, sorted_data_lin_month['emin'], sorted_data_lin_month['emax'] )}
+                    datasets = {f"No_Filtering": (sorted_data_none['geometric_mean'], sorted_data_none['flux_tot_value'], sorted_data_none['flux_tot_error'], sorted_data_none['emin'], sorted_data_none['emax'] )}
+                    datasets_snr = {f"snr_3": (sorted_data_snr3['geometric_mean'], sorted_data_snr3['flux_tot_value'], sorted_data_snr3['flux_tot_error'], sorted_data_snr3['emin'], sorted_data_snr3['emax'] ),
+                                    f"snr_5": (sorted_data_snr5['geometric_mean'], sorted_data_snr5['flux_tot_value'], sorted_data_snr5['flux_tot_error'], sorted_data_snr5['emin'], sorted_data_snr5['emax'] ),
+                                    f"snr_10": (sorted_data_snr10['geometric_mean'], sorted_data_snr10['flux_tot_value'], sorted_data_snr10['flux_tot_error'], sorted_data_snr10['emin'], sorted_data_snr10['emax'] )}
+                    datasets_lin = {f"week": (sorted_data_lin_week['geometric_mean'], sorted_data_lin_week['flux_tot_value'], sorted_data_lin_week['flux_tot_error'], sorted_data_lin_week['emin'], sorted_data_lin_week['emax'] ),
+                                    f"month": (sorted_data_lin_month['geometric_mean'], sorted_data_lin_month['flux_tot_value'], sorted_data_lin_month['flux_tot_error'], sorted_data_lin_month['emin'], sorted_data_lin_month['emax'] )}
                     print(source_name)
                     #No systematic errors added
-                    results = nested_fits_combined(datasets, source_name, useEBL=True, fitting_method="no_sys_error", basefunc = "logpar", chunk_size=30)
+                    results = nested_fits_combined(datasets, bin_size, source_name, useEBL=True, fitting_method="no_sys_error", basefunc = "logpar", chunk_size=30)
                     #results_snr = nested_fits_combined(datasets_snr, source_name, useEBL=True, fitting_method="no_sys_error", basefunc = "logpar", chunk_size=30)
                     #results_lin= nested_fits_combined(datasets_lin, source_name, useEBL=True, fitting_method="no_sys_error", basefunc = "logpar", chunk_size=30)
                     
