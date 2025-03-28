@@ -113,8 +113,8 @@ def fit_data(x, y, y_err, emin, emax, p0, E_c, k, source_name, dataset_label, us
         z = data1['Redshift'][idx][0]
         ebl = EblAbsorptionModel(z).transmission(x_filtered * u.MeV)
         
-        def LogPar_EBL(x, Norm, alpha_, beta_):
-            return logpar_base(x, Norm, alpha_, beta_) * ebl
+        def LogPar_EBL(E, Norm, alpha_, beta_):
+            return logpar_base(E, Norm, alpha_, beta_) * ebl
 
         base = LogPar_EBL
         bounds_base = ([1e-12, -1.0, -1.0], [1e-7, 5.0, 3.0])  # Lower and upper bounds
@@ -748,12 +748,12 @@ with open(f'Source_ra_dec_specin.txt', 'r') as file:
                     bin_size = np.array(sorted_data_none['emax'])-np.array(sorted_data_none['emin'])
                     e_lowers = sorted_data_none['geometric_mean'] - sorted_data_none['emin']
                     e_uppers = sorted_data_none['emax'] - sorted_data_none['geometric_mean']
-                    datasets = {f"No_Filtering": (sorted_data_none['geometric_mean'], sorted_data_none['flux_tot_value'], sorted_data_none['flux_tot_error'], sorted_data_none['emin'], sorted_data_none['emax'] )}
-                    datasets_snr = {f"snr_3": (sorted_data_snr3['geometric_mean'], sorted_data_snr3['flux_tot_value'], sorted_data_snr3['flux_tot_error'], sorted_data_snr3['emin'], sorted_data_snr3['emax'] ),
-                                    f"snr_5": (sorted_data_snr5['geometric_mean'], sorted_data_snr5['flux_tot_value'], sorted_data_snr5['flux_tot_error'], sorted_data_snr5['emin'], sorted_data_snr5['emax'] ),
-                                    f"snr_10": (sorted_data_snr10['geometric_mean'], sorted_data_snr10['flux_tot_value'], sorted_data_snr10['flux_tot_error'], sorted_data_snr10['emin'], sorted_data_snr10['emax'] )}
-                    datasets_lin = {f"week": (sorted_data_lin_week['geometric_mean'], sorted_data_lin_week['flux_tot_value'], sorted_data_lin_week['flux_tot_error'], sorted_data_lin_week['emin'], sorted_data_lin_week['emax'] ),
-                                    f"month": (sorted_data_lin_month['geometric_mean'], sorted_data_lin_month['flux_tot_value'], sorted_data_lin_month['flux_tot_error'], sorted_data_lin_month['emin'], sorted_data_lin_month['emax'] )}
+                    datasets = {f"No_Filtering": (sorted_data_none['geometric_mean'], sorted_data_none['flux_tot_value']/bin_size, sorted_data_none['flux_tot_error']/bin_size, sorted_data_none['emin'], sorted_data_none['emax'] )}
+                    datasets_snr = {f"snr_3": (sorted_data_snr3['geometric_mean'], sorted_data_snr3['flux_tot_value']/bin_size, sorted_data_snr3['flux_tot_error']/bin_size, sorted_data_snr3['emin'], sorted_data_snr3['emax'] ),
+                                    f"snr_5": (sorted_data_snr5['geometric_mean'], sorted_data_snr5['flux_tot_value']/bin_size, sorted_data_snr5['flux_tot_error']/bin_size, sorted_data_snr5['emin'], sorted_data_snr5['emax'] ),
+                                    f"snr_10": (sorted_data_snr10['geometric_mean'], sorted_data_snr10['flux_tot_value']/bin_size, sorted_data_snr10['flux_tot_error']/bin_size, sorted_data_snr10['emin'], sorted_data_snr10['emax'] )}
+                    datasets_lin = {f"week": (sorted_data_lin_week['geometric_mean'], sorted_data_lin_week['flux_tot_value']/bin_size, sorted_data_lin_week['flux_tot_error']/bin_size, sorted_data_lin_week['emin'], sorted_data_lin_week['emax'] ),
+                                    f"month": (sorted_data_lin_month['geometric_mean'], sorted_data_lin_month['flux_tot_value']/bin_size, sorted_data_lin_month['flux_tot_error']/bin_size, sorted_data_lin_month['emin'], sorted_data_lin_month['emax'] )}
                     print(source_name)
                     #No systematic errors added
                     results = nested_fits_combined(datasets, source_name, useEBL=True, fitting_method="no_sys_error", basefunc = "logpar", chunk_size=30)
