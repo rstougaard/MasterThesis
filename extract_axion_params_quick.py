@@ -778,9 +778,9 @@ with open(f'Source_ra_dec_specin.txt', 'r') as file:
                         pickle.dump(all_results_lin, file)
                     
                     #With systematic errors added
-                    results_sys = nested_fits_combined(datasets, bin_size, source_name, useEBL=True, fitting_method="sys_error", basefunc = "logpar", chunk_size=30)
-                    results_snr_sys = nested_fits_combined(datasets_snr, bin_size, source_name, useEBL=True, fitting_method="sys_error", basefunc = "logpar", chunk_size=30)
-                    results_lin_sys= nested_fits_combined(datasets_lin, bin_size, source_name, useEBL=True, fitting_method="sys_error", basefunc = "logpar", chunk_size=30)
+                    results_sys = nested_fits_combined(datasets, bin_size, source_name, useEBL=True, fitting_method="sys_error", basefunc = "logpar", chunk_size=100)
+                    results_snr_sys = nested_fits_combined(datasets_snr, bin_size, source_name, useEBL=True, fitting_method="sys_error", basefunc = "logpar", chunk_size=100)
+                    results_lin_sys= nested_fits_combined(datasets_lin, bin_size, source_name, useEBL=True, fitting_method="sys_error", basefunc = "logpar", chunk_size=100)
                     
 
                     all_results_none_sys[source_name] = results_sys
