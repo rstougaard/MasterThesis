@@ -251,7 +251,7 @@ with PdfPages(output_pdf) as pdf:
         bin_data = f_bin[1].data
         sorted_idx = np.argsort(bin_data['emin'])
         sd = bin_data[sorted_idx]
-
+    
         # Build the single “No_Filtering” dataset dict
         datasets = {
             "No_Filtering": (
@@ -259,6 +259,23 @@ with PdfPages(output_pdf) as pdf:
                 sd['emin'], sd['emax']
             )
         }
+
+        if source == "4FGL J0617.7-1715":
+            # Stack the arrays as columns; ensure that they are numpy arrays (or convert them if needed)
+            data = np.column_stack((
+                sd['geometric_mean'], 
+                sd['flux_tot_value'], 
+                sd['flux_tot_error'],
+                sd['emin'], 
+                sd['emax']
+            ))
+            
+            # Define a header for clarity in the text file
+            header = "geometric_mean flux_tot_value flux_tot_error emin emax"
+            
+            # Save the data to a text file. Adjust the format (here '%f') if you need different precision.
+            np.savetxt("output.txt", data, header=header, fmt='%f')
+
 
         # Generate the two figures
         fig_best, fig_worst = simple_plot_fit(datasets, all_results_none, source)
