@@ -8,6 +8,7 @@ from iminuit import Minuit
 from matplotlib.backends.backend_pdf import PdfPages
 import pickle
 from naima.models import EblAbsorptionModel
+import astropy.units as u
 axion_data = np.load('./denys/Rikke/Data/scan12.npy')
 ma_all = axion_data[:,0] #eV
 g_all = axion_data[:,1] # GeV**-1
