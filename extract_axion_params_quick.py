@@ -630,7 +630,7 @@ def process_chunk(i, j_start, j_end, x, y, y_err, emin, emax, bin_size, source_n
             y_err=np.array(y_err),
             emin=np.array(emin),
             emax=np.array(emax),
-            binsize=bin_size,
+            binsize=np.array(bin_size),
             p0=p0_val,
             E_c=ec_val,
             k=k,  # Ensure k is defined in the scope
@@ -777,7 +777,7 @@ with open(f'Source_ra_dec_specin.txt', 'r') as file:
                         pickle.dump(all_results_lin, file)
                     ''' 
                     #With systematic errors added
-                    results_sys = nested_fits_combined(datasets, source_name, useEBL=True, fitting_method="sys_error", basefunc = "logpar", chunk_size=30)
+                    results_sys = nested_fits_combined(datasets, bin_size, source_name, useEBL=True, fitting_method="sys_error", basefunc = "logpar", chunk_size=30)
                     #results_snr_sys = nested_fits_combined(datasets_snr, source_name, useEBL=True, fitting_method="sys_error", basefunc = "logpar", chunk_size=30)
                     #results_lin_sys= nested_fits_combined(datasets_lin, source_name, useEBL=True, fitting_method="sys_error", basefunc = "logpar", chunk_size=30)
                     
