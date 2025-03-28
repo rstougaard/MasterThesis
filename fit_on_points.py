@@ -140,6 +140,9 @@ def simple_plot_fit(dataset_none, fit_results_none, source, png_naming=""):
     x_masked   = x_data[mask]
     y_masked   = y_data[mask]/binsize_masked
     yerr_masked = y_err[mask]/binsize_masked
+
+    print(source)
+    print(y_masked)
     
 
     all_x = np.concatenate([np.array(vals[0]) for vals in dataset_none.values()])
