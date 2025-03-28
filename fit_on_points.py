@@ -7,6 +7,7 @@ from iminuit.cost import LeastSquares
 from iminuit import Minuit
 from matplotlib.backends.backend_pdf import PdfPages
 import pickle
+from naima.models import EblAbsorptionModel
 axion_data = np.load('./denys/Rikke/Data/scan12.npy')
 ma_all = axion_data[:,0] #eV
 g_all = axion_data[:,1] # GeV**-1
@@ -69,9 +70,7 @@ plt.rcParams.update({
     'legend.fontsize': 16
 })
 
-def logpar_base(x, Norm, alpha_, beta_):
-    E_b = 1000  # Fixed E_b value
-    return Norm * (x / E_b) ** (-(alpha_ + beta_ * np.log(x / E_b)))
+
 
 def find_best_worst_fits(fits):
     # Normalize into a flat list of result‑dicts
@@ -101,7 +100,15 @@ def simple_plot_fit(dataset_none, fit_results_none, source, png_naming=""):
     import numpy as np
     import matplotlib.pyplot as plt
     from astropy.io import fits
+    with fits.open('table-4LAC-DR3-h.fits') as f:
+        data1 = f[1].data
+        idx = (data1['Source_Name'] == source)
+        z = data1['Redshift'][idx][0]
 
+    def logpar_base(x, Norm, alpha_, beta_):
+        E_b = 1000  # Fixed E_b value
+        ebl = EblAbsorptionModel(z).transmission(x * u.MeV)
+        return Norm * (x / E_b) ** (-(alpha_ + beta_ * np.log(x / E_b)))
     # ————— Load data & plot points —————
     f = fits.open('./test/gll_psc_v35.fit')
     data = f[1].data; ebounds = f[5].data
