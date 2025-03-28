@@ -123,8 +123,8 @@ def fit_data(x, y, y_err, emin, emax, p0, E_c, k, source_name, dataset_label, us
         def axion_func(E, Norm, alpha_, beta_, w):
             return base(E, Norm, alpha_, beta_) * (1 - (p0 / (1 + (E_c / E) ** k)) * (1+0.2*np.tanh(w)))
         
-        bounds_alp = ([1e-12, -1.0, -1.0, -np.pi], [1e-7, 5.0, 3.0, np.pi])  # Lower and upper bounds
-        p0_alp= [1e-9, 2.0, 0.001, np.pi/2]
+        bounds_alp = ([1e-14, -1.0, -1.0, -np.pi], [1e-9, 5.0, 3.0, np.pi])  # Lower and upper bounds
+        p0_alp= [1e-11, 2.0, 0.001, np.pi/2]
 
     elif useEBL and basefunc == "cutoff":
         with fits.open('table-4LAC-DR3-h.fits') as f:
@@ -138,8 +138,8 @@ def fit_data(x, y, y_err, emin, emax, p0, E_c, k, source_name, dataset_label, us
 
         base = cutoff_EBL
 
-        bounds_base = ([1e-12, -5.0, -5.0], [1e-7, 5.0, 5.0])  # Lower and upper bounds
-        p0_base = [1e-9, 2.0, 2.0]  # Initial guesses
+        bounds_base = ([1e-14, -5.0, -5.0], [1e-9, 5.0, 5.0])  # Lower and upper bounds
+        p0_base = [1e-11, 2.0, 2.0]  # Initial guesses
 
         def axion_func(E, Norm, l1, l2, w):
             return base(E, Norm, l1, l2) * (1 - (p0 / (1 + (E_c / E) ** k)) * (1+0.2*np.tanh(w)))
@@ -748,7 +748,7 @@ with open(f'Source_ra_dec_specin.txt', 'r') as file:
                     bin_size = np.array(sorted_data_none['emax'])-np.array(sorted_data_none['emin'])
                     e_lowers = sorted_data_none['geometric_mean'] - sorted_data_none['emin']
                     e_uppers = sorted_data_none['emax'] - sorted_data_none['geometric_mean']
-                    datasets = {f"No_Filtering": (sorted_data_none['geometric_mean'], sorted_data_none['flux_tot_value']/bin_size, sorted_data_none['flux_tot_error']/bin_size, sorted_data_none['emin'], sorted_data_none['emax'] )}
+                    datasets = {f"No_Filtering": (sorted_data_none['geometric_mean'], sorted_data_none['flux_tot_value']/bin_size, sorted_data_none['flux_tot_error'], sorted_data_none['emin'], sorted_data_none['emax'] )}
                     datasets_snr = {f"snr_3": (sorted_data_snr3['geometric_mean'], sorted_data_snr3['flux_tot_value']/bin_size, sorted_data_snr3['flux_tot_error']/bin_size, sorted_data_snr3['emin'], sorted_data_snr3['emax'] ),
                                     f"snr_5": (sorted_data_snr5['geometric_mean'], sorted_data_snr5['flux_tot_value']/bin_size, sorted_data_snr5['flux_tot_error']/bin_size, sorted_data_snr5['emin'], sorted_data_snr5['emax'] ),
                                     f"snr_10": (sorted_data_snr10['geometric_mean'], sorted_data_snr10['flux_tot_value']/bin_size, sorted_data_snr10['flux_tot_error']/bin_size, sorted_data_snr10['emin'], sorted_data_snr10['emax'] )}
