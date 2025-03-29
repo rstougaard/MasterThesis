@@ -966,14 +966,13 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
                         # Save successful bin details
                         successful_bins[(emin, emax)] = writexml
 
-                        flux_tot_value = like.flux(source_name, emin=emin, emax=emax)
-                        flux_tot_error = like.fluxError(source_name, emin=emin, emax=emax)
-                        alpha = like.model[source_name].funcs['Spectrum'].getParam('alpha').value()
-                        alpha_err = like.model[source_name].funcs['Spectrum'].getParam('alpha').error()
-                        beta = like.model[source_name].funcs['Spectrum'].getParam('beta').value()
-                        beta_err = like.model[source_name].funcs['Spectrum'].getParam('beta').error()
-                        Eb = like.model[source_name].funcs['Spectrum'].getParam('Eb').value()
-                        Eb_err = like.model[source_name].funcs['Spectrum'].getParam('Eb').error()
+                        #flux_tot_value = like.flux(source_name, emin=emin, emax=emax)
+                        #flux_tot_error = like.fluxError(source_name, emin=emin, emax=emax)
+                        arg = pyLike.dArg( (emin*emax)**0.5 ) # Emin, Emax are in MeV
+                        flux = like.model.srcs[source_name].src.spectrum()(arg) *emin*emax*1.6e-6  # differential flux in erg/cm2/s ; source -- the name of the source
+                        coeff = flux / like.flux(source_name,emin,emax)
+
+                        dflux = like.fluxError(source_name,emin,emax)*coeff # flux error, erg/cm2/s
 
                         E = (like.energies[:-1] + like.energies[1:]) / 2.
                         nobs = like.nobs
@@ -986,8 +985,8 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
                             'geometric_mean': geometric_mean,
                             'e_lower': geometric_mean - emin,
                             'e_upper': emax - geometric_mean,
-                            'flux_tot_value': float(flux_tot_value),
-                            'flux_tot_error': float(flux_tot_error),
+                            'flux_tot_value': float(flux),
+                            'flux_tot_error': float(dflux),
                             'nobs': list(nobs),
                             'TS': TS,
                             'convergence': convergence
@@ -1025,8 +1024,13 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
                         like.writeCountsSpectra(cspectra)
                         like.logLike.writeXml(writexml)
 
-                        flux_tot_value = like.flux(source_name, emin=emin, emax=emax)
-                        flux_tot_error = like.fluxError(source_name, emin=emin, emax=emax)
+                        #flux_tot_value = like.flux(source_name, emin=emin, emax=emax)
+                        #flux_tot_error = like.fluxError(source_name, emin=emin, emax=emax)
+                        arg = pyLike.dArg( (emin*emax)**0.5 ) # Emin, Emax are in MeV
+                        flux = like.model.srcs[source_name].src.spectrum()(arg) *emin*emax*1.6e-6  # differential flux in erg/cm2/s ; source -- the name of the source
+                        coeff = flux / like.flux(source_name,emin,emax)
+
+                        dflux = like.fluxError(source_name,emin,emax)*coeff # flux error, erg/cm2/s
                         geometric_mean = (emin * emax) ** 0.5
                         nobs = like.nobs
 
@@ -1036,8 +1040,8 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
                             'geometric_mean': geometric_mean,
                             'e_lower': geometric_mean - emin,
                             'e_upper': emax - geometric_mean,
-                            'flux_tot_value': float(flux_tot_value),
-                            'flux_tot_error': float(flux_tot_error),
+                            'flux_tot_value': float(flux),
+                            'flux_tot_error': float(dflux),
                             'nobs': nobs,
                             'TS': TS,
                             'convergence': convergence
@@ -1166,14 +1170,14 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
                         # Save successful bin details
                         successful_bins[(emin, emax)] = writexml
 
-                        flux_tot_value = like.flux(source_name, emin=emin, emax=emax)
-                        flux_tot_error = like.fluxError(source_name, emin=emin, emax=emax)
-                        alpha = like.model[source_name].funcs['Spectrum'].getParam('alpha').value()
-                        alpha_err = like.model[source_name].funcs['Spectrum'].getParam('alpha').error()
-                        beta = like.model[source_name].funcs['Spectrum'].getParam('beta').value()
-                        beta_err = like.model[source_name].funcs['Spectrum'].getParam('beta').error()
-                        Eb = like.model[source_name].funcs['Spectrum'].getParam('Eb').value()
-                        Eb_err = like.model[source_name].funcs['Spectrum'].getParam('Eb').error()
+                        #flux_tot_value = like.flux(source_name, emin=emin, emax=emax)
+                        #flux_tot_error = like.fluxError(source_name, emin=emin, emax=emax)
+                        
+                        arg = pyLike.dArg( (emin*emax)**0.5 ) # Emin, Emax are in MeV
+                        flux = like.model.srcs[source_name].src.spectrum()(arg) *emin*emax*1.6e-6  # differential flux in erg/cm2/s ; source -- the name of the source
+                        coeff = flux / like.flux(source_name,emin,emax)
+
+                        dflux = like.fluxError(source_name,emin,emax)*coeff # flux error, erg/cm2/s
 
                         E = (like.energies[:-1] + like.energies[1:]) / 2.
                         nobs = like.nobs
@@ -1186,8 +1190,8 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
                             'geometric_mean': geometric_mean,
                             'e_lower': geometric_mean - emin,
                             'e_upper': emax - geometric_mean,
-                            'flux_tot_value': float(flux_tot_value),
-                            'flux_tot_error': float(flux_tot_error),                    
+                            'flux_tot_value': float(flux),
+                            'flux_tot_error': float(dflux),                    
                             'nobs': list(nobs),
                             'TS': TS,
                             'convergence': convergence
@@ -1235,8 +1239,14 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
                             like.writeCountsSpectra(cspectra)
                             like.logLike.writeXml(writexml)
 
-                            flux_tot_value = like.flux(source_name, emin=emin, emax=emax)
-                            flux_tot_error = like.fluxError(source_name, emin=emin, emax=emax)
+                            #flux_tot_value = like.flux(source_name, emin=emin, emax=emax)
+                            #flux_tot_error = like.fluxError(source_name, emin=emin, emax=emax)
+
+                            arg = pyLike.dArg( (emin*emax)**0.5 ) # Emin, Emax are in MeV
+                            flux = like.model.srcs[source_name].src.spectrum()(arg) *emin*emax*1.6e-6  # differential flux in erg/cm2/s ; source -- the name of the source
+                            coeff = flux / like.flux(source_name,emin,emax)
+
+                            dflux = like.fluxError(source_name,emin,emax)*coeff # flux error, erg/cm2/s
                             geometric_mean = (emin * emax) ** 0.5
                             nobs = like.nobs
 
@@ -1247,8 +1257,8 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
                                 'geometric_mean': geometric_mean,
                                 'e_lower': geometric_mean - emin,
                                 'e_upper': emax - geometric_mean,
-                                'flux_tot_value': float(flux_tot_value),
-                                'flux_tot_error': float(flux_tot_error),
+                                'flux_tot_value': float(flux),
+                                'flux_tot_error': float(dflux),
                                 'nobs': nobs,
                                 'TS': TS,
                                 'convergence': convergence
@@ -1394,7 +1404,7 @@ def run_analysis():
     """Main function to use multiprocessing"""
     with open(filename, "r") as file:
         lines = file.readlines()
-    num_workers = 6
+    num_workers = 16
     # Use multiprocessing Pool to process each line in parallel
     with multiprocessing.Pool(processes=num_workers) as pool:
         pool.map(process_line, lines)
