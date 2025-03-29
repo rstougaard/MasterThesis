@@ -968,7 +968,7 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
 
                         #flux_tot_value = like.flux(source_name, emin=emin, emax=emax)
                         #flux_tot_error = like.fluxError(source_name, emin=emin, emax=emax)
-                        arg = pyLike.dArg( (emin*emax)**0.5 ) # Emin, Emax are in MeV
+                        arg = pyLikelihood.dArg( (emin*emax)**0.5 ) # Emin, Emax are in MeV
                         flux = like.model.srcs[source_name].src.spectrum()(arg) *emin*emax*1.6e-6  # differential flux in erg/cm2/s ; source -- the name of the source
                         coeff = flux / like.flux(source_name,emin,emax)
 
@@ -1026,7 +1026,7 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
 
                         #flux_tot_value = like.flux(source_name, emin=emin, emax=emax)
                         #flux_tot_error = like.fluxError(source_name, emin=emin, emax=emax)
-                        arg = pyLike.dArg( (emin*emax)**0.5 ) # Emin, Emax are in MeV
+                        arg = pyLikelihood.dArg( (emin*emax)**0.5 ) # Emin, Emax are in MeV
                         flux = like.model.srcs[source_name].src.spectrum()(arg) *emin*emax*1.6e-6  # differential flux in erg/cm2/s ; source -- the name of the source
                         coeff = flux / like.flux(source_name,emin,emax)
 
@@ -1173,7 +1173,7 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
                         #flux_tot_value = like.flux(source_name, emin=emin, emax=emax)
                         #flux_tot_error = like.fluxError(source_name, emin=emin, emax=emax)
                         
-                        arg = pyLike.dArg( (emin*emax)**0.5 ) # Emin, Emax are in MeV
+                        arg = pyLikelihood.dArg( (emin*emax)**0.5 ) # Emin, Emax are in MeV
                         flux = like.model.srcs[source_name].src.spectrum()(arg) *emin*emax*1.6e-6  # differential flux in erg/cm2/s ; source -- the name of the source
                         coeff = flux / like.flux(source_name,emin,emax)
 
@@ -1242,7 +1242,7 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
                             #flux_tot_value = like.flux(source_name, emin=emin, emax=emax)
                             #flux_tot_error = like.fluxError(source_name, emin=emin, emax=emax)
 
-                            arg = pyLike.dArg( (emin*emax)**0.5 ) # Emin, Emax are in MeV
+                            arg = pyLikelihood.dArg( (emin*emax)**0.5 ) # Emin, Emax are in MeV
                             flux = like.model.srcs[source_name].src.spectrum()(arg) *emin*emax*1.6e-6  # differential flux in erg/cm2/s ; source -- the name of the source
                             coeff = flux / like.flux(source_name,emin,emax)
 
