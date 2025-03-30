@@ -18,13 +18,42 @@ plt.rcParams.update({
     'ytick.labelsize': 16,
     'legend.fontsize': 16
 })
+def GetCatalogueSpectrum(nn):
+    with fits.open('test/gll_psc_v35.fit') as f:
+        data = f[1].data
+        ebounds = f[5].data
+        emin = np.unique( ebounds['LowerEnergy'] )
+        emax = np.unique( ebounds['UpperEnergy'] )
+            
+    names4fgl = data['Source_Name']
+        
+    eav = (emin*emax)**0.5
+    de1 = eav - emin
+    de2 = emax - eav
+        
+    ok = np.where(names4fgl==nn)
+
+    fl = data['nuFnu_Band'][ok][0] #erg/cm2/s
+    ratio0 = data['Unc_Flux_Band'][ok][0][:,0] / data['Flux_Band'][ok][0]
+    ratio1 = data['Unc_Flux_Band'][ok][0][:,1] / data['Flux_Band'][ok][0]
+
+    dfl1 = -fl*ratio0
+    dfl2 = fl*ratio1
+
+    dfl = np.maximum(dfl1, dfl2) #+ systematics*fl #add systematics
+    
+    ok = fl>1e-13
+    
+    return eav[ok], fl[ok], dfl[ok], [de1[ok],de2[ok]] # flux to erg/cm2/s
+
+
 def simple_plot(dataset_none, dataset_snr, colors_snr, dataset_lin, colors_lin, source, png_naming=""):
     # Create a new figure
     fig = plt.figure(figsize=(10, 12))
     plt.rcParams["font.family"] = "serif"
     plt.rcParams["mathtext.fontset"] = "cm"
     
-
+    eav0, f0, df0, de0 = GetCatalogueSpectrum(source)
     # Top subplot: Spectrum - SNR Ratios
     ax1 = fig.add_subplot(2, 1, 1)
     
@@ -36,17 +65,19 @@ def simple_plot(dataset_none, dataset_snr, colors_snr, dataset_lin, colors_lin, 
         #bin_size = emax - emin
         ax1.errorbar(x, y, xerr=[e_lowers, e_uppers], yerr=y_err,
                      fmt='o', capsize=5, color='black', label=f'{dataset_label}')
+        ax1.errorbar(eav0, f0, yerr=df0, xerr=de0, fmt='ko', label='Catalogue Spectrum')
     
     # Plot the SNR datasets with their corresponding colors
     for i, (dataset_label, (x, y, y_err, emin, emax)) in enumerate(dataset_snr.items()):
         x, y, y_err, emin, emax = np.array(x), np.array(y), np.array(y_err), np.array(emin), np.array(emax)
         e_lowers = x - emin
         e_uppers = emax - x
-        bin_size = emax - emin
+        #bin_size = emax - emin
         # Get the color based on the index (defaulting to black if index is out of range)
         color = colors_snr[i] if i < len(colors_snr) else 'black'
         ax1.errorbar(x, y, xerr=[e_lowers, e_uppers], yerr=y_err,
                      fmt='o', capsize=5, color=color, label=f'{dataset_label}')
+        ax1.errorbar(eav0, f0, yerr=df0, xerr=de0, fmt='ko', label='Catalogue Spectrum')
 
     ax1.legend(ncol=1, loc='upper right')
     ax1.set_ylabel(r'E$^2$dN/dE [ erg/cm²/s ]')
