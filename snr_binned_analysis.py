@@ -1389,7 +1389,7 @@ def process_line(line):
     else:
         print(f'Likelihood for SNR binneddata done for {source_name}!')
    
-    if not os.path.exists(f"./fit_results/{source_name_cleaned}_fit_data_LIN.fits" and f"./data/{source_name_cleaned}/LIN/lc_month.png"):
+    if not os.path.exists(f"./fit_results/{source_name_cleaned}_fit_data_LIN.fits"):
         filtering(vars_lin, time_intervals=time_intervals)
         get_gti_bin(vars_lin, time_intervals=time_intervals)
         generate_files(vars_lin, time_intervals=time_intervals, number_of_bins=7)
