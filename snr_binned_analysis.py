@@ -1377,7 +1377,7 @@ def process_line(line):
     else:
         print(f'Likelihood for non-filtered data done for {source_name}!')
 
-    if not os.path.exists(f"./fit_results/{source_name_cleaned}_fit_data_SNR.fits" and f"./data/{source_name_cleaned}/SNR/lc_snr10.png"):
+    if not os.path.exists(f"./fit_results/{source_name_cleaned}_fit_data_SNR.fits"):
         filtering(vars_snr, snrratios=snrratios)
         get_gti_bin(vars_snr, snrratios=snrratios)
         generate_files(vars_snr, snrratios=snrratios, number_of_bins=7)
