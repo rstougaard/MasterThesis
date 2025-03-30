@@ -42,7 +42,7 @@ def GetCatalogueSpectrum(nn):
 
     dfl = np.maximum(dfl1, dfl2) #+ systematics*fl #add systematics
     
-    ok = fl>1e-13
+    ok = fl>0#1e-13
     
     return eav[ok], fl[ok], dfl[ok], [de1[ok],de2[ok]] # flux to erg/cm2/s
 
