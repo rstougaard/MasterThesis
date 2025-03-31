@@ -1375,7 +1375,7 @@ def process_line(line):
         print(source_name)
         run_binned_likelihood(vars_none, free_params="None")
         print(f'Likelihood for non-filtered data done for {source_name}!')
-        delete_fits_and_xml_files(source_name_cleaned, method = "NONE")
+        #delete_fits_and_xml_files(source_name_cleaned, method = "NONE")
     else:
         print(f'Likelihood for non-filtered data done for {source_name}!')
 
