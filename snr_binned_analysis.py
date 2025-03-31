@@ -974,10 +974,10 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
                         '''
                         #this is a change
                         prefix = "./Rikke"
-                        srcmap =str(ebin)+'_'+str(tbin)+'_SrcMap.fits' 
-                        binexpmap = str(ebin)+'_'+str(tbin)+'_BexpMap.fits'
+                        srcmap =prefix+str(ebin)+'_'+str(tbin)+'_SrcMap.fits' 
+                        binexpmap = prefix+str(ebin)+'_'+str(tbin)+'_BexpMap.fits'
                         ltcube = prefix+'_expCube_'+str(tbin)+'.fits'
-                        input_model =str(ebin)+'_'+str(tbin)+'_model_map.fits'
+                        input_model =prefix+str(ebin)+'_'+str(tbin)+'_model_map.fits'
                         obs = BinnedObs(srcMaps=srcmap, binnedExpMap=binexpmap, expCube=ltcube, irfs='CALDB')
                         like = BinnedAnalysis(obs, input_model, optimizer='NewMinuit')
                         likeobj = pyLikelihood.NewMinuit(like.logLike)
