@@ -972,6 +972,7 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
                         print( 'Will launch analysis with edisp_bins=',cfg.edisp_bins() )
                         analysis = binnedAnalysis (config=cfg, irfs=irf,cmap=cmapfile,bexpmap=bexpmapfile,expcube=expcubefile,srcmdl=model, optimizer=optimizer)
                         '''
+                        #this is a change
                         prefix = "./Rikke"
                         srcmap =str(ebin)+'_'+str(tbin)+'_SrcMap.fits' 
                         binexpmap = str(ebin)+'_'+str(tbin)+'_BexpMap.fits'
