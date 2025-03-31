@@ -973,7 +973,7 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
                         analysis = binnedAnalysis (config=cfg, irfs=irf,cmap=cmapfile,bexpmap=bexpmapfile,expcube=expcubefile,srcmdl=model, optimizer=optimizer)
                         '''
                         #this is a change
-                        prefix = "./Rikke"
+                        prefix = "./Rikke/"
                         srcmap =prefix+str(ebin)+'_'+str(tbin)+'_SrcMap.fits' 
                         binexpmap = prefix+str(ebin)+'_'+str(tbin)+'_BexpMap.fits'
                         ltcube = prefix+'_expCube_'+str(tbin)+'.fits'
