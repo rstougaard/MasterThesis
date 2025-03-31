@@ -1373,7 +1373,7 @@ def process_line(line):
         generate_files(vars_none, number_of_bins=7)
         source_maps(vars_none)
         print(source_name)
-        run_binned_likelihood(vars_none, free_params="None")
+        #run_binned_likelihood(vars_none, free_params="None")
         print(f'Likelihood for non-filtered data done for {source_name}!')
         #delete_fits_and_xml_files(source_name_cleaned, method = "NONE")
     else:
