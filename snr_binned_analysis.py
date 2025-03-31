@@ -980,7 +980,7 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
                         input_model ="src_model_const.xml"
                         
                         obs = BinnedObs(srcMaps=srcmap, binnedExpMap=binexpmap, expCube=ltcube, irfs='CALDB')
-                        like = BinnedAnalysis(obs, srcmdl=input_model, optimizer='NewMinuit')
+                        like = BinnedAnalysis(obs, input_model, optimizer='NewMinuit')
                         #cfg = BinnedConfig(edisp_bins=edisp_bins)
                         #print( 'Will launch analysis with edisp_bins=',cfg.edisp_bins() )
                         #like = binnedAnalysis (config=cfg, irfs=irf,cmap=srcmap,bexpmap=binexpmap,expcube=ltcube,srcmdl=input_model, optimizer=optimizer)
