@@ -972,18 +972,18 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
                         print( 'Will launch analysis with edisp_bins=',cfg.edisp_bins() )
                         analysis = binnedAnalysis (config=cfg, irfs=irf,cmap=cmapfile,bexpmap=bexpmapfile,expcube=expcubefile,srcmdl=model, optimizer=optimizer)
                         '''
-                        #this is a change
+                        #this is a change0
                         prefix = "./Rikke/"
                         srcmap =prefix+str(ebin)+'_'+str(tbin)+'_SrcMap.fits' 
                         binexpmap = prefix+str(ebin)+'_'+str(tbin)+'_BexpMap.fits'
                         ltcube = prefix+'J0617_expCube_'+str(tbin)+'.fits'
-                        #input_model =prefix+str(ebin)+'_'+str(tbin)+'_model_map.fits'
-
-                        #obs = BinnedObs(srcMaps=srcmap, binnedExpMap=binexpmap, expCube=ltcube, irfs='CALDB')
-                        #like = binnedAnalysis(obs, srcmdl=input_model, optimizer='NewMinuit')
-                        cfg = BinnedConfig(edisp_bins=edisp_bins)
-                        print( 'Will launch analysis with edisp_bins=',cfg.edisp_bins() )
-                        like = binnedAnalysis (config=cfg, irfs=irf,cmap=srcmap,bexpmap=binexpmap,expcube=ltcube,srcmdl=input_model, optimizer=optimizer)
+                        input_model ="src_model_const.xml"
+                        
+                        obs = BinnedObs(srcMaps=srcmap, binnedExpMap=binexpmap, expCube=ltcube, irfs='CALDB')
+                        like = binnedAnalysis(obs, srcmdl=input_model, optimizer='NewMinuit')
+                        #cfg = BinnedConfig(edisp_bins=edisp_bins)
+                        #print( 'Will launch analysis with edisp_bins=',cfg.edisp_bins() )
+                        #like = binnedAnalysis (config=cfg, irfs=irf,cmap=srcmap,bexpmap=binexpmap,expcube=ltcube,srcmdl=input_model, optimizer=optimizer)
                         likeobj = pyLikelihood.NewMinuit(like.logLike)
                         like.fit(verbosity=0, covar=True, optObject=likeobj)
                         TS = like.Ts(source_name) #also include in output file
