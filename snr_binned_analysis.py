@@ -978,8 +978,9 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
                         binexpmap = prefix+str(ebin)+'_'+str(tbin)+'_BexpMap.fits'
                         ltcube = prefix+'J0617_expCube_'+str(tbin)+'.fits'
                         input_model =prefix+str(ebin)+'_'+str(tbin)+'_model_map.fits'
+                        
                         obs = BinnedObs(srcMaps=srcmap, binnedExpMap=binexpmap, expCube=ltcube, irfs='CALDB')
-                        like = BinnedAnalysis(obs, input_model, optimizer='NewMinuit')
+                        like = BinnedAnalysis(obs, srcmdl=input_model, optimizer='NewMinuit')
                         likeobj = pyLikelihood.NewMinuit(like.logLike)
                         like.fit(verbosity=0, covar=True, optObject=likeobj)
                         TS = like.Ts(source_name) #also include in output file
