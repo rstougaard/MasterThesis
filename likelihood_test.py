@@ -3,7 +3,7 @@ from BinnedAnalysis import *
 import numpy as np
 nn = '4FGL J0617.7-1715'
 emin = 100
-emax = 1e6
+emax = 300
 irf='CALDB'
 edisp_bins = -3
 ebin = 1
