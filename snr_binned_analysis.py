@@ -931,7 +931,8 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
                     binexpmap = general_path + f'{method}/expmap/BinnedExpMap_{emin}_{emax}.fits'
                     srcmap = general_path + f'{method}/srcmap/srcmap_{emin}_{emax}.fits'
                     if free_params == "None":
-                        input_model = general_path + f'{method}/models/input_model_{emin}_{emax}.xml'
+                        input_model = "src_model_const.xml"
+                        #general_path + f'{method}/models/input_model_{emin}_{emax}.xml'
                         cspectra = general_path + f'{method}/CountsSpectra/cspectra_{emin}_{emax}.fits'
                         writexml = general_path + f'{method}/fit_params/fit_{emin}_{emax}.xml' 
                         results_output_file = f"{source_name_cleaned}_results.fits"
