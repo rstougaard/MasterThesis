@@ -2952,7 +2952,7 @@
 		<parameter free="0" max="10.0" min="-5.0" name="beta" scale="1.0" value="0.16913942"/>
 		<parameter free="0" max="5e5" min="30" name="Eb" scale="1.0" value="1183.6953"/>
 	</spectrum>
-	<spatialModel file="Templates_4FGL/Rosette.fits" map_based_integral="true" type="SpatialMap">
+	<spatialModel file="/groups/pheno/sqd515/miniconda3/pkgs/fermitools-2.2.0-py39h93a0a19_0/share/fermitools/data/pyBurstAnalysisGUI/templates/Rosette.fits" map_based_integral="true" type="SpatialMap">
 		<parameter free="0" max="1000" min="0.001" name="Prefactor" scale="1" value="1"/>
 	</spatialModel>
 </source>
