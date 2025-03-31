@@ -266,7 +266,21 @@ with PdfPages('./fit_results/spectral_points.pdf') as pdf:
                         
                         #print(sorted_data_snr5['geometric_mean'])
                         #print( sorted_data_snr5['flux_tot_value'])
-
+                        if source_name == "4FGL J0617.7-1715":
+                            # Stack the arrays as columns; ensure that they are numpy arrays (or convert them if needed)
+                            data = np.column_stack((
+                                sorted_data_none['geometric_mean'], 
+                                sorted_data_none['flux_tot_value'], 
+                                sorted_data_none['flux_tot_error'],
+                                sorted_data_none['emin'], 
+                                sorted_data_none['emax']
+                            ))
+                            # Define a header for clarity in the text file
+                            header = "geometric_mean flux flux_error emin emax"
+                            
+                            # Save the data to a text file. Adjust the format (here '%f') if you need different precision.
+                            np.savetxt("output_newmodel.txt", data, header=header, fmt='%s')
+                            
                         datasets = {f"No_Filtering": (sorted_data_none['geometric_mean'], sorted_data_none['flux_tot_value'], sorted_data_none['flux_tot_error'], sorted_data_none['emin'], sorted_data_none['emax'] )}
                         datasets_snr = {f"snr_3": (sorted_data_snr3['geometric_mean'], sorted_data_snr3['flux_tot_value'], sorted_data_snr3['flux_tot_error'], sorted_data_snr3['emin'], sorted_data_snr3['emax']),
                                         f"snr_5": (sorted_data_snr5['geometric_mean'], sorted_data_snr5['flux_tot_value'], sorted_data_snr5['flux_tot_error'], sorted_data_snr5['emin'], sorted_data_snr5['emax']),
