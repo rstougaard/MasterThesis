@@ -931,8 +931,7 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
                     binexpmap = general_path + f'{method}/expmap/BinnedExpMap_{emin}_{emax}.fits'
                     srcmap = general_path + f'{method}/srcmap/srcmap_{emin}_{emax}.fits'
                     if free_params == "None":
-                        input_model = "src_model_const.xml"
-                        #general_path + f'{method}/models/input_model_{emin}_{emax}.xml'
+                        input_model = general_path + f'{method}/models/input_model_{emin}_{emax}.xml'
                         cspectra = general_path + f'{method}/CountsSpectra/cspectra_{emin}_{emax}.fits'
                         writexml = general_path + f'{method}/fit_params/fit_{emin}_{emax}.xml' 
                         results_output_file = f"{source_name_cleaned}_results.fits"
@@ -953,6 +952,31 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
                         results_output_file = f"{source_name_cleaned}_free_alpha_beta_results.fits"
                     
                     try:
+                        
+                        irf='CALDB'
+                        edisp_bins = -3
+                        ebin = 1
+                        tbin = 1
+                        optimizer = 'MINUIT'
+                        '''
+                        scdatafile=glob.glob(datapath+'/*SC*.fits')[0]; # this is "SC" file downloaded from Fermi/LAT site
+                        eventsfile=str(ebin)+'_'+str(tbin)+'_events_gti.fits'
+                        expmapfile=str(ebin)+'_'+str(tbin)+'_expMap.fits'
+                        expcubefile=prefix+'_expCube_'+str(tbin)+'.fits'
+                        cmapfile=str(ebin)+'_'+str(tbin)+'_SrcMap.fits'
+                        bexpmapfile=str(ebin)+'_'+str(tbin)+'_BexpMap.fits'
+                        model_back = str(ebin)+'_'+str(tbin)+'_back_map.fits'
+                        model_all = str(ebin)+'_'+str(tbin)+'_model_map.fits'
+
+                        cfg = BinnedConfig(edisp_bins=edisp_bins)
+                        print( 'Will launch analysis with edisp_bins=',cfg.edisp_bins() )
+                        analysis = binnedAnalysis (config=cfg, irfs=irf,cmap=cmapfile,bexpmap=bexpmapfile,expcube=expcubefile,srcmdl=model, optimizer=optimizer)
+                        '''
+                        prefix = "./Rikke"
+                        srcmap =str(ebin)+'_'+str(tbin)+'_SrcMap.fits' 
+                        binexpmap = str(ebin)+'_'+str(tbin)+'_BexpMap.fits'
+                        ltcube = prefix+'_expCube_'+str(tbin)+'.fits'
+                        input_model =str(ebin)+'_'+str(tbin)+'_model_map.fits'
                         obs = BinnedObs(srcMaps=srcmap, binnedExpMap=binexpmap, expCube=ltcube, irfs='CALDB')
                         like = BinnedAnalysis(obs, input_model, optimizer='NewMinuit')
                         likeobj = pyLikelihood.NewMinuit(like.logLike)
