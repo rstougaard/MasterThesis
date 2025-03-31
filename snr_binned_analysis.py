@@ -977,7 +977,7 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
                         srcmap =prefix+str(ebin)+'_'+str(tbin)+'_SrcMap.fits' 
                         binexpmap = prefix+str(ebin)+'_'+str(tbin)+'_BexpMap.fits'
                         ltcube = prefix+'J0617_expCube_'+str(tbin)+'.fits'
-                        input_model =prefix+str(ebin)+'_'+str(tbin)+'_model_map.fits'
+                        #input_model =prefix+str(ebin)+'_'+str(tbin)+'_model_map.fits'
 
                         #obs = BinnedObs(srcMaps=srcmap, binnedExpMap=binexpmap, expCube=ltcube, irfs='CALDB')
                         #like = binnedAnalysis(obs, srcmdl=input_model, optimizer='NewMinuit')
