@@ -49,6 +49,7 @@ def filtering(vars, snrratios=None, time_intervals=None):
     evc = 128
     convt = 3
     roi = 1.
+    roi_maps = 10*2**0.5
     
     #tmp_evlist = f'@./data/{source_name_cleaned}/events.list'
     tmp_gti = f'./data/{source_name_cleaned}/temp_git.fits'
@@ -87,7 +88,7 @@ def filtering(vars, snrratios=None, time_intervals=None):
             gt.filter['evtype'] = convt
             gt.filter['ra'] = ra
             gt.filter['dec'] = dec
-            gt.filter['rad'] = roi
+            gt.filter['rad'] = roi_maps
             gt.filter['emin'] = minimal_energy
             gt.filter['emax'] = maximal_energy
             gt.filter['zmax'] = 90
@@ -304,7 +305,7 @@ def filtering(vars, snrratios=None, time_intervals=None):
             gt.filter['evtype']=convt
             gt.filter['ra'] = ra
             gt.filter['dec'] = dec
-            gt.filter['rad'] = roi
+            gt.filter['rad'] = roi_maps
             gt.filter['emin'] = minimal_energy
             gt.filter['emax'] = maximal_energy
             gt.filter['zmax'] = 90
@@ -364,7 +365,7 @@ def get_gti_bin(vars, snrratios=None, time_intervals=None):
     ebinfile_txt = f'./energy_7bins_gtbindef.txt'
     evc = 128
     convt = 3
-    roi = 1.
+    roi = 10*2**0.5
     #evlist = f'@./data/{source_name_cleaned}/events.list'
     gtifilter = '(DATA_QUAL>0)&&(LAT_CONFIG==1)'
     #sc = f'./data/{source_name_cleaned}/SC.fits'
@@ -952,13 +953,13 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
                         results_output_file = f"{source_name_cleaned}_free_alpha_beta_results.fits"
                     
                     try:
-                        
+                        '''
                         irf='CALDB'
                         edisp_bins = -3
                         ebin = 1
                         tbin = 1
                         optimizer = 'MINUIT'
-                        '''
+                        
                         scdatafile=glob.glob(datapath+'/*SC*.fits')[0]; # this is "SC" file downloaded from Fermi/LAT site
                         eventsfile=str(ebin)+'_'+str(tbin)+'_events_gti.fits'
                         expmapfile=str(ebin)+'_'+str(tbin)+'_expMap.fits'
@@ -971,14 +972,14 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
                         cfg = BinnedConfig(edisp_bins=edisp_bins)
                         print( 'Will launch analysis with edisp_bins=',cfg.edisp_bins() )
                         analysis = binnedAnalysis (config=cfg, irfs=irf,cmap=cmapfile,bexpmap=bexpmapfile,expcube=expcubefile,srcmdl=model, optimizer=optimizer)
-                        '''
+                        
                         #this is a change0
                         prefix = "./Rikke/"
                         srcmap =prefix+str(ebin)+'_'+str(tbin)+'_SrcMap.fits' 
                         binexpmap = prefix+str(ebin)+'_'+str(tbin)+'_BexpMap.fits'
                         ltcube = prefix+'J0617_expCube_'+str(tbin)+'.fits'
                         input_model ="src_model_const.xml"
-                        
+                        '''
                         obs = BinnedObs(srcMaps=srcmap, binnedExpMap=binexpmap, expCube=ltcube, irfs='CALDB')
                         like = BinnedAnalysis(obs, input_model, optimizer='NewMinuit')
                         #cfg = BinnedConfig(edisp_bins=edisp_bins)
@@ -1348,7 +1349,9 @@ def delete_fits_and_xml_files(source_name_cleaned, method):
         f'./data/{source_name_cleaned}/{method}/srcmap/*.fits',
         f'./data/{source_name_cleaned}/{method}/models/*.xml',
         f'./data/{source_name_cleaned}/{method}/ccube/*.fits',
-        f'./data/{source_name_cleaned}/{method}/expmap/*.fits'
+        f'./data/{source_name_cleaned}/{method}/expmap/*.fits',
+        f'./data/{source_name_cleaned}/{method}/*.fits'
+        f'./data/{source_name_cleaned}/*.fits'
     ]
     '''f'./data/{source_name_cleaned}/{method}/ltcube/*.fits','''
     # Iterate over each path pattern and delete all matching files
@@ -1398,13 +1401,14 @@ def process_line(line):
     vars_lin = (source_name, ra, dec, "LIN", specin, None, None, 100, 1000000)
     source_name_cleaned = source_name.replace(" ", "").replace(".", "dot").replace("+", "plus").replace("-", "minus")
     if not os.path.exists(f"./fit_results/{source_name_cleaned}_fit_data_NONE.fits"):
+        delete_fits_and_xml_files(source_name_cleaned, method = "NONE")
         get_gti_bin(vars_none)
         generate_files(vars_none, number_of_bins=7)
         source_maps(vars_none)
         print(source_name)
         run_binned_likelihood(vars_none, free_params="None")
         print(f'Likelihood for non-filtered data done for {source_name}!')
-        #delete_fits_and_xml_files(source_name_cleaned, method = "NONE")
+        
     else:
         print(f'Likelihood for non-filtered data done for {source_name}!')
 
