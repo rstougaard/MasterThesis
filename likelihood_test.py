@@ -22,19 +22,29 @@ model_all = str(ebin)+'_'+str(tbin)+'_model_map.fits'
 cfg = BinnedConfig(edisp_bins=edisp_bins)
 print( 'Will launch analysis with edisp_bins=',cfg.edisp_bins() )
 analysis = binnedAnalysis (config=cfg, irfs=irf,cmap=cmapfile,bexpmap=bexpmapfile,expcube=expcubefile,srcmdl=model, optimizer=optimizer)
-'''
+
 #this is a change0
 prefix = "./Rikke/"
 srcmap =prefix+str(ebin)+'_'+str(tbin)+'_SrcMap.fits' 
 binexpmap = prefix+str(ebin)+'_'+str(tbin)+'_BexpMap.fits'
 ltcube = prefix+'J0617_expCube_'+str(tbin)+'.fits'
 input_model ="src_model_const.xml"
+'''
+method = "NONE"
+source_name_cleaned = nn.replace(" ", "").replace(".", "dot").replace("+", "plus").replace("-", "minus")
+    
+general_path = f'./data/{source_name_cleaned}/'
+ltcube = general_path + f'{method}/ltcube/ltcube.fits'
+ccube = general_path + f'{method}/ccube/ccube_{emin}_{emax}.fits'
+binexpmap = general_path + f'{method}/expmap/BinnedExpMap_{emin}_{emax}.fits'
+srcmap = general_path + f'{method}/srcmap/srcmap_{emin}_{emax}.fits'
+input_model = general_path + f'{method}/models/input_model_{emin}_{emax}.xml'
 
-obs = BinnedObs(srcMaps=srcmap, binnedExpMap=binexpmap, expCube=ltcube, irfs='CALDB')
-like = BinnedAnalysis(obs, input_model, optimizer='NewMinuit')
-#cfg = BinnedConfig(edisp_bins=edisp_bins)
-#print( 'Will launch analysis with edisp_bins=',cfg.edisp_bins() )
-#like = binnedAnalysis (config=cfg, irfs=irf,cmap=srcmap,bexpmap=binexpmap,expcube=ltcube,srcmdl=input_model, optimizer=optimizer)
+#obs = BinnedObs(srcMaps=srcmap, binnedExpMap=binexpmap, expCube=ltcube, irfs='CALDB')
+#like = BinnedAnalysis(obs, input_model, optimizer='NewMinuit')
+cfg = BinnedConfig(edisp_bins=edisp_bins)
+print( 'Will launch analysis with edisp_bins=',cfg.edisp_bins() )
+like = binnedAnalysis (config=cfg, irfs=irf,cmap=srcmap,bexpmap=binexpmap,expcube=ltcube,srcmdl=input_model, optimizer=optimizer)
 likeobj = pyLikelihood.NewMinuit(like.logLike)
 like.fit(verbosity=0, covar=True, optObject=likeobj)
 TS = like.Ts(nn) #also include in output file
@@ -68,4 +78,4 @@ data = np.column_stack((
 header = "geometric_mean flux flux_error emin emax"
 
 # Save the data to a text file. Adjust the format (here '%f') if you need different precision.
-np.savetxt("output_denysdata_rikkeanalysis.txt", data, header=header, fmt='%s')
+np.savetxt("output_denysdata_rikkeanalysis_newroi.txt", data, header=header, fmt='%s')
