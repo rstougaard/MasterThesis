@@ -279,7 +279,7 @@ with PdfPages('./fit_results/spectral_points.pdf') as pdf:
                             header = "geometric_mean flux flux_error emin emax"
                             
                             # Save the data to a text file. Adjust the format (here '%f') if you need different precision.
-                            np.savetxt("output_newmodel.txt", data, header=header, fmt='%s')
+                            np.savetxt("output_newroi.txt", data, header=header, fmt='%s')
                             
                         datasets = {f"No_Filtering": (sorted_data_none['geometric_mean'], sorted_data_none['flux_tot_value'], sorted_data_none['flux_tot_error'], sorted_data_none['emin'], sorted_data_none['emax'] )}
                         datasets_snr = {f"snr_3": (sorted_data_snr3['geometric_mean'], sorted_data_snr3['flux_tot_value'], sorted_data_snr3['flux_tot_error'], sorted_data_snr3['emin'], sorted_data_snr3['emax']),
