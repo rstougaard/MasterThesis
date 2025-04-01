@@ -1345,29 +1345,22 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
                    
 def delete_fits_and_xml_files(source_name_cleaned, method):
     # Skip deletion for the protected folder
-    if source_name_cleaned == "4FGLJ0617dot7minus1715":
-        print(f"Skipping deletion for folder: {source_name_cleaned}")
-    else:
-        # Define the folders and file types to delete
-        paths_to_delete = [
+    paths_to_delete = [
             f'./data/{source_name_cleaned}/{method}/srcmap/*.fits',
             f'./data/{source_name_cleaned}/{method}/models/*.xml',
             f'./data/{source_name_cleaned}/{method}/ccube/*.fits',
             f'./data/{source_name_cleaned}/{method}/expmap/*.fits',
-            f'./data/{source_name_cleaned}/{method}/ltcube/*.fits',
-            f'./data/{source_name_cleaned}/{method}/*.fits',
-            f'./data/{source_name_cleaned}/*.fits'
         ]
 
-        # Iterate over each path pattern and delete all matching files
-        for path_pattern in paths_to_delete:
-            files = glob.glob(path_pattern)
-            for file in files:
-                try:
-                    os.remove(file)
-                    # print(f"Deleted: {file}")
-                except OSError as e:
-                    print(f"Error deleting file {file}: {e}")
+    # Iterate over each path pattern and delete all matching files
+    for path_pattern in paths_to_delete:
+        files = glob.glob(path_pattern)
+        for file in files:
+            try:
+                os.remove(file)
+                # print(f"Deleted: {file}")
+            except OSError as e:
+                print(f"Error deleting file {file}: {e}")
 ##################################################################################
 ##################################################################################
 
@@ -1406,9 +1399,8 @@ def process_line(line):
     vars_lin = (source_name, ra, dec, "LIN", specin, None, None, 100, 1000000)
     source_name_cleaned = source_name.replace(" ", "").replace(".", "dot").replace("+", "plus").replace("-", "minus")
     if not os.path.exists(f"./fit_results/{source_name_cleaned}_fit_data_NONE.fits"):
-        
-        '''
         get_gti_bin(vars_none)
+        '''
         generate_files(vars_none, number_of_bins=7)
         source_maps(vars_none)
         print(source_name)
