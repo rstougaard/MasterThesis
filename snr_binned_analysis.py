@@ -19,7 +19,7 @@ from BinnedAnalysis import *
 import multiprocessing
 import shlex
 import shutil
-general_path_for_slurm = "/groups/pheno/sqd515/MasterThesis"
+general_path_for_slurm = "./groups/pheno/sqd515/MasterThesis"
 edisp_bins = -3
 # Function to ensure paths exist
 def check_paths(source_name, method, number_of_bins):
