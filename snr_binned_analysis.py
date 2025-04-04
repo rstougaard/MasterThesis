@@ -1062,14 +1062,14 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
 
                     try:
                         cfg = BinnedConfig(edisp_bins=edisp_bins)
-                        like = binnedAnalysis (config=cfg, irfs=irf,cmap=srcmap,bexpmap=binexpmap,expcube=ltcube,srcmdl=input_model, optimizer=optimizer)
+                        analysis = binnedAnalysis (config=cfg, irfs=irf,cmap=srcmap,bexpmap=binexpmap,expcube=ltcube,srcmdl=input_model, optimizer=optimizer)
                         iteration = 0
                         ndeleted = 1 # number of deleted sources. We want to enter the loop below at least once.
 
                         while( ndeleted ):
                             likeobj = pyLikelihood.Minuit( like.logLike )  # or pyLike.NewMinuit(analysis.logLike)
                             loglike = like.fit(covar=True,optObject=likeobj)
-                            like, ndeleted = RemoveWeak(like, source_name)
+                            like, ndeleted = RemoveWeak(analysis, source_name)
                             print( f'After iteration {iteration} we removed {ndeleted} sources' )
                             iteration += 1
 
@@ -1424,7 +1424,7 @@ def process_line(line):
 
     
     if not os.path.exists(f"{general_path_for_slurm}/fit_results/{source_name_cleaned}_fit_data_NONE.fits"):
-        delete_fits_and_xml_files(source_name_cleaned, method = "NONE")
+        #delete_fits_and_xml_files(source_name_cleaned, method = "NONE")
         get_gti_bin(vars_none)
         generate_files(vars_none, number_of_bins=7)
         source_maps(vars_none)
