@@ -1356,14 +1356,18 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
     return
                    
 def delete_fits_and_xml_files(source_name_cleaned, method):
-    
+    # Skip deletion if the source is "4FGL J0617.7-1715"
+    if source_name_cleaned == "4FGLJ0617dot7minus1715":
+        print(f"Skipping deletion for source: {source_name_cleaned}")
+        return
+
     paths_to_delete = [
         f'{general_path_for_slurm}/data/{source_name_cleaned}/{method}/srcmap/*.fits',
         f'{general_path_for_slurm}/data/{source_name_cleaned}/{method}/models/*.xml',
         f'{general_path_for_slurm}/data/{source_name_cleaned}/{method}/ccube/*.fits',
         f'{general_path_for_slurm}/data/{source_name_cleaned}/{method}/expmap/*.fits',
         f'{general_path_for_slurm}/data/{source_name_cleaned}/{method}/ltcube/*.fits',
-        f'{general_path_for_slurm}/data/{source_name_cleaned}/{method}/*.fits'
+        f'{general_path_for_slurm}/data/{source_name_cleaned}/{method}/*.fits',
         f'{general_path_for_slurm}/data/{source_name_cleaned}/*.fits'        
     ]
 
@@ -1373,9 +1377,10 @@ def delete_fits_and_xml_files(source_name_cleaned, method):
         for file in files:
             try:
                 os.remove(file)
-                # print(f"Deleted: {file}")
+                print(f"Deleted: {file}")
             except OSError as e:
                 print(f"Error deleting file {file}: {e}")
+
 ##################################################################################
 ##################################################################################
 
@@ -1414,8 +1419,10 @@ def process_line(line):
     vars_snr = (source_name, ra, dec, "SNR", specin, None, None, 100, 1000000)
     vars_lin = (source_name, ra, dec, "LIN", specin, None, None, 100, 1000000)
     source_name_cleaned = source_name.replace(" ", "").replace(".", "dot").replace("+", "plus").replace("-", "minus")
-
-    
+    delete_fits_and_xml_files(source_name_cleaned, method = "NONE")
+    delete_fits_and_xml_files(source_name_cleaned, method = "SNR")
+    delete_fits_and_xml_files(source_name_cleaned, method = "LIN")
+    '''
     if not os.path.exists(f"{general_path_for_slurm}/fit_results/{source_name_cleaned}_fit_data_NONE.fits"):
         
         #get_gti_bin(vars_none)
@@ -1425,12 +1432,10 @@ def process_line(line):
         #run_binned_likelihood(vars_none, free_params="None")
         #print(f'Likelihood for non-filtered data done for {source_name}!')
         delete_fits_and_xml_files(source_name_cleaned, method = "NONE")
-        delete_fits_and_xml_files(source_name_cleaned, method = "SNR")
-        delete_fits_and_xml_files(source_name_cleaned, method = "LIN")
         
     else:
         print(f'Likelihood for non-filtered data done for {source_name}!')
-    '''
+    
     if not os.path.exists(f"{general_path_for_slurm}/fit_results/{source_name_cleaned}_fit_data_LIN.fits"):
         filtering(vars_lin, time_intervals=time_intervals)
         get_gti_bin(vars_lin, time_intervals=time_intervals)
