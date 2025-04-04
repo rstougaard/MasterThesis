@@ -1388,10 +1388,10 @@ def delete_fits_and_xml_files(source_name_cleaned, method):
 
 #snrratios = [3, 5, 10]
 #time_intervals = ["week", "month"]
-filename = f'{general_path_for_slurm}/Source_ra_dec_specin.txt'
+filename = f'{general_path_for_slurm}/Source_ra_dec_specin_0617.txt'
 snrratios = [10, 5, 3]
 time_intervals = ["week","month"]
-'''
+
 def process_line(line):
     """Function to process a single line of the input file"""
     parts = line.strip().split()
@@ -1421,20 +1421,8 @@ def process_line(line):
     vars_snr = (source_name, ra, dec, "SNR", specin, None, None, 100, 1000000)
     vars_lin = (source_name, ra, dec, "LIN", specin, None, None, 100, 1000000)
     source_name_cleaned = source_name.replace(" ", "").replace(".", "dot").replace("+", "plus").replace("-", "minus")
-'''
-def process_one_line(source_name, ra, dec, specin):
+
     
-    # Run analysis steps
-    check_paths(source_name, 'SNR', 7)
-    check_paths(source_name, 'LIN', 7)
-    check_paths(source_name, 'NONE', 7)
-
-    # Construct vars_snr tuple
-    vars_none = (source_name, ra, dec, "NONE", specin, None, None, 100, 1000000)
-    vars_snr = (source_name, ra, dec, "SNR", specin, None, None, 100, 1000000)
-    vars_lin = (source_name, ra, dec, "LIN", specin, None, None, 100, 1000000)
-    source_name_cleaned = source_name.replace(" ", "").replace(".", "dot").replace("+", "plus").replace("-", "minus")
-
     if not os.path.exists(f"{general_path_for_slurm}/fit_results/{source_name_cleaned}_fit_data_NONE.fits"):
         get_gti_bin(vars_none)
         generate_files(vars_none, number_of_bins=7)
@@ -1475,15 +1463,12 @@ def process_one_line(source_name, ra, dec, specin):
 
 def run_analysis():
     """Main function to use multiprocessing"""
-    '''
     with open(filename, "r") as file:
-        lines = file.readlines()'
-    '''
-    line = ["4FGL J0617.7-1715", "94.3892439292", "-17.2569680306", "1.9593390226364136"]
+        lines = file.readlines()
     num_workers = 1
     # Use multiprocessing Pool to process each line in parallel
     with multiprocessing.Pool(processes=num_workers) as pool:
-        pool.map(process_one_line, line[0], float(line[1]), float(line[2]), float(line[3]))
+        pool.map(process_line, lines)
 
 if __name__ == "__main__":
     run_analysis()
