@@ -652,7 +652,7 @@ def generate_files(vars, snrratios=None, time_intervals=None, number_of_bins=Non
                         my_apps.evtbin['xref'] = ra
                         my_apps.evtbin['yref'] = dec
                         my_apps.evtbin['axisrot'] = 0
-                        my_apps.evtbin['proj'] = 'CAR'
+                        my_apps.evtbin['proj'] = 'CAL'
                         #my_apps.evtbin['ebinalg'] = 'FILE'
                         my_apps.evtbin['ebinfile'] = 'NONE'
                         #my_apps.evtbin.run()
@@ -758,7 +758,6 @@ def generate_files(vars, snrratios=None, time_intervals=None, number_of_bins=Non
                         my_apps.evtbin['proj'] = 'CAL'
                         #my_apps.evtbin['ebinalg'] = 'FILE'
                         my_apps.evtbin['ebinfile'] = "NONE"
-                        #my_apps.evtbin.run()
                         my_apps.evtbin['emin'] = emin
                         my_apps.evtbin['emax'] = emax
                         my_apps.evtbin['enumbins'] = 3
