@@ -1419,9 +1419,9 @@ def process_line(line):
     vars_snr = (source_name, ra, dec, "SNR", specin, None, None, 100, 1000000)
     vars_lin = (source_name, ra, dec, "LIN", specin, None, None, 100, 1000000)
     source_name_cleaned = source_name.replace(" ", "").replace(".", "dot").replace("+", "plus").replace("-", "minus")
-    delete_fits_and_xml_files(source_name_cleaned, method = "NONE")
+    #delete_fits_and_xml_files(source_name_cleaned, method = "NONE")
     delete_fits_and_xml_files(source_name_cleaned, method = "SNR")
-    delete_fits_and_xml_files(source_name_cleaned, method = "LIN")
+    #delete_fits_and_xml_files(source_name_cleaned, method = "LIN")
     '''
     if not os.path.exists(f"{general_path_for_slurm}/fit_results/{source_name_cleaned}_fit_data_NONE.fits"):
         
