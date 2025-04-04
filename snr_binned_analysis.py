@@ -998,14 +998,14 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
                     
                     try:
                         cfg = BinnedConfig(edisp_bins=edisp_bins)
-                        like = binnedAnalysis (config=cfg, irfs=irf,cmap=srcmap,bexpmap=binexpmap,expcube=ltcube,srcmdl=input_model, optimizer=optimizer)
+                        analysis = binnedAnalysis (config=cfg, irfs=irf,cmap=srcmap,bexpmap=binexpmap,expcube=ltcube,srcmdl=input_model, optimizer=optimizer)
                         iteration = 0
                         ndeleted = 1 # number of deleted sources. We want to enter the loop below at least once.
 
                         while( ndeleted ):
-                            likeobj = pyLikelihood.Minuit( like.logLike )  # or pyLike.NewMinuit(analysis.logLike)
-                            loglike = like.fit(covar=True,optObject=likeobj)
-                            like, ndeleted = RemoveWeak(like, source_name)
+                            likeobj = pyLikelihood.Minuit( analysis.logLike )  # or pyLike.NewMinuit(analysis.logLike)
+                            loglike = analysis.fit(covar=True,optObject=likeobj)
+                            like, ndeleted = RemoveWeak(analysis, source_name)
                             print( f'After iteration {iteration} we removed {ndeleted} sources' )
                             iteration += 1
 
@@ -1062,17 +1062,9 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
 
                     try:
                         cfg = BinnedConfig(edisp_bins=edisp_bins)
-                        analysis = binnedAnalysis (config=cfg, irfs=irf,cmap=srcmap,bexpmap=binexpmap,expcube=ltcube,srcmdl=input_model, optimizer=optimizer)
-                        iteration = 0
-                        ndeleted = 1 # number of deleted sources. We want to enter the loop below at least once.
-
-                        while( ndeleted ):
-                            likeobj = pyLikelihood.Minuit( like.logLike )  # or pyLike.NewMinuit(analysis.logLike)
-                            loglike = like.fit(covar=True,optObject=likeobj)
-                            like, ndeleted = RemoveWeak(analysis, source_name)
-                            print( f'After iteration {iteration} we removed {ndeleted} sources' )
-                            iteration += 1
-
+                        like = binnedAnalysis(config=cfg, irfs=irf,cmap=srcmap,bexpmap=binexpmap,expcube=ltcube,srcmdl=ref_model, optimizer=optimizer)
+                        likeobj = pyLikelihood.Minuit(like.logLike)
+                        like.fit(covar=True,optObject=likeobj)
                         TS = like.Ts(source_name) #also include in output file
                         convergence = likeobj.getRetCode()  #also include in output file
                         arg = pyLikelihood.dArg( (emin*emax)**0.5 ) # Emin, Emax are in MeV
@@ -1207,14 +1199,14 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
                      ####### Binned Likelihood Analysis #######
                     try:
                         cfg = BinnedConfig(edisp_bins=edisp_bins)
-                        like = binnedAnalysis (config=cfg, irfs=irf,cmap=srcmap,bexpmap=binexpmap,expcube=ltcube,srcmdl=input_model, optimizer=optimizer)
+                        analysis = binnedAnalysis (config=cfg, irfs=irf,cmap=srcmap,bexpmap=binexpmap,expcube=ltcube,srcmdl=input_model, optimizer=optimizer)
                         iteration = 0
                         ndeleted = 1 # number of deleted sources. We want to enter the loop below at least once.
 
                         while( ndeleted ):
-                            likeobj = pyLikelihood.Minuit( like.logLike )  # or pyLike.NewMinuit(analysis.logLike)
-                            loglike = like.fit(covar=True,optObject=likeobj)
-                            like, ndeleted = RemoveWeak(like, source_name)
+                            likeobj = pyLikelihood.Minuit( analysis.logLike )  # or pyLike.NewMinuit(analysis.logLike)
+                            loglike = analysis.fit(covar=True,optObject=likeobj)
+                            like, ndeleted = RemoveWeak(analysis, source_name)
                             print( f'After iteration {iteration} we removed {ndeleted} sources' )
                             iteration += 1
 
@@ -1281,17 +1273,9 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
 
                         try:
                             cfg = BinnedConfig(edisp_bins=edisp_bins)
-                            like = binnedAnalysis (config=cfg, irfs=irf,cmap=srcmap,bexpmap=binexpmap,expcube=ltcube,srcmdl=input_model, optimizer=optimizer)
-                            iteration = 0
-                            ndeleted = 1 # number of deleted sources. We want to enter the loop below at least once.
-
-                            while( ndeleted ):
-                                likeobj = pyLikelihood.Minuit( like.logLike )  # or pyLike.NewMinuit(analysis.logLike)
-                                loglike = like.fit(covar=True,optObject=likeobj)
-                                like, ndeleted = RemoveWeak(like, source_name)
-                                print( f'After iteration {iteration} we removed {ndeleted} sources' )
-                                iteration += 1
-
+                            like = binnedAnalysis (config=cfg, irfs=irf,cmap=srcmap,bexpmap=binexpmap,expcube=ltcube,srcmdl=ref_model, optimizer=optimizer)
+                            likeobj = pyLikelihood.Minuit(like.logLike)
+                            like.fit(covar=True,optObject=likeobj)
                             TS = like.Ts(source_name) #also include in output file
                             convergence = likeobj.getRetCode()  #also include in output file
 
