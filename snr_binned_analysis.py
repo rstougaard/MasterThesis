@@ -999,12 +999,13 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
                     try:
                         cfg = BinnedConfig(edisp_bins=edisp_bins)
                         analysis = binnedAnalysis (config=cfg, irfs=irf,cmap=srcmap,bexpmap=binexpmap,expcube=ltcube,srcmdl=input_model, optimizer=optimizer)
+                        analysis.logLike.set_edisp_flag(True)
                         iteration = 0
                         ndeleted = 1 # number of deleted sources. We want to enter the loop below at least once.
 
                         while( ndeleted ):
                             likeobj = pyLikelihood.Minuit( analysis.logLike )  # or pyLike.NewMinuit(analysis.logLike)
-                            loglike = analysis.fit(covar=True,optObject=likeobj)
+                            loglike = analysis.fit(verbosity=0, covar=True,optObject=likeobj)
                             like, ndeleted = RemoveWeak(analysis, source_name)
                             print( f'After iteration {iteration} we removed {ndeleted} sources' )
                             iteration += 1
@@ -1023,6 +1024,8 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
 
                         nobs = like.nobs
                         geometric_mean = (emin*emax)**0.5
+
+                        print(emin, emax, geometric_mean, geometric_mean - emin, emax - geometric_mean, float(flux), float(dflux), list(nobs), TS, convergence)
 
                         # Add the data for this energy bin to the list
                         fit_data_list.append({
@@ -1063,8 +1066,9 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
                     try:
                         cfg = BinnedConfig(edisp_bins=edisp_bins)
                         like = binnedAnalysis(config=cfg, irfs=irf,cmap=srcmap,bexpmap=binexpmap,expcube=ltcube,srcmdl=ref_model, optimizer=optimizer)
+                        like.logLike.set_edisp_flag(True)
                         likeobj = pyLikelihood.Minuit(like.logLike)
-                        like.fit(covar=True,optObject=likeobj)
+                        like.fit(verbosity=0, covar=True,optObject=likeobj)
                         TS = like.Ts(source_name) #also include in output file
                         convergence = likeobj.getRetCode()  #also include in output file
                         arg = pyLikelihood.dArg( (emin*emax)**0.5 ) # Emin, Emax are in MeV
