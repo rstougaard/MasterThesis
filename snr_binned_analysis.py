@@ -570,7 +570,7 @@ def generate_files(vars, snrratios=None, time_intervals=None, number_of_bins=Non
     general_path = f'{general_path_for_slurm}/data/{source_name_cleaned}/'
     sc = f"{general_path_for_slurm}/mission/spacecraft/lat_spacecraft_merged.fits" 
     
-    ebinfile_txt = f"{general_path_for_slurm}/energy_7bins_gtbindef.txt'
+    ebinfile_txt = f"{general_path_for_slurm}/energy_7bins_gtbindef.txt"
 
     
     with open(f'{ebinfile_txt}', 'r') as file:
