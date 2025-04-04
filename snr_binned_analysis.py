@@ -1482,7 +1482,7 @@ def run_analysis():
     num_workers = 1
     # Use multiprocessing Pool to process each line in parallel
     with multiprocessing.Pool(processes=num_workers) as pool:
-        pool.map(process_one_line, ('4FGL J0617.7-1715', 94.3892439292, -17.2569680306, 1.9593390226364136))
+        pool.map(process_one_line, '4FGL J0617.7-1715', 94.3892439292, -17.2569680306, 1.9593390226364136)
 
 if __name__ == "__main__":
     run_analysis()
