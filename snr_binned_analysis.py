@@ -622,7 +622,7 @@ def generate_files(vars, snrratios=None, time_intervals=None, number_of_bins=Non
                     ltcube = general_path + f'{method}/ltcube/ltcube.fits'
                     ccube = general_path + f'{method}/ccube/ccube_{emin}_{emax}.fits'
                     binexpmap = general_path + f'{method}/expmap/BinnedExpMap_{emin}_{emax}.fits'
-                    model = general_path +f'{method}/models/input_model_{emin}_{emax}.xml'
+                    model = general_path + f'{method}/models/input_model_{emin}_{emax}.xml'
                     ebinfile = f'{general_path_for_slurm}/energy_bins_def/{number_of_bins}/energy_bins_{emin}_{emax}.fits'
                     print(f"Processing method {method} without looping.")
                     
@@ -1424,13 +1424,14 @@ def process_line(line):
 
     
     if not os.path.exists(f"{general_path_for_slurm}/fit_results/{source_name_cleaned}_fit_data_NONE.fits"):
+        delete_fits_and_xml_files(source_name_cleaned, method = "NONE")
         get_gti_bin(vars_none)
         generate_files(vars_none, number_of_bins=7)
         source_maps(vars_none)
         print(source_name)
         run_binned_likelihood(vars_none, free_params="None")
         print(f'Likelihood for non-filtered data done for {source_name}!')
-        delete_fits_and_xml_files(source_name_cleaned, method = "NONE")
+        
     else:
         print(f'Likelihood for non-filtered data done for {source_name}!')
     
