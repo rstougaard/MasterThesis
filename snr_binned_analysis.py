@@ -652,7 +652,7 @@ def generate_files(vars, snrratios=None, time_intervals=None, number_of_bins=Non
                         my_apps.evtbin['xref'] = ra
                         my_apps.evtbin['yref'] = dec
                         my_apps.evtbin['axisrot'] = 0
-                        my_apps.evtbin['proj'] = 'CAL'
+                        my_apps.evtbin['proj'] = 'CAR'
                         #my_apps.evtbin['ebinalg'] = 'FILE'
                         my_apps.evtbin['ebinfile'] = 'NONE'
                         #my_apps.evtbin.run()
@@ -679,7 +679,7 @@ def generate_files(vars, snrratios=None, time_intervals=None, number_of_bins=Non
                         expCube2['xref'] = ra
                         expCube2['yref'] = dec
                         expCube2['axisrot'] = 0
-                        expCube2['proj'] = 'CAL'
+                        expCube2['proj'] = 'CAR'
                         #expCube2['ebinalg'] = 'FILE'
                         expCube2['ebinfile'] = 'NONE'
                         expCube2['ebinalg'] = 'LOG'
@@ -755,7 +755,7 @@ def generate_files(vars, snrratios=None, time_intervals=None, number_of_bins=Non
                         my_apps.evtbin['xref'] = ra
                         my_apps.evtbin['yref'] = dec
                         my_apps.evtbin['axisrot'] = 0
-                        my_apps.evtbin['proj'] = 'CAL'
+                        my_apps.evtbin['proj'] = 'CAR'
                         #my_apps.evtbin['ebinalg'] = 'FILE'
                         my_apps.evtbin['ebinfile'] = "NONE"
                         my_apps.evtbin['emin'] = emin
@@ -781,7 +781,7 @@ def generate_files(vars, snrratios=None, time_intervals=None, number_of_bins=Non
                         expCube2['xref'] = ra
                         expCube2['yref'] = dec
                         expCube2['axisrot'] = 0
-                        expCube2['proj'] = 'CAL'
+                        expCube2['proj'] = 'CAR'
                         #expCube2['ebinalg'] = 'FILE'
                         expCube2['ebinfile'] = "NONE"
                         #expCube2.run()
