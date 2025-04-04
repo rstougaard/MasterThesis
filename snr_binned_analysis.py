@@ -622,7 +622,7 @@ def generate_files(vars, snrratios=None, time_intervals=None, number_of_bins=Non
                     ltcube = general_path + f'{method}/ltcube/ltcube.fits'
                     ccube = general_path + f'{method}/ccube/ccube_{emin}_{emax}.fits'
                     binexpmap = general_path + f'{method}/expmap/BinnedExpMap_{emin}_{emax}.fits'
-                    model = f'{general_path}data/{source_name_cleaned}/{method}/models/input_model_{emin}_{emax}.xml'
+                    model = general_path +f'{method}/models/input_model_{emin}_{emax}.xml'
                     ebinfile = f'{general_path_for_slurm}/energy_bins_def/{number_of_bins}/energy_bins_{emin}_{emax}.fits'
                     print(f"Processing method {method} without looping.")
                     
