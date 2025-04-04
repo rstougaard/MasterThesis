@@ -1361,7 +1361,10 @@ def delete_fits_and_xml_files(source_name_cleaned, method):
         f'{general_path_for_slurm}/data/{source_name_cleaned}/{method}/srcmap/*.fits',
         f'{general_path_for_slurm}/data/{source_name_cleaned}/{method}/models/*.xml',
         f'{general_path_for_slurm}/data/{source_name_cleaned}/{method}/ccube/*.fits',
-        f'{general_path_for_slurm}/data/{source_name_cleaned}/{method}/expmap/*.fits'     
+        f'{general_path_for_slurm}/data/{source_name_cleaned}/{method}/expmap/*.fits',
+        f'{general_path_for_slurm}/data/{source_name_cleaned}/{method}/ltcube/*.fits',
+        f'{general_path_for_slurm}/data/{source_name_cleaned}/{method}/*.fits'
+        f'{general_path_for_slurm}/data/{source_name_cleaned}/*.fits'        
     ]
 
     # Iterate over each path pattern and delete all matching files
@@ -1414,13 +1417,15 @@ def process_line(line):
 
     
     if not os.path.exists(f"{general_path_for_slurm}/fit_results/{source_name_cleaned}_fit_data_NONE.fits"):
-        #delete_fits_and_xml_files(source_name_cleaned, method = "NONE")
-        get_gti_bin(vars_none)
-        generate_files(vars_none, number_of_bins=7)
-        source_maps(vars_none)
-        print(source_name)
-        run_binned_likelihood(vars_none, free_params="None")
-        print(f'Likelihood for non-filtered data done for {source_name}!')
+        delete_fits_and_xml_files(source_name_cleaned, method = "NONE")
+        delete_fits_and_xml_files(source_name_cleaned, method = "LIN")
+        delete_fits_and_xml_files(source_name_cleaned, method = "SNR")
+        #get_gti_bin(vars_none)
+        #generate_files(vars_none, number_of_bins=7)
+        #source_maps(vars_none)
+        #print(source_name)
+        #run_binned_likelihood(vars_none, free_params="None")
+        #print(f'Likelihood for non-filtered data done for {source_name}!')
         
     else:
         print(f'Likelihood for non-filtered data done for {source_name}!')
