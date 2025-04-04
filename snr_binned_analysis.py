@@ -1025,7 +1025,7 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
                         nobs = like.nobs
                         geometric_mean = (emin*emax)**0.5
 
-                        print(emin, emax, geometric_mean, geometric_mean - emin, emax - geometric_mean, float(flux), float(dflux), list(nobs), TS, convergence)
+                        print(emin, emax, geometric_mean, geometric_mean - emin, emax - geometric_mean, float(flux), float(dflux), float(sum(nobs)), TS, convergence)
 
                         # Add the data for this energy bin to the list
                         fit_data_list.append({
@@ -1036,7 +1036,7 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
                             'e_upper': emax - geometric_mean,
                             'flux_tot_value': float(flux),
                             'flux_tot_error': float(dflux),
-                            'nobs': list(nobs),
+                            'nobs': float(sum(nobs)),
                             'TS': TS,
                             'convergence': convergence
                         })
@@ -1087,7 +1087,7 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
                             'e_upper': emax - geometric_mean,
                             'flux_tot_value': float(flux),
                             'flux_tot_error': float(dflux),
-                            'nobs': nobs,
+                            'nobs': float(sum(nobs)),
                             'TS': TS,
                             'convergence': convergence
                         })
@@ -1238,7 +1238,7 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
                             'e_upper': emax - geometric_mean,
                             'flux_tot_value': float(flux),
                             'flux_tot_error': float(dflux),                    
-                            'nobs': list(nobs),
+                            'nobs': float(sum(nobs)),
                             'TS': TS,
                             'convergence': convergence
                         }
@@ -1300,7 +1300,7 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
                                 'e_upper': emax - geometric_mean,
                                 'flux_tot_value': float(flux),
                                 'flux_tot_error': float(dflux),
-                                'nobs': nobs,
+                                'nobs': float(sum(nobs)),
                                 'TS': TS,
                                 'convergence': convergence
                             }
