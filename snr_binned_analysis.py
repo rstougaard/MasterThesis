@@ -1479,10 +1479,11 @@ def run_analysis():
     with open(filename, "r") as file:
         lines = file.readlines()'
     '''
+    line = ["4FGL J0617.7-1715", "94.3892439292", "-17.2569680306", "1.9593390226364136"]
     num_workers = 1
     # Use multiprocessing Pool to process each line in parallel
     with multiprocessing.Pool(processes=num_workers) as pool:
-        pool.map(process_one_line, '4FGL J0617.7-1715', 94.3892439292, -17.2569680306, 1.9593390226364136)
+        pool.map(process_one_line, line[0], float(line[1]), float(line[2]), float(line[3]))
 
 if __name__ == "__main__":
     run_analysis()
