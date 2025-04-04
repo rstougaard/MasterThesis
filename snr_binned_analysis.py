@@ -681,7 +681,7 @@ def generate_files(vars, snrratios=None, time_intervals=None, number_of_bins=Non
                         expCube2['axisrot'] = 0
                         expCube2['proj'] = 'CAL'
                         #expCube2['ebinalg'] = 'FILE'
-                        #expCube2['ebinfile'] = ebinfile
+                        expCube2['ebinfile'] = 'NONE'
                         expCube2['ebinalg'] = 'LOG'
                         expCube2['emin'] = emin
                         expCube2['emax'] = emax
