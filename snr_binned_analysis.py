@@ -1204,6 +1204,7 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
                     try:
                         cfg = BinnedConfig(edisp_bins=edisp_bins)
                         analysis = binnedAnalysis (config=cfg, irfs=irf,cmap=srcmap,bexpmap=binexpmap,expcube=ltcube,srcmdl=input_model, optimizer=optimizer)
+                        analysis.logLike.set_edisp_flag(True)
                         iteration = 0
                         ndeleted = 1 # number of deleted sources. We want to enter the loop below at least once.
 
@@ -1278,6 +1279,7 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
                         try:
                             cfg = BinnedConfig(edisp_bins=edisp_bins)
                             like = binnedAnalysis (config=cfg, irfs=irf,cmap=srcmap,bexpmap=binexpmap,expcube=ltcube,srcmdl=ref_model, optimizer=optimizer)
+                            like.logLike.set_edisp_flag(True)
                             likeobj = pyLikelihood.Minuit(like.logLike)
                             like.fit(covar=True,optObject=likeobj)
                             TS = like.Ts(source_name) #also include in output file
