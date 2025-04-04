@@ -1453,7 +1453,7 @@ def process_one_line(source_name, ra, dec, specin):
         source_maps(vars_lin, time_intervals=time_intervals)
         print(source_name)
         run_binned_likelihood(vars_lin, time_intervals=time_intervals, free_params="None")
-        print(f'Likelihood linear binned done for {source_name}!')'
+        print(f'Likelihood linear binned done for {source_name}!')
         delete_fits_and_xml_files(source_name_cleaned, method = "LIN")
     else:
         print(f'Likelihood for linear binned data done for {source_name}!')
