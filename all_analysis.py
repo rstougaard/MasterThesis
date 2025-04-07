@@ -1424,7 +1424,7 @@ def process_line(line):
         print(f'Likelihood for non-filtered data done for {source_name}!')
         
     else:
-        print(f'Likelihood for non-filtered data done for {source_name}!', flush=True)
+        print(f'Likelihood for non-filtered data done for {source_name}!')
     
     if not os.path.exists(f"{general_path_for_slurm}/fit_results/{source_name_cleaned}_fit_data_LIN.fits"):
         filtering(vars_lin, time_intervals=time_intervals)
