@@ -1457,7 +1457,7 @@ def run_analysis():
     """Main function to use multiprocessing"""
     with open(filename, "r") as file:
         lines = file.readlines()
-    num_workers = 1
+    num_workers = 32
     # Use multiprocessing Pool to process each line in parallel
     with multiprocessing.Pool(processes=num_workers) as pool:
         pool.map(process_line, lines)
