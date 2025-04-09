@@ -53,7 +53,7 @@ def simple_plot(dataset_none, dataset_snr, colors_snr, dataset_lin, colors_lin, 
     plt.rcParams["font.family"] = "serif"
     plt.rcParams["mathtext.fontset"] = "cm"
     
-    #eav0, f0, df0, de0 = GetCatalogueSpectrum(source)
+    eav0, f0, df0, de0 = GetCatalogueSpectrum(source)
     # Top subplot: Spectrum - SNR Ratios
     ax1 = fig.add_subplot(2, 1, 1)
     
@@ -77,14 +77,14 @@ def simple_plot(dataset_none, dataset_snr, colors_snr, dataset_lin, colors_lin, 
         color = colors_snr[i] if i < len(colors_snr) else 'black'
         ax1.errorbar(x, y, xerr=[e_lowers, e_uppers], yerr=y_err,
                      fmt='o', capsize=5, color=color, label=f'{dataset_label}')
-    #ax1.errorbar(eav0, f0, yerr=df0, xerr=de0, fmt='o', color="pink", label='Catalogue Spectrum')
+    ax1.errorbar(eav0, f0, yerr=df0, xerr=de0, fmt='o', color="pink", label='Catalogue Spectrum')
 
     ax1.legend(ncol=1, loc='lower left')
     ax1.set_ylabel(r'E$^2$dN/dE [ erg/cm²/s ]')
     ax1.set_title(f'{source} - SNR Time Intervals')
     ax1.set_xscale('log')
     ax1.set_yscale('log')
-    ax1.set_ylim(2e-14, 1e-10)
+    #ax1.set_ylim(2e-14, 1e-10)
     ax1.grid(True, which="both", linestyle="--", linewidth=0.5)
 
     # Bottom subplot: Spectrum - Time Intervals
@@ -98,7 +98,7 @@ def simple_plot(dataset_none, dataset_snr, colors_snr, dataset_lin, colors_lin, 
         #bin_size = emax - emin
         ax2.errorbar(x, y, xerr=[e_lowers, e_uppers], yerr=y_err,
                      fmt='s', capsize=5, color='black', label=f'{dataset_label}')
-   # ax2.errorbar(eav0, f0, yerr=df0, xerr=de0, fmt='o', color="pink", label='Catalogue Spectrum')
+    ax2.errorbar(eav0, f0, yerr=df0, xerr=de0, fmt='o', color="pink", label='Catalogue Spectrum')
 
     # Plot the lin datasets with their corresponding colors
     for i, (dataset_label, (x, y, y_err, emin, emax)) in enumerate(dataset_lin.items()):
@@ -116,7 +116,7 @@ def simple_plot(dataset_none, dataset_snr, colors_snr, dataset_lin, colors_lin, 
     ax2.set_xlabel('Energy [ MeV ]')
     ax2.set_title(f'{source} - Linear Time Intervals')
     ax2.set_xscale('log')
-    ax2.set_ylim(2e-14, 1e-10)
+    #ax2.set_ylim(2e-14, 1e-10)
     ax2.set_yscale('log')
     ax2.grid(True, which="both", linestyle="--", linewidth=0.5)
 
@@ -206,7 +206,7 @@ print(source_name)
 
 fig = simple_plot(datasets, datasets_snr, colors_snr, datasets_lin, colors_lin, source_name, png_naming="")
 '''
-with PdfPages('./fit_results/spectral_points.pdf') as pdf:
+with PdfPages('./fit_results/spectral_points_with_cat.pdf') as pdf:
     with open(f'Source_ra_dec_specin.txt', 'r') as file:
                     for line in file:
                         parts = line.strip().split()
