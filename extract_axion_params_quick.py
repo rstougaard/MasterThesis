@@ -120,37 +120,16 @@ def fit_data(x, y, y_err, emin, emax, bin_size, p0, E_c, k, source_name, dataset
             return logpar_base(E, Norm, alpha_, beta_) * ebl
 
         base = LogPar_EBL
-        bounds_base = ([1e-14, -1.0, -1.0], [1e-9, 5.0, 3.0])  # Lower and upper bounds
+        bounds_base = ([1e-14, -5.0, -5.0], [1e-9, 5.0, 3.0])  # Lower and upper bounds
         p0_base = [1e-11, 2.0, 0.001]  # Initial guesses
 
         def axion_func(E, Norm, alpha_, beta_, w):
             return base(E, Norm, alpha_, beta_) * (1 - (p0 / (1 + (E_c / E) ** k)) * (1+0.2*np.tanh(w)))
         
-        bounds_alp = ([1e-14, -1.0, -1.0, -np.pi], [1e-9, 5.0, 3.0, np.pi])  # Lower and upper bounds
+        bounds_alp = ([1e-14, -5.0, -5.0, -np.pi], [1e-9, 5.0, 5.0, np.pi])  # Lower and upper bounds
         p0_alp= [1e-11, 2.0, 0.001, np.pi/2]
 
-    elif useEBL and basefunc == "cutoff":
-        with fits.open('table-4LAC-DR3-h.fits') as f:
-            data1 = f[1].data
-        idx = (data1['Source_Name'] == source_name)
-        z = data1['Redshift'][idx][0]
-        ebl = EblAbsorptionModel(z).transmission(x_filtered * u.MeV)
 
-        def cutoff_EBL(x, Norm,  l1, l2):
-            return cutoff_base(x, Norm, l1, l2) * ebl
-
-        base = cutoff_EBL
-
-        bounds_base = ([1e-14, -5.0, -5.0], [1e-9, 5.0, 5.0])  # Lower and upper bounds
-        p0_base = [1e-11, 2.0, 2.0]  # Initial guesses
-
-        def axion_func(E, Norm, l1, l2, w):
-            return base(E, Norm, l1, l2) * (1 - (p0 / (1 + (E_c / E) ** k)) * (1+0.2*np.tanh(w)))
-        
-        bounds_alp = ([1e-12, -5.0, -5.0, -np.pi], [1e-7, 5.0, 5.0, np.pi])  # Lower and upper bounds
-        p0_alp= [1e-9, 2.0, 2.0, np.pi/2]
-
-    
         
     popt_base, pcov_base = curve_fit(
         base, x_filtered, y_filtered, sigma=y_err_eff, p0=p0_base, bounds=bounds_base, absolute_sigma=True, maxfev=100000)
@@ -761,42 +740,42 @@ with open(f'Source_ra_dec_specin.txt', 'r') as file:
                     print(source_name)
                     #No systematic errors added
                     results = nested_fits_combined(datasets, bin_size, source_name, useEBL=True, fitting_method="no_sys_error", basefunc = "logpar", chunk_size=30)
-                    #results_snr = nested_fits_combined(datasets_snr, bin_size, source_name, useEBL=True, fitting_method="no_sys_error", basefunc = "logpar", chunk_size=30)
-                    #results_lin= nested_fits_combined(datasets_lin, bin_size, source_name, useEBL=True, fitting_method="no_sys_error", basefunc = "logpar", chunk_size=30)
+                    results_snr = nested_fits_combined(datasets_snr, bin_size, source_name, useEBL=True, fitting_method="no_sys_error", basefunc = "logpar", chunk_size=30)
+                    results_lin= nested_fits_combined(datasets_lin, bin_size, source_name, useEBL=True, fitting_method="no_sys_error", basefunc = "logpar", chunk_size=30)
                     
 
                     all_results_none[source_name] = results
                     with open("all_results_none_32_logpar_no_sys_error.pkl", "wb") as file:
                         pickle.dump(all_results_none, file)
-                    ''' 
+                    
                     all_results_snr[source_name] = results_snr
-                    with open("all_results_snr_31_logpar_no_sys_error.pkl", "wb") as file:
+                    with open("all_results_snr_32_logpar_no_sys_error.pkl", "wb") as file:
                         pickle.dump(all_results_snr, file)
 
                     all_results_lin[source_name] = results_lin
-                    with open("all_results_lin_31_logpar_no_sys_error.pkl", "wb") as file:
+                    with open("all_results_lin_32_logpar_no_sys_error.pkl", "wb") as file:
                         pickle.dump(all_results_lin, file)
-                    '''
+                    
                     
                     #With systematic errors added
                     results_sys = nested_fits_combined(datasets, bin_size, source_name, useEBL=True, fitting_method="sys_error", basefunc = "logpar", chunk_size=100)
-                    #results_snr_sys = nested_fits_combined(datasets_snr, bin_size, source_name, useEBL=True, fitting_method="sys_error", basefunc = "logpar", chunk_size=100)
-                    #results_lin_sys= nested_fits_combined(datasets_lin, bin_size, source_name, useEBL=True, fitting_method="sys_error", basefunc = "logpar", chunk_size=100)
+                    results_snr_sys = nested_fits_combined(datasets_snr, bin_size, source_name, useEBL=True, fitting_method="sys_error", basefunc = "logpar", chunk_size=100)
+                    results_lin_sys= nested_fits_combined(datasets_lin, bin_size, source_name, useEBL=True, fitting_method="sys_error", basefunc = "logpar", chunk_size=100)
                     
 
                     all_results_none_sys[source_name] = results_sys
                     with open("all_results_none_32_logpar_sys_error.pkl", "wb") as file:
                         pickle.dump(all_results_none_sys, file)
-                    ''' 
+                     
                     all_results_snr_sys[source_name] = results_snr_sys
-                    with open("all_results_snr_31_logpar_sys_error.pkl", "wb") as file:
+                    with open("all_results_snr_32_logpar_sys_error.pkl", "wb") as file:
                         pickle.dump(all_results_snr_sys, file)
 
                     all_results_lin_sys[source_name] = results_lin_sys
-                    with open("all_results_lin_31_logpar_sys_error.pkl", "wb") as file:
+                    with open("all_results_lin_32_logpar_sys_error.pkl", "wb") as file:
                         pickle.dump(all_results_lin_sys, file)
 
-                    
+                    '''
                     plot_delta_chi2_heatmap(results, dataset_label="No_Filtering", png_naming =f"{source_name_cleaned}")
                     
                     plot_delta_chi2_heatmap(results_snr, dataset_label="snr_3", png_naming =f"{source_name_cleaned}")
@@ -806,8 +785,8 @@ with open(f'Source_ra_dec_specin.txt', 'r') as file:
                     plot_delta_chi2_heatmap(results_lin, dataset_label="week", png_naming =f"{source_name_cleaned}")
                     plot_delta_chi2_heatmap(results_lin, dataset_label="month", png_naming =f"{source_name_cleaned}")
                     print("(p0, Ec) Heatmaps done!")
-                    '''
-'''
+                    
+
 
 
 
