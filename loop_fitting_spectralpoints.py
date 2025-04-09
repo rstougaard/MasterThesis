@@ -53,7 +53,7 @@ def simple_plot(dataset_none, dataset_snr, colors_snr, dataset_lin, colors_lin, 
     plt.rcParams["font.family"] = "serif"
     plt.rcParams["mathtext.fontset"] = "cm"
     
-    eav0, f0, df0, de0 = GetCatalogueSpectrum(source)
+    #eav0, f0, df0, de0 = GetCatalogueSpectrum(source)
     # Top subplot: Spectrum - SNR Ratios
     ax1 = fig.add_subplot(2, 1, 1)
     
@@ -125,7 +125,7 @@ def simple_plot(dataset_none, dataset_snr, colors_snr, dataset_lin, colors_lin, 
 
     # Optionally save the figure as a PNG
     if source == "4FGL J0319.8+4130":
-        fig.savefig("./fit_results/NGC1275_spectral_points.png", dpi=600)
+        plt.savefig("./fit_results/NGC1275_spectral_points.png", dpi=600)
 
     return fig
 
