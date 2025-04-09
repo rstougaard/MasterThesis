@@ -64,7 +64,7 @@ def simple_plot(dataset_none, dataset_snr, colors_snr, dataset_lin, colors_lin, 
         e_uppers = emax - x
         #bin_size = emax - emin
         ax1.errorbar(x, y, xerr=[e_lowers, e_uppers], yerr=y_err,
-                     fmt='o', capsize=5, color='black', label=f'{dataset_label}')
+                     fmt='s', capsize=5, color='black', label=f'{dataset_label}')
         
     
     # Plot the SNR datasets with their corresponding colors
