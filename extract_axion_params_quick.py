@@ -739,9 +739,9 @@ with open(f'Source_ra_dec_specin.txt', 'r') as file:
                                     f"month": (sorted_data_lin_month['geometric_mean'], sorted_data_lin_month['flux_tot_value'], sorted_data_lin_month['flux_tot_error'], sorted_data_lin_month['emin'], sorted_data_lin_month['emax'] )}
                     print(source_name)
                     #No systematic errors added
-                    results = nested_fits_combined(datasets, bin_size, source_name, useEBL=True, fitting_method="no_sys_error", basefunc = "logpar", chunk_size=30)
-                    results_snr = nested_fits_combined(datasets_snr, bin_size, source_name, useEBL=True, fitting_method="no_sys_error", basefunc = "logpar", chunk_size=30)
-                    results_lin= nested_fits_combined(datasets_lin, bin_size, source_name, useEBL=True, fitting_method="no_sys_error", basefunc = "logpar", chunk_size=30)
+                    results = nested_fits_combined(datasets, bin_size, source_name, useEBL=True, fitting_method="no_sys_error", basefunc = "logpar", chunk_size=100)
+                    results_snr = nested_fits_combined(datasets_snr, bin_size, source_name, useEBL=True, fitting_method="no_sys_error", basefunc = "logpar", chunk_size=100)
+                    results_lin= nested_fits_combined(datasets_lin, bin_size, source_name, useEBL=True, fitting_method="no_sys_error", basefunc = "logpar", chunk_size=100)
                     
 
                     all_results_none[source_name] = results
