@@ -84,6 +84,7 @@ def simple_plot(dataset_none, dataset_snr, colors_snr, dataset_lin, colors_lin, 
     ax1.set_title(f'{source} - SNR Time Intervals')
     ax1.set_xscale('log')
     ax1.set_yscale('log')
+    ax1.set_ylim(2e-14, 1e-10)
     ax1.grid(True, which="both", linestyle="--", linewidth=0.5)
 
     # Bottom subplot: Spectrum - Time Intervals
@@ -115,6 +116,7 @@ def simple_plot(dataset_none, dataset_snr, colors_snr, dataset_lin, colors_lin, 
     ax2.set_xlabel('Energy [ MeV ]')
     ax2.set_title(f'{source} - Linear Time Intervals')
     ax2.set_xscale('log')
+    ax2.set_ylim(2e-14, 1e-10)
     ax2.set_yscale('log')
     ax2.grid(True, which="both", linestyle="--", linewidth=0.5)
 
