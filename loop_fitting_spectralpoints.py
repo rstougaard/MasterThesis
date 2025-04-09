@@ -81,7 +81,7 @@ def simple_plot(dataset_none, dataset_snr, colors_snr, dataset_lin, colors_lin, 
 
     ax1.legend(ncol=1, loc='lower left')
     ax1.set_ylabel(r'E$^2$dN/dE [ erg/cm²/s ]')
-    ax1.set_title(f'{source} - SNR Ratios')
+    ax1.set_title(f'{source} - SNR Time Intervals')
     ax1.set_xscale('log')
     ax1.set_yscale('log')
     ax1.grid(True, which="both", linestyle="--", linewidth=0.5)
@@ -113,7 +113,7 @@ def simple_plot(dataset_none, dataset_snr, colors_snr, dataset_lin, colors_lin, 
     ax2.legend(ncol=1, loc='lower left')
     ax2.set_ylabel(r'E$^2$dN/dE [ erg/cm²/s ]')
     ax2.set_xlabel('Energy [ MeV ]')
-    ax2.set_title(f'{source} - Time Intervals')
+    ax2.set_title(f'{source} - Linear Time Intervals')
     ax2.set_xscale('log')
     ax2.set_yscale('log')
     ax2.grid(True, which="both", linestyle="--", linewidth=0.5)
@@ -122,8 +122,8 @@ def simple_plot(dataset_none, dataset_snr, colors_snr, dataset_lin, colors_lin, 
     fig.tight_layout()
 
     # Optionally save the figure as a PNG
-    #png_name = f'fit_results/speactral_points/{dataset_label}{png_naming}.png'
-    #fig.savefig("./hpc_results/NGC1275/spectral_points.png", dpi=600)
+    if source == "4FGL J0319.8+4130":
+        fig.savefig("./fit_results/NGC1275_spectral_points.png", dpi=600)
 
     return fig
 
@@ -266,6 +266,7 @@ with PdfPages('./fit_results/spectral_points.pdf') as pdf:
                         
                         #print(sorted_data_snr5['geometric_mean'])
                         #print( sorted_data_snr5['flux_tot_value'])
+                        '''
                         if source_name == "4FGL J0617.7-1715":
                             # Stack the arrays as columns; ensure that they are numpy arrays (or convert them if needed)
                             data = np.column_stack((
@@ -280,6 +281,7 @@ with PdfPages('./fit_results/spectral_points.pdf') as pdf:
                             
                             # Save the data to a text file. Adjust the format (here '%f') if you need different precision.
                             np.savetxt("output_newroi.txt", data, header=header, fmt='%s')
+                        '''
                             
                         datasets = {f"No_Filtering": (sorted_data_none['geometric_mean'], sorted_data_none['flux_tot_value'], sorted_data_none['flux_tot_error'], sorted_data_none['emin'], sorted_data_none['emax'] )}
                         datasets_snr = {f"snr_3": (sorted_data_snr3['geometric_mean'], sorted_data_snr3['flux_tot_value'], sorted_data_snr3['flux_tot_error'], sorted_data_snr3['emin'], sorted_data_snr3['emax']),
