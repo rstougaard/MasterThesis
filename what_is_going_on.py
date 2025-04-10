@@ -33,9 +33,9 @@ g_unique = axion_data[:n_g, 1]       # length = n_g
 mass_unique = axion_data[::n_g, 0]     # length = n_mass
 
 # Define your desired start and stop values
-m_start_val = 3e-10
-g_start_val = 1e-13
-m_stop_val  = 6e-9
+m_start_val = 1e-10
+g_start_val = 6e-13 #1e-13
+m_stop_val  = 1e-8
 g_stop_val  = 1e-11
 
 # Find the row (mass) and column (g) indices closest to the desired start values.
@@ -190,8 +190,9 @@ def plot_individual_delta_chi2_heatmap_with_pdf(all_results, dataset_labels, sys
                 plt.tight_layout()
                 
                 # Save the current figure as a PNG file.
-                png_filepath = f'{path_to_save_heatmap_m_g}{png_naming}_{source_name}_{filter_label}_ma_ga.png'
-                #plt.savefig(png_filepath, dpi=300)
+                if source_name == "4FGL J0319.8+4130":
+                    png_filepath = f'./fit_results/NGC1275_{filter_label}_ma_ga.png'
+                    plt.savefig(png_filepath, dpi=300)
                 #print(f"Saved PNG: {png_filepath}")
                 
                 # Add the current figure as a page in the PDF.
@@ -491,17 +492,17 @@ def plot_mean_delta_chi2_heatmap_sys_base(
         print(f"Finished plotting for filter: {filter_label}")
 
 ################################################################################################# WITH systematic errors #######################################################################################
-with open("all_results_none_31_logpar_sys_error.pkl", "rb") as file:
+with open("all_results_none_32_logpar_sys_error.pkl", "rb") as file:
     all_results_none_sys = pickle.load(file)
 
-with open("all_results_lin_31_logpar_sys_error.pkl", "rb") as file:
+with open("all_results_lin_32_logpar_sys_error.pkl", "rb") as file:
     all_results_lin_sys = pickle.load(file)
 
-with open("all_results_snr_31_logpar_sys_error.pkl", "rb") as file:
+with open("all_results_snr_32_logpar_sys_error.pkl", "rb") as file:
     all_results_snr_sys = pickle.load(file)
 
 no_filtering_sources_sys = list(all_results_none_sys.keys()) 
-'''
+
 plot_individual_delta_chi2_heatmap_with_pdf(all_results_none_sys, no_filtering_sources_sys, None, " ", filtering_methods="No_Filtering", pdf_filename="indv_heatmaps_no_filter_logpar_sys_error.pdf")
 plot_individual_delta_chi2_heatmap_with_pdf(all_results_lin_sys, no_filtering_sources_sys, None, " ", filtering_methods="week", pdf_filename="indv_heatmaps_week_logpar_sys_error.pdf")
 plot_individual_delta_chi2_heatmap_with_pdf(all_results_lin_sys, no_filtering_sources_sys, None, " ", filtering_methods="month", pdf_filename="indv_heatmaps_month_logpar_sys_error.pdf")
@@ -519,7 +520,7 @@ no_filtering_grid_sys = compute_mean_delta_chi2_grid(
     p0_masked=p0_masked,
     ec_masked=ec_masked
 ) 
-'''
+
 plot_mean_delta_chi2_heatmap_nosys_base(all_results_none_sys, None,list(all_results_none_sys.keys()), "mean_sys_", remove_source_label=None)
 # For LIN filtering ("week" and "month")
 plot_mean_delta_chi2_heatmap_nosys_base(all_results_lin_sys, None,list(all_results_lin_sys.keys()), "mean_sys_", no_filtering_grid=no_filtering_grid_sys, remove_source_label=None)
@@ -533,20 +534,21 @@ plot_mean_delta_chi2_heatmap(all_results_lin, list(all_results_lin.keys()), "mea
 
 # For SNR filtering ("snr_3", "snr_5", "snr_10")
 plot_mean_delta_chi2_heatmap(all_results_snr, list(all_results_snr.keys()), "mean_", no_filtering_grid=no_filtering_grid, remove_source_label="4FGL J2314.0+1445")
+
 '''
 ################################################################################################# NO systematic errors #######################################################################################
 
-with open("all_results_none_31_logpar_no_sys_error.pkl", "rb") as file:
+with open("all_results_none_32_logpar_no_sys_error.pkl", "rb") as file:
     all_results_none = pickle.load(file)
 
-with open("all_results_lin_31_logpar_no_sys_error.pkl", "rb") as file:
+with open("all_results_lin_32_logpar_no_sys_error.pkl", "rb") as file:
     all_results_lin = pickle.load(file)
 
-with open("all_results_snr_31_logpar_no_sys_error.pkl", "rb") as file:
+with open("all_results_snr_32_logpar_no_sys_error.pkl", "rb") as file:
     all_results_snr = pickle.load(file)
 
 no_filtering_sources = list(all_results_none.keys())
-'''
+
 plot_individual_delta_chi2_heatmap_with_pdf(all_results_none, no_filtering_sources, None, " ", filtering_methods="No_Filtering", pdf_filename="indv_heatmaps_no_filter_logpar_no_sys_error.pdf")
 plot_individual_delta_chi2_heatmap_with_pdf(all_results_lin, no_filtering_sources, None, " ", filtering_methods="week", pdf_filename="indv_heatmaps_week_logpar_no_sys_error.pdf")
 plot_individual_delta_chi2_heatmap_with_pdf(all_results_lin, no_filtering_sources, None, " ", filtering_methods="month", pdf_filename="indv_heatmaps_month_logpar_no_sys_error.pdf")
@@ -571,7 +573,7 @@ plot_mean_delta_chi2_heatmap_nosys_base(all_results_snr, all_results_snr_sys, li
 plot_mean_delta_chi2_heatmap_sys_base(all_results_none, all_results_none_sys, list(all_results_none.keys()), "base_sys_",  remove_source_label=None)
 plot_mean_delta_chi2_heatmap_sys_base(all_results_lin, all_results_lin_sys, list(all_results_lin.keys()), "base_sys_", no_filtering_grid=no_filtering_grid_sys,no_filtering_grid_other=no_filtering_grid, remove_source_label=None)
 plot_mean_delta_chi2_heatmap_sys_base(all_results_snr, all_results_snr_sys, list(all_results_snr.keys()), "base_sys_", no_filtering_grid=no_filtering_grid_sys, no_filtering_grid_other=no_filtering_grid, remove_source_label=None)
-
+'''
 #plot_mean_delta_chi2_heatmap_limit(all_results_none, all_results_none_sys, list(all_results_none.keys()), "limit_mean",  remove_source_label=None)
 #plot_mean_delta_chi2_heatmap_limit(all_results_lin, all_results_lin_sys, list(all_results_lin.keys()), "limit_mean_", no_filtering_grid=no_filtering_grid, remove_source_label=None)
 #plot_mean_delta_chi2_heatmap_limit(all_results_snr, all_results_snr_sys, list(all_results_snr.keys()), "limit_mean_", no_filtering_grid=no_filtering_grid, remove_source_label=None)
