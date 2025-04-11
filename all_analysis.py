@@ -1379,7 +1379,7 @@ def delete_fits_and_xml_files(source_name_cleaned, method):
 
 #snrratios = [3, 5, 10]
 #time_intervals = ["week", "month"]
-filename = f'{general_path_for_slurm}/Source_ra_dec_specin.txt'
+filename = f'{general_path_for_slurm}/rerun.txt'
 snrratios = [10, 5, 3]
 time_intervals = ["week","month"]
 
@@ -1457,7 +1457,7 @@ def run_analysis():
     """Main function to use multiprocessing"""
     with open(filename, "r") as file:
         lines = file.readlines()
-    num_workers = 32
+    num_workers = 5
     # Use multiprocessing Pool to process each line in parallel
     with multiprocessing.Pool(processes=num_workers) as pool:
         pool.map(process_line, lines)
