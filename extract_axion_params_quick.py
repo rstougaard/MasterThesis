@@ -89,7 +89,7 @@ def reduced_chi_square(y_obs, y_fit, y_err, num_params):
 
 def fit_data(x, y, y_err, emin, emax, bin_size, p0, E_c, k, source_name, dataset_label, useEBL=True, fitting_method="no_sys_error", basefunc = "cutoff"):
     # Filter out points where y is zero
-    mask = (y != 0) & (np.abs(y) >= 1e-14)
+    mask = (y != 0) & (np.abs(y) >= 1e-13)
     x_filtered, y_filtered, y_err_filtered, emin_f, emax_f, bin_size_masked  = x[mask], y[mask], y_err[mask], emin[mask], emax[mask], bin_size[mask]
     y_filtered = y_filtered
     y_err_filtered = y_err_filtered
@@ -673,7 +673,7 @@ all_results_lin = {}
 all_results_none_sys = {}
 all_results_snr_sys = {}
 all_results_lin_sys = {}
-with open(f'Source_ra_dec_specin.txt', 'r') as file:
+with open(f'temp_sources.txt', 'r') as file:
                 for line in file:
                 
                     parts = line.strip().split()
