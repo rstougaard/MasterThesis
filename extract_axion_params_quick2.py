@@ -6,16 +6,17 @@ from scipy.optimize import curve_fit
 import shlex
 from naima.models import EblAbsorptionModel
 import astropy.units as u
+from iminuit.cost import LeastSquares
+from iminuit import Minuit
+from tqdm import tqdm
+from matplotlib.backends.backend_pdf import PdfPages
 import pickle
-from joblib import Parallel, delayed
-
-# Import numba and use it with default (object mode) because not all functions are jittable
-from numba import jit
+import multiprocessing
 
 path_to_save_heatmap_m_g = "./fit_results/heatmaps_m_g/"
 path_to_save_heatmap_Ec_p0 = "./fit_results/heatmaps_Ec_p0/"
 
-# Load axion data
+# Load axion data.
 axion_data = np.load('./denys/Rikke/Data/scan12.npy')
 ma_all = axion_data[:, 0]   # eV
 g_all = axion_data[:, 1]    # GeV**-1
@@ -28,21 +29,21 @@ n_g = 40
 n_total = axion_data.shape[0]
 n_mass = n_total // n_g
 
-# For the (E_c, p₀) plot, we want the full grid.
+# Reshape for the (E_c, p₀) grid.
 ec_all_full = (axion_data[:, 2] / 1e6).reshape(n_mass, n_g)
 p0_all_full = p0_all.reshape(n_mass, n_g)
 
-# For the (mₐ, g) plot, extract the unique values.
-g_unique = axion_data[:n_g, 1]   # length = n_g
-mass_unique = axion_data[::n_g, 0] # length = n_mass
+# Extract unique values for (mₐ, g) plot.
+g_unique = axion_data[:n_g, 1]       # length = n_g
+mass_unique = axion_data[::n_g, 0]     # length = n_mass
 
-# Define desired start and stop values
+# Define your desired start and stop values.
 m_start_val = 1e-10
 g_start_val = 5e-13
 m_stop_val  = 1e-8
 g_stop_val  = 1e-11
 
-# Find the row (mass) and column (g) indices closest to the desired start/stop values.
+# Find indices closest to the desired values.
 row_start = np.argmin(np.abs(mass_unique - m_start_val))
 col_start = np.argmin(np.abs(g_unique - g_start_val))
 row_stop  = np.argmin(np.abs(mass_unique - m_stop_val))
@@ -62,28 +63,33 @@ m_masked = mass_unique[row_start:row_stop+1]
 g_masked = g_unique[col_start:col_stop+1]
 
 
-# --- Base functions and chi-square computation ---
+# -------------------------
+# Define base functions.
+# -------------------------
 
 def logpar_base(x, Norm, alpha_, beta_):
-    E_b = 1000  # Fixed E_b value
+    E_b = 1000  # Fixed E_b value.
     return Norm * (x / E_b) ** (-(alpha_ + beta_ * np.log(x / E_b)))
 
 def cutoff_base(x, Norm, l1, l2):
     E_b = 1000
     return np.piecewise(x, [x < E_b, x >= E_b],
-                        [lambda x: Norm*(x/E_b)**l1, lambda x: Norm*(x/E_b)**l2])
+                        [lambda x: Norm * (x / E_b) ** l1,
+                         lambda x: Norm * (x / E_b) ** l2])
 
 def reduced_chi_square(y_obs, y_fit, y_err, num_params):
     residuals = (y_obs - y_fit) / y_err
     chi2 = np.sum(residuals**2)
-    dof = len(y_obs) - num_params  # Degrees of freedom
+    dof = len(y_obs) - num_params  # Degrees of freedom.
     return chi2, dof
 
 
-# --- The fitting function (unchanged) ---
+# -------------------------
+# The fitting function.
+# -------------------------
 
 def fit_data(x, y, y_err, emin, emax, bin_size, p0, E_c, k, source_name, dataset_label, useEBL=True, fitting_method="no_sys_error", basefunc="cutoff"):
-    # Filter out points where y is zero
+    # Filter out points with y == 0 (or nearly zero).
     mask = (y != 0) & (np.abs(y) >= 1e-13)
     x_filtered = x[mask]
     y_filtered = y[mask]
@@ -120,22 +126,22 @@ def fit_data(x, y, y_err, emin, emax, bin_size, p0, E_c, k, source_name, dataset
         p0_base = [1e-11, 2.0, 0.001]
 
         def axion_func(E, Norm, alpha_, beta_, w):
-            return base(E, Norm, alpha_, beta_) * (1 - (p0 / (1 + (E_c / E)**k)) * (1+0.2*np.tanh(w)))
+            return base(E, Norm, alpha_, beta_) * (1 - (p0 / (1 + (E_c / E) ** k)) * (1 + 0.2 * np.tanh(w)))
         bounds_alp = ([1e-14, -5.0, -5.0, -np.pi], [1e-9, 5.0, 5.0, np.pi])
-        p0_alp = [1e-11, 2.0, 0.001, np.pi/2]
+        p0_alp = [1e-11, 2.0, 0.001, np.pi / 2]
     else:
         raise ValueError("Only EBL logpar fitting is implemented in this code example.")
 
     popt_base, pcov_base = curve_fit(
-        base, x_filtered, y_filtered, sigma=y_err_eff, p0=p0_base, bounds=bounds_base,
-        absolute_sigma=True, maxfev=100000)
+        base, x_filtered, y_filtered, sigma=y_err_eff, p0=p0_base,
+        bounds=bounds_base, absolute_sigma=True, maxfev=100000)
     y_fit_base = base(x_filtered, *popt_base)
     chi2_base, dof_base = reduced_chi_square(y_filtered, y_fit_base, y_err_eff, len(popt_base))
     perr_base = np.sqrt(np.diag(pcov_base))
 
     popt_axion, pcov_axion = curve_fit(
-        axion_func, x_filtered, y_filtered, sigma=y_err_eff, p0=p0_alp, bounds=bounds_alp,
-        absolute_sigma=True, maxfev=100000)
+        axion_func, x_filtered, y_filtered, sigma=y_err_eff, p0=p0_alp,
+        bounds=bounds_alp, absolute_sigma=True, maxfev=100000)
     y_fit_axion = axion_func(x_filtered, *popt_axion)
     chi2_axion, dof_axion = reduced_chi_square(y_filtered, y_fit_axion, y_err_eff, len(popt_axion))
     perr_axion = np.sqrt(np.diag(pcov_axion))
@@ -173,12 +179,12 @@ def fit_data(x, y, y_err, emin, emax, bin_size, p0, E_c, k, source_name, dataset
     }
 
 
-# --- Process-chunk function with a Numba jit decorator ---
-# We use nopython=False because the function uses unsupported objects.
-@jit(nopython=False)
+# -------------------------
+# Process a chunk of a row.
+# -------------------------
+
 def process_chunk(i, j_start, j_end, x, y, y_err, emin, emax, bin_size, source_name, dataset_label, useEBL, fitting_method, basefunc):
     results_chunk = []
-    # Note: p0_masked and ec_masked are globals
     p0_chunk = p0_masked[i, j_start:j_end]
     ec_chunk = ec_masked[i, j_start:j_end]
     for p0_val, ec_val in zip(p0_chunk, ec_chunk):
@@ -191,7 +197,7 @@ def process_chunk(i, j_start, j_end, x, y, y_err, emin, emax, bin_size, source_n
             bin_size=np.array(bin_size),
             p0=p0_val,
             E_c=ec_val,
-            k=k,  # k defined globally
+            k=k,  # k is defined globally.
             source_name=source_name,
             dataset_label=dataset_label,
             useEBL=useEBL,
@@ -206,39 +212,47 @@ def process_chunk(i, j_start, j_end, x, y, y_err, emin, emax, bin_size, source_n
     return results_chunk
 
 
-def nested_fits_combined(datasets, bin_size, source_name, useEBL=True, fitting_method="no_sys_error", basefunc="cutoff", chunk_size=10):
+# -------------------------
+# Process one row (mass) using chunks.
+# -------------------------
+
+def process_row(i, x, y, y_err, emin, emax, bin_size, source_name, dataset_label, useEBL, fitting_method, basefunc, chunk_size):
+    row_results = []
+    num_cols = p0_masked.shape[1]
+    for j_start in range(0, num_cols, chunk_size):
+        j_end = min(j_start + chunk_size, num_cols)
+        row_results.extend(process_chunk(i, j_start, j_end, x, y, y_err, emin, emax, bin_size,
+                                         source_name, dataset_label, useEBL, fitting_method, basefunc))
+    return row_results
+
+
+# -------------------------
+# Nested fits using multiprocessing.
+# -------------------------
+
+def nested_fits_combined_mp(datasets, bin_size, source_name, useEBL=True, fitting_method="no_sys_error", basefunc="cutoff", chunk_size=10):
     """
-    Processes each row (mass) of the masked (p0, Ec) grid.
-    The row is split into chunks that are processed in parallel (via joblib),
-    and the inner processing in each chunk is handled by the numba-compiled process_chunk.
+    This function processes each row (mass) of the masked (p0, Ec) grid.
+    Instead of using joblib, it uses multiprocessing to run one row per process.
     """
     results = {}
+    num_rows = p0_masked.shape[0]
     for dataset_label, (x, y, y_err, emin, emax) in datasets.items():
-        dataset_results = []
-        num_rows = p0_masked.shape[0]
-        num_cols = p0_masked.shape[1]
-        # Process each row of the grid.
-        for i in range(num_rows):
-            tasks = []
-            # Split the row into chunks.
-            for j_start in range(0, num_cols, chunk_size):
-                j_end = min(j_start + chunk_size, num_cols)
-                tasks.append(delayed(process_chunk)(
-                    i, j_start, j_end, 
-                    np.array(x), np.array(y), np.array(y_err),
-                    np.array(emin), np.array(emax), np.array(bin_size),
-                    source_name, dataset_label, useEBL, fitting_method, basefunc
-                ))
-            row_results = []
-            chunk_results = Parallel(n_jobs=-1)(tasks)
-            for chunk in chunk_results:
-                row_results.extend(chunk)
-            dataset_results.append(row_results)
-        results[dataset_label] = dataset_results
+        # Prepare tasks for each row.
+        tasks = [(i,
+                  np.array(x), np.array(y), np.array(y_err),
+                  np.array(emin), np.array(emax), np.array(bin_size),
+                  source_name, dataset_label, useEBL, fitting_method, basefunc, chunk_size)
+                 for i in range(num_rows)]
+        with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
+            row_results_all = pool.starmap(process_row, tasks)
+        results[dataset_label] = row_results_all
     return results
 
 
-# --- Main processing loop over sources ---
+# -------------------------
+# Main processing loop over sources.
+# -------------------------
 
 all_results_none = {}
 all_results_snr = {}
@@ -345,21 +359,27 @@ with open('temp_sources.txt', 'r') as file:
         }
         print(source_name)
         # Run fits without systematic errors.
-        results = nested_fits_combined(
+        results = nested_fits_combined_mp(
             datasets, bin_size, source_name, useEBL=True, fitting_method="no_sys_error",
             basefunc="logpar", chunk_size=30
         )
         all_results_none[source_name] = results
-        with open("all_results_none_32_numba_no_sys_error.pkl", "wb") as file_out:
+        with open("all_results_none_new_no_sys_error.pkl", "wb") as file_out:
             pickle.dump(all_results_none, file_out)
 
         # Run fits with systematic errors.
-        results_sys = nested_fits_combined(
+        results_sys = nested_fits_combined_mp(
             datasets, bin_size, source_name, useEBL=True, fitting_method="sys_error",
             basefunc="logpar", chunk_size=30
         )
         all_results_none_sys[source_name] = results_sys
-        with open("all_results_none_numba_sys_error.pkl", "wb") as file_out:
+        with open("all_results_none_new_sys_error.pkl", "wb") as file_out:
             pickle.dump(all_results_none_sys, file_out)
 
+        # (The blocks for snr and lin datasets are currently commented out.)
         
+# Optionally, call additional plotting functions below.
+# For example:
+# plot_delta_chi2_heatmap_m_g(results, dataset_label="No_Filtering")
+# plot_delta_chi2_heatmap_m_g(results_snr, dataset_label="snr_3")
+# ... etc.
