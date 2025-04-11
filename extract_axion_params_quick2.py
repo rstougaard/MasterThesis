@@ -6,10 +6,6 @@ from scipy.optimize import curve_fit
 import shlex
 from naima.models import EblAbsorptionModel
 import astropy.units as u
-from iminuit.cost import LeastSquares
-from iminuit import Minuit
-from tqdm import tqdm
-from matplotlib.backends.backend_pdf import PdfPages
 import pickle
 from joblib import Parallel, delayed
 
