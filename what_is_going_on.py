@@ -267,7 +267,7 @@ def plot_mean_delta_chi2_heatmap_nosys_base(all_results,
                 'grid': mean_delta_chi2_grid,
                 'label': 'Without systematics',
                 'color_pos': 'red',   'linestyle_pos': 'solid',
-                'color_neg': 'grenn',  'linestyle_neg': 'solid'
+                'color_neg': 'green',  'linestyle_neg': 'solid'
             })
 
         # — Mean (no filtering) —
