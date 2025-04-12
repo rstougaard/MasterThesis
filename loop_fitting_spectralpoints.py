@@ -207,7 +207,7 @@ print(source_name)
 fig = simple_plot(datasets, datasets_snr, colors_snr, datasets_lin, colors_lin, source_name, png_naming="")
 '''
 with PdfPages('./fit_results/NEW_spectral_points.pdf') as pdf:
-    with open(f'temp_sources.txt', 'r') as file:
+    with open(f'Source_ra_dec_specin.txt', 'r') as file:
                     for line in file:
                         parts = line.strip().split()
         
