@@ -363,17 +363,50 @@ with open('sources_for_heatmaps.txt', 'r') as file:
             datasets, bin_size, source_name, useEBL=True, fitting_method="no_sys_error",
             basefunc="logpar", chunk_size=30
         )
+
+        results_snr = nested_fits_combined_mp(
+            datasets_snr, bin_size, source_name, useEBL=True, fitting_method="no_sys_error",
+            basefunc="logpar", chunk_size=30
+        )
+        results_lin = nested_fits_combined_mp(
+            datasets_lin, bin_size, source_name, useEBL=True, fitting_method="no_sys_error",
+            basefunc="logpar", chunk_size=30
+        )
         all_results_none[source_name] = results
         with open("all_results_none_new0_no_sys_error.pkl", "wb") as file_out:
             pickle.dump(all_results_none, file_out)
+
+        all_results_snr[source_name] = results_snr
+        with open("all_results_snr_new0_no_sys_error.pkl", "wb") as file:
+            pickle.dump(all_results_snr, file)
+
+        all_results_lin[source_name] = results_lin
+        with open("all_results_lin_new0_no_sys_error.pkl", "wb") as file:
+            pickle.dump(all_results_lin, file)
 
         # Run fits with systematic errors.
         results_sys = nested_fits_combined_mp(
             datasets, bin_size, source_name, useEBL=True, fitting_method="sys_error",
             basefunc="logpar", chunk_size=30
         )
+        results_sys_snr = nested_fits_combined_mp(
+            datasets_snr, bin_size, source_name, useEBL=True, fitting_method="sys_error",
+            basefunc="logpar", chunk_size=30
+        )
+        results_sys_lin = nested_fits_combined_mp(
+            datasets_lin, bin_size, source_name, useEBL=True, fitting_method="sys_error",
+            basefunc="logpar", chunk_size=30
+        )
         all_results_none_sys[source_name] = results_sys
         with open("all_results_none_new0_sys_error.pkl", "wb") as file_out:
+            pickle.dump(all_results_none_sys, file_out)
+
+        all_results_snr_sys[source_name] = results_sys_snr
+        with open("all_results_snr_new0_sys_error.pkl", "wb") as file_out:
+            pickle.dump(all_results_none_sys, file_out)
+
+        all_results_lin_sys[source_name] = results_sys_lin
+        with open("all_results_lin_new0_sys_error.pkl", "wb") as file_out:
             pickle.dump(all_results_none_sys, file_out)
 
         # (The blocks for snr and lin datasets are currently commented out.)
