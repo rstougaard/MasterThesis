@@ -145,7 +145,14 @@ def plot_individual_delta_chi2_heatmap_with_pdf(all_results, dataset_labels, sys
                 print(f"Source: {source_name} | Filter: {filter_label} | min: {np.min(mean_delta_chi2_grid)}, max: {np.max(mean_delta_chi2_grid)}")
                 
                 # Set up colormap parameters.
-                vmin, vmax = -1, 1#int(np.min(mean_delta_chi2_grid)), int(np.max(mean_delta_chi2_grid))
+                grid_min = np.min(mean_delta_chi2_grid)
+                grid_max = np.max(mean_delta_chi2_grid)
+
+                # If both the min and max are within [-1, 1], use fixed values.
+                if grid_min > -1 and grid_max < 1:
+                    vmin, vmax = -1, 1
+                else:
+                    vmin, vmax = grid_min, grid_max
                 num_colors = 120
                 boundaries = np.linspace(vmin, vmax, num_colors + 1)
                 cmap = plt.get_cmap('gnuplot2', num_colors)
