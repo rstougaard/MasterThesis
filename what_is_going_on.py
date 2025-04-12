@@ -34,7 +34,7 @@ mass_unique = axion_data[::n_g, 0]     # length = n_mass
 
 # Define your desired start and stop values
 m_start_val = 1e-10
-g_start_val = 6e-13 #1e-13
+g_start_val = 5e-13 #1e-13
 m_stop_val  = 1e-8
 g_stop_val  = 1e-11
 
@@ -492,24 +492,24 @@ def plot_mean_delta_chi2_heatmap_sys_base(
         print(f"Finished plotting for filter: {filter_label}")
 
 ################################################################################################# WITH systematic errors #######################################################################################
-with open("all_results_none_32_logpar_sys_error.pkl", "rb") as file:
+with open("all_results_none_new_sys_error.pkl", "rb") as file:
     all_results_none_sys = pickle.load(file)
-
+'''
 with open("all_results_lin_32_logpar_sys_error.pkl", "rb") as file:
     all_results_lin_sys = pickle.load(file)
 
 with open("all_results_snr_32_logpar_sys_error.pkl", "rb") as file:
     all_results_snr_sys = pickle.load(file)
-
+'''
 no_filtering_sources_sys = list(all_results_none_sys.keys()) 
 
 plot_individual_delta_chi2_heatmap_with_pdf(all_results_none_sys, no_filtering_sources_sys, None, " ", filtering_methods="No_Filtering", pdf_filename="indv_heatmaps_no_filter_logpar_sys_error.pdf")
-plot_individual_delta_chi2_heatmap_with_pdf(all_results_lin_sys, no_filtering_sources_sys, None, " ", filtering_methods="week", pdf_filename="indv_heatmaps_week_logpar_sys_error.pdf")
-plot_individual_delta_chi2_heatmap_with_pdf(all_results_lin_sys, no_filtering_sources_sys, None, " ", filtering_methods="month", pdf_filename="indv_heatmaps_month_logpar_sys_error.pdf")
+#plot_individual_delta_chi2_heatmap_with_pdf(all_results_lin_sys, no_filtering_sources_sys, None, " ", filtering_methods="week", pdf_filename="indv_heatmaps_week_logpar_sys_error.pdf")
+#plot_individual_delta_chi2_heatmap_with_pdf(all_results_lin_sys, no_filtering_sources_sys, None, " ", filtering_methods="month", pdf_filename="indv_heatmaps_month_logpar_sys_error.pdf")
 
-plot_individual_delta_chi2_heatmap_with_pdf(all_results_snr_sys, no_filtering_sources_sys, None, " ", filtering_methods="snr_3", pdf_filename="indv_heatmaps_snr3_logpar_sys_error.pdf")
-plot_individual_delta_chi2_heatmap_with_pdf(all_results_snr_sys, no_filtering_sources_sys, None, " ", filtering_methods="snr_5", pdf_filename="indv_heatmaps_snr5_logpar_sys_error.pdf")
-plot_individual_delta_chi2_heatmap_with_pdf(all_results_snr_sys, no_filtering_sources_sys, None, " ", filtering_methods="snr_10", pdf_filename="indv_heatmaps_snr10_logpar_sys_error.pdf")
+#plot_individual_delta_chi2_heatmap_with_pdf(all_results_snr_sys, no_filtering_sources_sys, None, " ", filtering_methods="snr_3", pdf_filename="indv_heatmaps_snr3_logpar_sys_error.pdf")
+#plot_individual_delta_chi2_heatmap_with_pdf(all_results_snr_sys, no_filtering_sources_sys, None, " ", filtering_methods="snr_5", pdf_filename="indv_heatmaps_snr5_logpar_sys_error.pdf")
+#plot_individual_delta_chi2_heatmap_with_pdf(all_results_snr_sys, no_filtering_sources_sys, None, " ", filtering_methods="snr_10", pdf_filename="indv_heatmaps_snr10_logpar_sys_error.pdf")
 '''
 print('Plotting mean chi-squared heatmap!')
 
@@ -538,23 +538,23 @@ plot_mean_delta_chi2_heatmap(all_results_snr, list(all_results_snr.keys()), "mea
 '''
 ################################################################################################# NO systematic errors #######################################################################################
 
-with open("all_results_none_32_logpar_no_sys_error.pkl", "rb") as file:
+with open("all_results_none_new_no_sys_error.pkl", "rb") as file:
     all_results_none = pickle.load(file)
-
+'''
 with open("all_results_lin_32_logpar_no_sys_error.pkl", "rb") as file:
     all_results_lin = pickle.load(file)
 
 with open("all_results_snr_32_logpar_no_sys_error.pkl", "rb") as file:
     all_results_snr = pickle.load(file)
-
+'''
 no_filtering_sources = list(all_results_none.keys())
 
 plot_individual_delta_chi2_heatmap_with_pdf(all_results_none, no_filtering_sources, None, " ", filtering_methods="No_Filtering", pdf_filename="indv_heatmaps_no_filter_logpar_no_sys_error.pdf")
-plot_individual_delta_chi2_heatmap_with_pdf(all_results_lin, no_filtering_sources, None, " ", filtering_methods="week", pdf_filename="indv_heatmaps_week_logpar_no_sys_error.pdf")
-plot_individual_delta_chi2_heatmap_with_pdf(all_results_lin, no_filtering_sources, None, " ", filtering_methods="month", pdf_filename="indv_heatmaps_month_logpar_no_sys_error.pdf")
-plot_individual_delta_chi2_heatmap_with_pdf(all_results_snr, no_filtering_sources, None, " ", filtering_methods="snr_3", pdf_filename="indv_heatmaps_snr3_logpar_no_sys_error.pdf")
-plot_individual_delta_chi2_heatmap_with_pdf(all_results_snr, no_filtering_sources, None, " ", filtering_methods="snr_5", pdf_filename="indv_heatmaps_snr5_logpar_no_sys_error.pdf")
-plot_individual_delta_chi2_heatmap_with_pdf(all_results_snr, no_filtering_sources, None, " ", filtering_methods="snr_10", pdf_filename="indv_heatmaps_snr10_logpar_no_sys_error.pdf")
+#plot_individual_delta_chi2_heatmap_with_pdf(all_results_lin, no_filtering_sources, None, " ", filtering_methods="week", pdf_filename="indv_heatmaps_week_logpar_no_sys_error.pdf")
+#plot_individual_delta_chi2_heatmap_with_pdf(all_results_lin, no_filtering_sources, None, " ", filtering_methods="month", pdf_filename="indv_heatmaps_month_logpar_no_sys_error.pdf")
+#plot_individual_delta_chi2_heatmap_with_pdf(all_results_snr, no_filtering_sources, None, " ", filtering_methods="snr_3", pdf_filename="indv_heatmaps_snr3_logpar_no_sys_error.pdf")
+#plot_individual_delta_chi2_heatmap_with_pdf(all_results_snr, no_filtering_sources, None, " ", filtering_methods="snr_5", pdf_filename="indv_heatmaps_snr5_logpar_no_sys_error.pdf")
+#plot_individual_delta_chi2_heatmap_with_pdf(all_results_snr, no_filtering_sources, None, " ", filtering_methods="snr_10", pdf_filename="indv_heatmaps_snr10_logpar_no_sys_error.pdf")
 '''
 print('Plotting mean chi-squared heatmap!') # e.g. ["No_Filtering"] or sometimes multiple sources
 
