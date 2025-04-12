@@ -267,7 +267,7 @@ def plot_mean_delta_chi2_heatmap_nosys_base(all_results,
                 'grid': mean_delta_chi2_grid,
                 'label': 'Without systematics',
                 'color_pos': 'red',   'linestyle_pos': 'solid',
-                'color_neg': 'blue',  'linestyle_neg': 'solid'
+                'color_neg': 'grenn',  'linestyle_neg': 'solid'
             })
 
         # — Mean (no filtering) —
@@ -284,7 +284,7 @@ def plot_mean_delta_chi2_heatmap_nosys_base(all_results,
                 'grid': systematic_grid,
                 'label': 'With systematics',
                 'color_pos': 'red',   'linestyle_pos': 'dashed',
-                'color_neg': 'blue',  'linestyle_neg': 'dashed'
+                'color_neg': 'green',  'linestyle_neg': 'dashed'
             })
 
         # — Systematics (no filtering) —
@@ -316,15 +316,21 @@ def plot_mean_delta_chi2_heatmap_nosys_base(all_results,
                             linewidths=2)
 
         # --- Build proxy legend handles for both aspects ---
+        if no_filtering_grid_other is not None:
+            # 1. Legend for threshold (color) mapping:
+            color_handles = [
+                Line2D([0], [0], color='red', linestyle='-', linewidth=2, label='> 6.2'),
+                Line2D([0], [0], color='blue', linestyle='-', linewidth=2, label='< -6.2'),
+                # For "No filtering" the color is white. Use a marker with a black edge to make it visible.
+                Line2D([0], [0], marker='s', markersize=8, markerfacecolor='white', 
+                    markeredgecolor='black', linestyle='-', linewidth=2, label='No filtering (white)')
+            ]
+        else:
+            color_handles = [
+                Line2D([0], [0], color='red', linestyle='-', linewidth=2, label='> 6.2'),
+                Line2D([0], [0], color='blue', linestyle='-', linewidth=2, label='< -6.2')
+            ]
 
-        # 1. Legend for threshold (color) mapping:
-        color_handles = [
-            Line2D([0], [0], color='red', linestyle='-', linewidth=2, label='> 6.2'),
-            Line2D([0], [0], color='blue', linestyle='-', linewidth=2, label='< -6.2'),
-            # For "No filtering" the color is white. Use a marker with a black edge to make it visible.
-            Line2D([0], [0], marker='s', markersize=8, markerfacecolor='white', 
-                   markeredgecolor='black', linestyle='-', linewidth=2, label='No filtering (white)')
-        ]
 
         # 2. Legend for systematics (line style) mapping:
         linestyle_handles = [
@@ -333,9 +339,9 @@ def plot_mean_delta_chi2_heatmap_nosys_base(all_results,
         ]
 
         # Create the two legends. Add the first legend to the axes so that the second does not overwrite it.
-        legend1 = plt.legend(handles=color_handles, loc='upper right', title="Threshold")
+        legend1 = plt.legend(handles=color_handles, loc='upper left', title="Threshold")
         plt.gca().add_artist(legend1)
-        plt.legend(handles=linestyle_handles, loc='lower right', title="Systematics")
+        plt.legend(handles=linestyle_handles, loc='lower left', title="Systematics")
 
         cbar = plt.colorbar(heatmap, ticks=np.linspace(vmin, vmax, 11))
         cbar.set_label(r'$\sum \Delta \chi^2$', fontsize=15)
@@ -411,7 +417,7 @@ def plot_mean_delta_chi2_heatmap_sys_base(
                 'grid': mean_delta_chi2_grid,
                 'label': 'With systematics',
                 'color_pos': 'red',   'linestyle_pos': 'solid',
-                'color_neg': 'blue',  'linestyle_neg': 'solid'
+                'color_neg': 'green',  'linestyle_neg': 'solid'
             })
 
         # — Mean (no filtering) —
@@ -428,7 +434,7 @@ def plot_mean_delta_chi2_heatmap_sys_base(
                 'grid': systematic_grid,
                 'label': 'No systematics',
                 'color_pos': 'red',   'linestyle_pos': 'dashed',
-                'color_neg': 'blue',  'linestyle_neg': 'dashed'
+                'color_neg': 'green',  'linestyle_neg': 'dashed'
             })
 
         # — Systematics (no filtering) —
@@ -461,14 +467,20 @@ def plot_mean_delta_chi2_heatmap_sys_base(
 
         # --- Build proxy legend handles for both aspects ---
 
-        # 1. Legend for threshold (color) mapping:
-        color_handles = [
-            Line2D([0], [0], color='red', linestyle='-', linewidth=2, label='> 6.2'),
-            Line2D([0], [0], color='blue', linestyle='-', linewidth=2, label='< -6.2'),
-            # For "No filtering" the color is white. Use a marker with a black edge to make it visible.
-            Line2D([0], [0], marker='s', markersize=8, markerfacecolor='white', 
-                   markeredgecolor='black', linestyle='-', linewidth=2, label='No filtering (white)')
-        ]
+        if no_filtering_grid_other is not None: # 1. Legend for threshold (color) mapping:
+            color_handles = [
+                Line2D([0], [0], color='red', linestyle='-', linewidth=2, label='> 6.2'),
+                Line2D([0], [0], color='blue', linestyle='-', linewidth=2, label='< -6.2'),
+                # For "No filtering" the color is white. Use a marker with a black edge to make it visible.
+                Line2D([0], [0], marker='s', markersize=8, markerfacecolor='white', 
+                    markeredgecolor='black', linestyle='-', linewidth=2, label='No filtering (white)')
+            ]
+        else:
+            color_handles = [
+                Line2D([0], [0], color='red', linestyle='-', linewidth=2, label='> 6.2'),
+                Line2D([0], [0], color='blue', linestyle='-', linewidth=2, label='< -6.2')
+            ]
+
 
         # 2. Legend for systematics (line style) mapping:
         linestyle_handles = [
@@ -477,9 +489,9 @@ def plot_mean_delta_chi2_heatmap_sys_base(
         ]
 
         # Create the two legends. Add the first legend to the axes so that the second does not overwrite it.
-        legend1 = plt.legend(handles=color_handles, loc='upper right', title="Threshold")
+        legend1 = plt.legend(handles=color_handles, loc='upper left', title="Threshold")
         plt.gca().add_artist(legend1)
-        plt.legend(handles=linestyle_handles, loc='lower right', title="Systematics")
+        plt.legend(handles=linestyle_handles, loc='lower left', title="Systematics")
 
         cbar = plt.colorbar(heatmap, ticks=np.linspace(vmin, vmax, 11))
         cbar.set_label(r'$\sum \Delta \chi^2$', fontsize=15)
