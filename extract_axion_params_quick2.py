@@ -39,8 +39,8 @@ mass_unique = axion_data[::n_g, 0]     # length = n_mass
 
 # Define your desired start and stop values.
 m_start_val = 1e-10
-g_start_val = 7e-13
-m_stop_val  = 1e-8
+g_start_val = 7.5e-13
+m_stop_val  = 1.5e-8
 g_stop_val  = 1e-11
 
 # Find indices closest to the desired values.
