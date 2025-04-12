@@ -1010,7 +1010,7 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
                             like, ndeleted = RemoveWeak(analysis, source_name)
                             print( f'After iteration {iteration} we removed {ndeleted} sources' )
                             iteration += 1
-
+                        like.logLike.writeXml(writexml)
                         TS = like.Ts(source_name) #also include in output file
                         convergence = likeobj.getRetCode()  #also include in output file
 
@@ -1215,7 +1215,7 @@ def run_binned_likelihood(vars, snrratios=None, time_intervals=None, free_params
                             like, ndeleted = RemoveWeak(analysis, source_name)
                             print( f'After iteration {iteration} we removed {ndeleted} sources' )
                             iteration += 1
-
+                        like.logLike.writeXml(writexml)
                         TS = like.Ts(source_name) #also include in output file
                         convergence = likeobj.getRetCode()  #also include in output file
                         
