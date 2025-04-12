@@ -248,7 +248,7 @@ def plot_mean_delta_chi2_heatmap_nosys_base(all_results,
         ) if all_results_sys else None)
 
         # Set up colormap.
-        vmin, vmax = int(np.min(mean_delta_chi2_grid)), int(np.max(mean_delta_chi2_grid))
+        vmin, vmax = int(np.min(mean_delta_chi2_grid))-1, int(np.max(mean_delta_chi2_grid))+1
         num_colors = 120
         boundaries = np.linspace(vmin, vmax, num_colors + 1)
         cmap = plt.get_cmap('gnuplot2', num_colors)
@@ -398,7 +398,7 @@ def plot_mean_delta_chi2_heatmap_sys_base(
         ) if all_results else None)
 
         # Set up colormap.
-        vmin, vmax = int(np.min(mean_delta_chi2_grid)), int(np.max(mean_delta_chi2_grid))
+        vmin, vmax = int(np.min(mean_delta_chi2_grid))-1, int(np.max(mean_delta_chi2_grid))+1
         num_colors = 120
         boundaries = np.linspace(vmin, vmax, num_colors + 1)
         cmap = plt.get_cmap('gnuplot2', num_colors)
