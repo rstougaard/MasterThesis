@@ -499,7 +499,7 @@ def plot_mean_delta_chi2_heatmap_sys_base(
         print(f"Finished plotting for filter: {filter_label}")
 
 ################################################################################################# WITH systematic errors #######################################################################################
-with open("all_results_none_new_sys_error.pkl", "rb") as file:
+with open("all_results_none_new0_sys_error.pkl", "rb") as file:
     all_results_none_sys = pickle.load(file)
 '''
 with open("all_results_lin_32_logpar_sys_error.pkl", "rb") as file:
@@ -545,7 +545,7 @@ plot_mean_delta_chi2_heatmap(all_results_snr, list(all_results_snr.keys()), "mea
 '''
 ################################################################################################# NO systematic errors #######################################################################################
 
-with open("all_results_none_new_no_sys_error.pkl", "rb") as file:
+with open("all_results_none_new0_no_sys_error.pkl", "rb") as file:
     all_results_none = pickle.load(file)
 '''
 with open("all_results_lin_32_logpar_no_sys_error.pkl", "rb") as file:

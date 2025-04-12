@@ -261,7 +261,7 @@ all_results_none_sys = {}
 all_results_snr_sys = {}
 all_results_lin_sys = {}
 
-with open('temp_sources.txt', 'r') as file:
+with open('Sources_for_heatmaps.txt', 'r') as file:
     for line in file:
         parts = shlex.split(line.strip())
         source_name = parts[0]
@@ -364,7 +364,7 @@ with open('temp_sources.txt', 'r') as file:
             basefunc="logpar", chunk_size=30
         )
         all_results_none[source_name] = results
-        with open("all_results_none_new_no_sys_error.pkl", "wb") as file_out:
+        with open("all_results_none_new0_no_sys_error.pkl", "wb") as file_out:
             pickle.dump(all_results_none, file_out)
 
         # Run fits with systematic errors.
@@ -373,7 +373,7 @@ with open('temp_sources.txt', 'r') as file:
             basefunc="logpar", chunk_size=30
         )
         all_results_none_sys[source_name] = results_sys
-        with open("all_results_none_new_sys_error.pkl", "wb") as file_out:
+        with open("all_results_none_new0_sys_error.pkl", "wb") as file_out:
             pickle.dump(all_results_none_sys, file_out)
 
         # (The blocks for snr and lin datasets are currently commented out.)
