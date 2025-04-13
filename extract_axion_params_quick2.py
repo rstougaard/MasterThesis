@@ -409,11 +409,11 @@ with open('sources_for_heatmaps.txt', 'r') as file:
 
         all_results_snr_sys[source_name] = results_sys_snr
         with open("all_results_snr_new0_sys_error.pkl", "wb") as file_out:
-            pickle.dump(all_results_none_sys, file_out)
+            pickle.dump(all_results_snr_sys, file_out)
 
         all_results_lin_sys[source_name] = results_sys_lin
         with open("all_results_lin_new0_sys_error.pkl", "wb") as file_out:
-            pickle.dump(all_results_none_sys, file_out)
+            pickle.dump(all_results_lin_sys, file_out)
 
         # (The blocks for snr and lin datasets are currently commented out.)
         
