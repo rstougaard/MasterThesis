@@ -181,7 +181,7 @@ def fit_data(x, y, y_err, p0, E_c, k, source_name, dataset_label, useEBL=True, f
 # Process a chunk of a row.
 # -------------------------
 
-def process_chunk(i, j_start, j_end, x, y, y_err, emin, emax, source_name, dataset_label, useEBL, fitting_method, basefunc):
+def process_chunk(i, j_start, j_end, x, y, y_err, source_name, dataset_label, useEBL, fitting_method, basefunc):
     results_chunk = []
     p0_chunk = p0_masked[i, j_start:j_end]
     ec_chunk = ec_masked[i, j_start:j_end]
@@ -190,8 +190,6 @@ def process_chunk(i, j_start, j_end, x, y, y_err, emin, emax, source_name, datas
             x=np.array(x),
             y=np.array(y),
             y_err=np.array(y_err),
-            emin=np.array(emin),
-            emax=np.array(emax),
             p0=p0_val,
             E_c=ec_val,
             k=k,  # k is defined globally.
@@ -213,12 +211,12 @@ def process_chunk(i, j_start, j_end, x, y, y_err, emin, emax, source_name, datas
 # Process one row (mass) using chunks.
 # -------------------------
 
-def process_row(i, x, y, y_err, emin, emax, source_name, dataset_label, useEBL, fitting_method, basefunc, chunk_size):
+def process_row(i, x, y, y_err, source_name, dataset_label, useEBL, fitting_method, basefunc, chunk_size):
     row_results = []
     num_cols = p0_masked.shape[1]
     for j_start in range(0, num_cols, chunk_size):
         j_end = min(j_start + chunk_size, num_cols)
-        row_results.extend(process_chunk(i, j_start, j_end, x, y, y_err, emin, emax,
+        row_results.extend(process_chunk(i, j_start, j_end, x, y, y_err,
                                          source_name, dataset_label, useEBL, fitting_method, basefunc))
     return row_results
 
@@ -248,7 +246,6 @@ def nested_fits_combined_mp(datasets, source_name, useEBL=True, fitting_method="
             (
                 i,
                 np.array(x), np.array(y), np.array(y_err),
-                np.array(emin), np.array(emax),
                 source_name, dataset_label, useEBL, fitting_method, basefunc, chunk_size
             )
             for i in range(num_rows)
