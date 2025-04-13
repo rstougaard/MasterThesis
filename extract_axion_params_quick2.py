@@ -88,15 +88,13 @@ def reduced_chi_square(y_obs, y_fit, y_err, num_params):
 # The fitting function.
 # -------------------------
 
-def fit_data(x, y, y_err, emin, emax, bin_size, p0, E_c, k, source_name, dataset_label, useEBL=True, fitting_method="no_sys_error", basefunc="cutoff"):
+def fit_data(x, y, y_err, p0, E_c, k, source_name, dataset_label, useEBL=True, fitting_method="no_sys_error", basefunc="cutoff"):
     # Filter out points with y == 0 (or nearly zero).
     mask = (y != 0) & (np.abs(y) >= 1e-13)
     x_filtered = x[mask]
     y_filtered = y[mask]
     y_err_filtered = y_err[mask]
-    emin_f = emin[mask]
-    emax_f = emax[mask]
-    bin_size_masked = bin_size[mask]
+    
 
     if fitting_method in ["with_sys_error", "sys_error"]:
         if not mask[-1]:
@@ -183,7 +181,7 @@ def fit_data(x, y, y_err, emin, emax, bin_size, p0, E_c, k, source_name, dataset
 # Process a chunk of a row.
 # -------------------------
 
-def process_chunk(i, j_start, j_end, x, y, y_err, emin, emax, bin_size, source_name, dataset_label, useEBL, fitting_method, basefunc):
+def process_chunk(i, j_start, j_end, x, y, y_err, emin, emax, source_name, dataset_label, useEBL, fitting_method, basefunc):
     results_chunk = []
     p0_chunk = p0_masked[i, j_start:j_end]
     ec_chunk = ec_masked[i, j_start:j_end]
@@ -194,7 +192,6 @@ def process_chunk(i, j_start, j_end, x, y, y_err, emin, emax, bin_size, source_n
             y_err=np.array(y_err),
             emin=np.array(emin),
             emax=np.array(emax),
-            bin_size=np.array(bin_size),
             p0=p0_val,
             E_c=ec_val,
             k=k,  # k is defined globally.
@@ -216,12 +213,12 @@ def process_chunk(i, j_start, j_end, x, y, y_err, emin, emax, bin_size, source_n
 # Process one row (mass) using chunks.
 # -------------------------
 
-def process_row(i, x, y, y_err, emin, emax, bin_size, source_name, dataset_label, useEBL, fitting_method, basefunc, chunk_size):
+def process_row(i, x, y, y_err, emin, emax, source_name, dataset_label, useEBL, fitting_method, basefunc, chunk_size):
     row_results = []
     num_cols = p0_masked.shape[1]
     for j_start in range(0, num_cols, chunk_size):
         j_end = min(j_start + chunk_size, num_cols)
-        row_results.extend(process_chunk(i, j_start, j_end, x, y, y_err, emin, emax, bin_size,
+        row_results.extend(process_chunk(i, j_start, j_end, x, y, y_err, emin, emax,
                                          source_name, dataset_label, useEBL, fitting_method, basefunc))
     return row_results
 
@@ -230,7 +227,7 @@ def process_row(i, x, y, y_err, emin, emax, bin_size, source_name, dataset_label
 # Nested fits using multiprocessing.
 # -------------------------
 
-def nested_fits_combined_mp(datasets, bin_size, source_name, useEBL=True, fitting_method="no_sys_error", basefunc="cutoff", chunk_size=10):
+def nested_fits_combined_mp(datasets, source_name, useEBL=True, fitting_method="no_sys_error", basefunc="cutoff", chunk_size=10):
     """
     This function processes each row (mass) of the masked (p0, Ec) grid.
     Instead of using joblib, it uses multiprocessing to run one row per process.
@@ -251,7 +248,7 @@ def nested_fits_combined_mp(datasets, bin_size, source_name, useEBL=True, fittin
             (
                 i,
                 np.array(x), np.array(y), np.array(y_err),
-                np.array(emin), np.array(emax), np.array(bin_size),
+                np.array(emin), np.array(emax),
                 source_name, dataset_label, useEBL, fitting_method, basefunc, chunk_size
             )
             for i in range(num_rows)
