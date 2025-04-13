@@ -234,16 +234,28 @@ def nested_fits_combined_mp(datasets, bin_size, source_name, useEBL=True, fittin
     """
     This function processes each row (mass) of the masked (p0, Ec) grid.
     Instead of using joblib, it uses multiprocessing to run one row per process.
+    Before processing, it checks if the y data exists.
+    If not, it writes a message to 'missing_data.txt' and skips that dataset.
     """
     results = {}
     num_rows = p0_masked.shape[0]
     for dataset_label, (x, y, y_err, emin, emax) in datasets.items():
+        # Check if y data exists (or is non-empty)
+        if y is None or len(y) == 0:
+            with open("missing_data.txt", "a") as f:
+                f.write(f"{source_name} and {dataset_label} does not exist\n")
+            continue  # Skip this dataset and move on to the next one.
+        
         # Prepare tasks for each row.
-        tasks = [(i,
-                  np.array(x), np.array(y), np.array(y_err),
-                  np.array(emin), np.array(emax), np.array(bin_size),
-                  source_name, dataset_label, useEBL, fitting_method, basefunc, chunk_size)
-                 for i in range(num_rows)]
+        tasks = [
+            (
+                i,
+                np.array(x), np.array(y), np.array(y_err),
+                np.array(emin), np.array(emax), np.array(bin_size),
+                source_name, dataset_label, useEBL, fitting_method, basefunc, chunk_size
+            )
+            for i in range(num_rows)
+        ]
         with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
             row_results_all = pool.starmap(process_row, tasks)
         results[dataset_label] = row_results_all
