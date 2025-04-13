@@ -369,16 +369,16 @@ with open('sources_for_heatmaps.txt', 'r') as file:
         print(source_name)
         # Run fits without systematic errors.
         results = nested_fits_combined_mp(
-            datasets, bin_size, source_name, useEBL=True, fitting_method="no_sys_error",
+            datasets, source_name, useEBL=True, fitting_method="no_sys_error",
             basefunc="logpar", chunk_size=30
         )
 
         results_snr = nested_fits_combined_mp(
-            datasets_snr, bin_size, source_name, useEBL=True, fitting_method="no_sys_error",
+            datasets_snr, source_name, useEBL=True, fitting_method="no_sys_error",
             basefunc="logpar", chunk_size=30
         )
         results_lin = nested_fits_combined_mp(
-            datasets_lin, bin_size, source_name, useEBL=True, fitting_method="no_sys_error",
+            datasets_lin, source_name, useEBL=True, fitting_method="no_sys_error",
             basefunc="logpar", chunk_size=30
         )
         all_results_none[source_name] = results
@@ -395,15 +395,15 @@ with open('sources_for_heatmaps.txt', 'r') as file:
 
         # Run fits with systematic errors.
         results_sys = nested_fits_combined_mp(
-            datasets, bin_size, source_name, useEBL=True, fitting_method="sys_error",
+            datasets, source_name, useEBL=True, fitting_method="sys_error",
             basefunc="logpar", chunk_size=30
         )
         results_sys_snr = nested_fits_combined_mp(
-            datasets_snr, bin_size, source_name, useEBL=True, fitting_method="sys_error",
+            datasets_snr, source_name, useEBL=True, fitting_method="sys_error",
             basefunc="logpar", chunk_size=30
         )
         results_sys_lin = nested_fits_combined_mp(
-            datasets_lin, bin_size, source_name, useEBL=True, fitting_method="sys_error",
+            datasets_lin, source_name, useEBL=True, fitting_method="sys_error",
             basefunc="logpar", chunk_size=30
         )
         all_results_none_sys[source_name] = results_sys
