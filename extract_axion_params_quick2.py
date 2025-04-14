@@ -12,7 +12,7 @@ from tqdm import tqdm
 from matplotlib.backends.backend_pdf import PdfPages
 import pickle
 import multiprocessing
-
+general_path_for_slurm = "/groups/pheno/sqd515/MasterThesis"
 path_to_save_heatmap_m_g = "./fit_results/heatmaps_m_g/"
 path_to_save_heatmap_Ec_p0 = "./fit_results/heatmaps_Ec_p0/"
 
@@ -126,20 +126,19 @@ def fit_data(x, y, y_err, p0, E_c, k, source_name, dataset_label, useEBL=True, f
         def axion_func(E, Norm, alpha_, beta_, w):
             return base(E, Norm, alpha_, beta_) * (1 - (p0 / (1 + (E_c / E) ** k)) * (1 + 0.2 * np.tanh(w)))
         bounds_alp = ([1e-14, -5.0, -5.0, -np.pi], [1e-9, 5.0, 5.0, np.pi])
-        p0_alp = [1e-11, 2.0, 0.001, np.pi / 2]
+        p0_alp = [1e-11, 2.0, 0.001, -0.1]
     else:
         raise ValueError("Only EBL logpar fitting is implemented in this code example.")
-
+    #,bounds=bounds_base,
+    #,bounds=bounds_alp
     popt_base, pcov_base = curve_fit(
-        base, x_filtered, y_filtered, sigma=y_err_eff, p0=p0_base,
-        bounds=bounds_base, absolute_sigma=True, maxfev=100000)
+        base, x_filtered, y_filtered, sigma=y_err_eff, p0=p0_base absolute_sigma=True, maxfev=100000)
     y_fit_base = base(x_filtered, *popt_base)
     chi2_base, dof_base = reduced_chi_square(y_filtered, y_fit_base, y_err_eff, len(popt_base))
     perr_base = np.sqrt(np.diag(pcov_base))
 
     popt_axion, pcov_axion = curve_fit(
-        axion_func, x_filtered, y_filtered, sigma=y_err_eff, p0=p0_alp,
-        bounds=bounds_alp, absolute_sigma=True, maxfev=100000)
+        axion_func, x_filtered, y_filtered, sigma=y_err_eff, p0=p0_alp, absolute_sigma=True, maxfev=100000)
     y_fit_axion = axion_func(x_filtered, *popt_axion)
     chi2_axion, dof_axion = reduced_chi_square(y_filtered, y_fit_axion, y_err_eff, len(popt_axion))
     perr_axion = np.sqrt(np.diag(pcov_axion))
@@ -237,7 +236,7 @@ def nested_fits_combined_mp(datasets, source_name, useEBL=True, fitting_method="
     for dataset_label, (x, y, y_err, emin, emax) in datasets.items():
         # Check if y data exists (or is non-empty)
         if y is None or len(y) == 0:
-            with open("missing_data.txt", "a") as f:
+            with open(f"{general_path_for_slurm}/missing_data.txt", "a") as f:
                 f.write(f"{source_name} and {dataset_label} does not exist\n")
             continue  # Skip this dataset and move on to the next one.
         
@@ -267,7 +266,7 @@ all_results_none_sys = {}
 all_results_snr_sys = {}
 all_results_lin_sys = {}
 
-with open('sources_for_heatmaps.txt', 'r') as file:
+with open('Source_ra_dec_specin.txt', 'r') as file:
     for line in file:
         parts = shlex.split(line.strip())
         source_name = parts[0]
@@ -379,15 +378,15 @@ with open('sources_for_heatmaps.txt', 'r') as file:
             basefunc="logpar", chunk_size=30
         )
         all_results_none[source_name] = results
-        with open("all_results_none_new0_no_sys_error.pkl", "wb") as file_out:
+        with open("nobounds_none_new0_no_sys_error.pkl", "wb") as file_out:
             pickle.dump(all_results_none, file_out)
 
         all_results_snr[source_name] = results_snr
-        with open("all_results_snr_new0_no_sys_error.pkl", "wb") as file:
+        with open("nobounds_snr_new0_no_sys_error.pkl", "wb") as file:
             pickle.dump(all_results_snr, file)
 
         all_results_lin[source_name] = results_lin
-        with open("all_results_lin_new0_no_sys_error.pkl", "wb") as file:
+        with open("nobounds_lin_new0_no_sys_error.pkl", "wb") as file:
             pickle.dump(all_results_lin, file)
 
         # Run fits with systematic errors.
@@ -404,15 +403,15 @@ with open('sources_for_heatmaps.txt', 'r') as file:
             basefunc="logpar", chunk_size=30
         )
         all_results_none_sys[source_name] = results_sys
-        with open("all_results_none_new0_sys_error.pkl", "wb") as file_out:
+        with open("nobounds_none_new0_sys_error.pkl", "wb") as file_out:
             pickle.dump(all_results_none_sys, file_out)
 
         all_results_snr_sys[source_name] = results_sys_snr
-        with open("all_results_snr_new0_sys_error.pkl", "wb") as file_out:
+        with open("nobounds_snr_new0_sys_error.pkl", "wb") as file_out:
             pickle.dump(all_results_snr_sys, file_out)
 
         all_results_lin_sys[source_name] = results_sys_lin
-        with open("all_results_lin_new0_sys_error.pkl", "wb") as file_out:
+        with open("nobounds_lin_new0_sys_error.pkl", "wb") as file_out:
             pickle.dump(all_results_lin_sys, file_out)
 
         # (The blocks for snr and lin datasets are currently commented out.)
