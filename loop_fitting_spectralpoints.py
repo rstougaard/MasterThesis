@@ -78,6 +78,10 @@ def simple_plot(dataset_none, dataset_snr, colors_snr, dataset_lin, colors_lin, 
         ax1.errorbar(x, y, xerr=[e_lowers, e_uppers], yerr=y_err,
                      fmt='o', capsize=5, color=color, label=f'{dataset_label}')
     #ax1.errorbar(eav0, f0, yerr=df0, xerr=de0, fmt='o', color="pink", label='Catalogue Spectrum')
+        if source_name == "4FGL J1010.8-0158" or "4FGL J0309.4-4000" or "4FGL J1213.0+5129":
+             print(source_name)
+             print(dataset_label)
+             print(y)
 
     ax1.legend(ncol=1, loc='lower left')
     ax1.set_ylabel(r'E$^2$dN/dE [ erg/cm²/s ]')
