@@ -91,7 +91,7 @@ def compute_chi2(x, y, y_err, model, popt):
 # === Output setup ===
 output_lines = ["Source_Name\tChi2_Data\tChi2_Catalog\tAlpha_Catalog\tAlpha_DataFit\tAlpha_CatalogFit\n"]
 
-pdf = PdfPages("source_spectra_fits_lowerb.pdf")
+pdf = PdfPages("source_spectra_fits_obs.pdf")
 
 # === Main loop ===
 with open('Source_ra_dec_specin.txt', 'r') as file:
@@ -127,14 +127,14 @@ with open('Source_ra_dec_specin.txt', 'r') as file:
         chi2_cat = np.nan
 
         try:
-            popt_data, _, x_filt_data, y_filt_data, yerr_eff_data = fit_logpar(x, y/(x*MeVinERGs)**2, y_err/(x*MeVinERGs)**2, nobs=None, lowerb=True)
+            popt_data, _, x_filt_data, y_filt_data, yerr_eff_data = fit_logpar(x, y/(x*MeVinERGs)**2, y_err/(x*MeVinERGs)**2, nobs=nobs, lowerb=None)
             chi2_data = compute_chi2(x_filt_data, y_filt_data, yerr_eff_data, logpar_base, popt_data)
         except Exception as e:
             print(f"Data fit failed for {source_name}: {e}")
 
         try:
             eav0, f0, df0, de0, alpha = GetCatalogueSpectrum(source_name)
-            popt_cat, _, x_filt_cat, y_filt_cat, yerr_eff_cat = fit_logpar(eav0[1:], f0[1:]/(eav0[1:]*MeVinERGs)**2, df0[1:]/(eav0[1:]*MeVinERGs)**2, nobs=None, lowerb=True)
+            popt_cat, _, x_filt_cat, y_filt_cat, yerr_eff_cat = fit_logpar(eav0[1:], f0[1:]/(eav0[1:]*MeVinERGs)**2, df0[1:]/(eav0[1:]*MeVinERGs)**2, nobs=None, lowerb=None)
             chi2_cat = compute_chi2(x_filt_cat, y_filt_cat, yerr_eff_cat, logpar_base, popt_cat)
         except Exception as e:
             print(f"Catalogue fit failed for {source_name}: {e}")
@@ -192,7 +192,7 @@ with open('Source_ra_dec_specin.txt', 'r') as file:
         plt.close(fig)
 
 # === Save output ===
-with open("chi2_summary_lowerb.txt", "w") as out_file:
+with open("chi2_summary_obs.txt", "w") as out_file:
     out_file.writelines(output_lines)
 
 pdf.close()
