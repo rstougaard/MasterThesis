@@ -491,7 +491,7 @@ def plot_mean_delta_chi2_heatmap_sys_base(
         # Create the two legends. Add the first legend to the axes so that the second does not overwrite it.
         legend1 = plt.legend(handles=color_handles, loc='upper left', title="Threshold")
         plt.gca().add_artist(legend1)
-        #plt.legend(handles=linestyle_handles, loc='lower left', title="Systematics")
+        plt.legend(handles=linestyle_handles, loc='lower left', title="Systematics")
 
         cbar = plt.colorbar(heatmap, ticks=np.linspace(vmin, vmax, 11))
         cbar.set_label(r'$\sum \Delta \chi^2$', fontsize=15)
