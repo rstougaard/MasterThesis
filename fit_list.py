@@ -35,7 +35,8 @@ def fit_logpar(x, y, y_err, nobs, lowerb):
     p0_base = [1e-11, 2.0, 0.001]
 
     popt, pcov = curve_fit(logpar_base, x_filtered, y_filtered,
-                           sigma=y_err_eff, absolute_sigma=True, p0=p0_base)
+                           sigma=y_err_eff, absolute_sigma=True,
+                           bounds=bounds_base, p0=p0_base)
 
     return popt, pcov, x_filtered, y_filtered, y_err_eff
 
@@ -111,7 +112,7 @@ with open('Source_ra_dec_specin.txt', 'r') as file:
 
         try:
             eav0, f0, df0, de0 = GetCatalogueSpectrum(source_name)
-            popt_cat, _, x_filt_cat, y_filt_cat, yerr_eff_cat = fit_logpar(eav0[1:], f0[1:], df0[1:], nobs=None, lowerb=None)
+            popt_cat, _, x_filt_cat, y_filt_cat, yerr_eff_cat = fit_logpar(eav0[1:], f0[1:], df0[1:], nobs=None, lowerb=True)
             chi2_cat = compute_chi2(x_filt_cat, y_filt_cat, yerr_eff_cat, logpar_base, popt_cat)
         except Exception as e:
             print(f"Catalogue fit failed for {source_name}: {e}")
