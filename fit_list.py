@@ -4,11 +4,11 @@ from scipy.optimize import curve_fit
 import shlex
 from astropy.io import fits as pyfits
 from matplotlib.backends.backend_pdf import PdfPages
-
+MeVinERGs = 1.609e-6
 # === Define log-parabola function ===
 def logpar_base(x, Norm, alpha_, beta_):
     E_b = 1000  # Fixed reference energy [MeV]
-    return Norm*1e-8 * (x / E_b) ** (-(alpha_ + beta_ * np.log(x / E_b)))
+    return Norm * (x / E_b) ** (-(alpha_ + beta_ * np.log(x / E_b)))
 
 # === Fitting function with systematics and masking ===
 def fit_logpar(x, y, y_err, nobs, lowerb):
@@ -35,7 +35,7 @@ def fit_logpar(x, y, y_err, nobs, lowerb):
     bounds_base = ([1e-14, -5.0, -5.0], [1e-9, 5.0, 3.0])
     #p0_base = [1e-11, 2.0, 0.001]
     
-    p0_base = [10, 1, 0.1]
+    p0_base = [1e-13, 2, 0.1]
     assert np.all(np.isfinite(x_filtered)), "x_filtered has non-finite values!"
     assert np.all(np.isfinite(y_filtered)), "y_filtered has non-finite values!"
     assert np.all(np.isfinite(y_err_filtered)), "y_err_filtered has non-finite values!"
@@ -127,14 +127,14 @@ with open('Source_ra_dec_specin.txt', 'r') as file:
         chi2_cat = np.nan
 
         try:
-            popt_data, _, x_filt_data, y_filt_data, yerr_eff_data = fit_logpar(x, y/x**2, y_err/x**2, nobs=None, lowerb=True)
+            popt_data, _, x_filt_data, y_filt_data, yerr_eff_data = fit_logpar(x, y/(x*MeVinERGs)**2, y_err/(x*MeVinERGs)**2, nobs=None, lowerb=True)
             chi2_data = compute_chi2(x_filt_data, y_filt_data, yerr_eff_data, logpar_base, popt_data)
         except Exception as e:
             print(f"Data fit failed for {source_name}: {e}")
 
         try:
             eav0, f0, df0, de0, alpha = GetCatalogueSpectrum(source_name)
-            popt_cat, _, x_filt_cat, y_filt_cat, yerr_eff_cat = fit_logpar(eav0[1:], f0[1:]/eav0[1:]**2, df0[1:]/eav0[1:]**2, nobs=None, lowerb=True)
+            popt_cat, _, x_filt_cat, y_filt_cat, yerr_eff_cat = fit_logpar(eav0[1:], f0[1:]/(eav0[1:]*MeVinERGs)**2, df0[1:]/(eav0[1:]*MeVinERGs)**2, nobs=None, lowerb=True)
             chi2_cat = compute_chi2(x_filt_cat, y_filt_cat, yerr_eff_cat, logpar_base, popt_cat)
         except Exception as e:
             print(f"Catalogue fit failed for {source_name}: {e}")
@@ -164,7 +164,7 @@ with open('Source_ra_dec_specin.txt', 'r') as file:
 
         ax_top.set_xscale("log")
         ax_top.set_yscale("log")
-        ax_top.set_ylabel("E$^2$ Flux [erg cm$^{-2}$ s$^{-1}$]")
+        ax_top.set_ylabel("Flux [erg cm$^{-2}$ s$^{-1}$]")
         ax_top.set_title(source_name)
         ax_top.legend()
         ax_top.grid(True, which='both', ls=':')
