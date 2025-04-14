@@ -10,9 +10,14 @@ def logpar_base(x, Norm, alpha_, beta_):
     return Norm * (x / E_b) ** (-(alpha_ + beta_ * np.log(x / E_b)))
 
 # Fit function with systematic error handling
-def fit_logpar(x, y, y_err):
+def fit_logpar(x, y, y_err, nobs, lowerb):
     # Mask out zeroes
-    mask = y != 0
+    if nobs is not None:
+        mask = nobs > 10
+    elif lowerb is not None:
+        mask = y >1e-13
+    else:
+        mask = y != 0
     x_filtered = x[mask]
     y_filtered = y[mask]
     y_err_filtered = y_err[mask]
@@ -58,52 +63,11 @@ def GetCatalogueSpectrum(nn):
     dfl1 = -fl * ratio0
     dfl2 = fl * ratio1
     systematics = 0.03  # set your systematic error level here
-    dfl = np.maximum(dfl1, dfl2) + systematics * fl
+    dfl = np.maximum(dfl1, dfl2)
 
     ok = fl > 0
     return eav[ok], fl[ok], dfl[ok], [de1[ok], de2[ok]]
 
-# === Loop over all sources ===
-with open('sources_for_heatmaps.txt', 'r') as file:
-    for line in file:
-        parts = shlex.split(line.strip())
-        source_name = parts[0]
-        ra = float(parts[1])
-        dec = float(parts[2])
-        specin = float(parts[3])
-
-        source_name_cleaned = (source_name.replace(" ", "")
-                                             .replace(".", "dot")
-                                             .replace("+", "plus")
-                                             .replace("-", "minus")
-                                             .replace('"', ''))
-
-        # Load fit result
-        f_bin = pyfits.open(f'./fit_results/{source_name_cleaned}_fit_data_NONE.fits')
-        bin_data = f_bin[1].data
-        sorted_indices = np.argsort(bin_data['emin'])
-        sorted_data_none = bin_data[sorted_indices]
-
-        x = sorted_data_none['geometric_mean']
-        y = sorted_data_none['flux_tot_value']
-        y_err = sorted_data_none['flux_tot_error']
-        nobs = sorted_data_none['nobs']
-        print(nobs)
-        '''
-        try:
-            popt_data, _, x_filt_data, y_filt_data, yerr_eff_data = fit_logpar(x, y, y_err)
-            print(f"Fitted data for {source_name}: {popt_data}")
-        except Exception as e:
-            print(f"Data fit failed for {source_name}: {e}")
-            continue
-
-        try:
-            eav0, f0, df0, de0 = GetCatalogueSpectrum(source_name)
-            popt_cat, _, x_filt_cat, y_filt_cat, yerr_eff_cat = fit_logpar(eav0, f0, df0)
-            print(f"Fitted catalogue for {source_name}: {popt_cat}")
-        except Exception as e:
-            print(f"Catalogue fit failed for {source_name}: {e}")
-        '''
 output_lines = ["Source_Name\tChi2_Data\tChi2_Catalog\n"]
 
 def compute_chi2(x, y, y_err, model, popt):
@@ -135,19 +99,20 @@ with open('Source_ra_dec_specin.txt', 'r') as file:
         x = sorted_data_none['geometric_mean']
         y = sorted_data_none['flux_tot_value']
         y_err = sorted_data_none['flux_tot_error']
+        nobs = sorted_data_none['nobs']
 
         chi2_data = np.nan
         chi2_cat = np.nan
 
         try:
-            popt_data, _, x_filt_data, y_filt_data, yerr_eff_data = fit_logpar(x, y, y_err)
+            popt_data, _, x_filt_data, y_filt_data, yerr_eff_data = fit_logpar(x, y, y_err, nobs=None, lowerb=True)
             chi2_data = compute_chi2(x_filt_data, y_filt_data, yerr_eff_data, logpar_base, popt_data)
         except Exception as e:
             print(f"Data fit failed for {source_name}: {e}")
 
         try:
             eav0, f0, df0, de0 = GetCatalogueSpectrum(source_name)
-            popt_cat, _, x_filt_cat, y_filt_cat, yerr_eff_cat = fit_logpar(eav0, f0, df0)
+            popt_cat, _, x_filt_cat, y_filt_cat, yerr_eff_cat = fit_logpar(eav0, f0, df0, nobs=None, lowerb=True)
             chi2_cat = compute_chi2(x_filt_cat, y_filt_cat, yerr_eff_cat, logpar_base, popt_cat)
         except Exception as e:
             print(f"Catalogue fit failed for {source_name}: {e}")
