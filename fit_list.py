@@ -134,7 +134,7 @@ with open('Source_ra_dec_specin.txt', 'r') as file:
 
         try:
             eav0, f0, df0, de0, alpha = GetCatalogueSpectrum(source_name)
-            popt_cat, _, x_filt_cat, y_filt_cat, yerr_eff_cat = fit_logpar(eav0[1:], f0[1:]/eav0**2, df0[1:]/eav0**2, nobs=None, lowerb=None)
+            popt_cat, _, x_filt_cat, y_filt_cat, yerr_eff_cat = fit_logpar(eav0[1:], f0[1:]/eav0[1:]**2, df0[1:]/eav0[1:]**2, nobs=None, lowerb=None)
             chi2_cat = compute_chi2(x_filt_cat, y_filt_cat, yerr_eff_cat, logpar_base, popt_cat)
         except Exception as e:
             print(f"Catalogue fit failed for {source_name}: {e}")
