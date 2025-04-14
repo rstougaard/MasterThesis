@@ -16,7 +16,7 @@ def fit_logpar(x, y, y_err, nobs, lowerb):
     if nobs is not None:
         mask = nobs > 10
     elif lowerb is not None:
-        mask = y > 1e-13
+        mask = y > 1e-30
     elif nobs == None and lowerb == None:
         mask = y != 0
     x_filtered = x[mask]
