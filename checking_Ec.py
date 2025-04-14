@@ -36,9 +36,9 @@ for row in results_list:
 flat_results_sorted = sorted(flat_results, key=lambda x: x["Ec"])
 
 # Print nicely
-print("E_c [MeV]      p₀         χ²_base/dof      χ²_axion/dof")
+print("E_c [MeV]      p₀         χ²_base      χ²_axion")
 print("------------------------------------------------------------")
 for r in flat_results_sorted:
-    chi2_base_red = r["chi2_base"] / r["dof_base"]
-    chi2_axion_red = r["chi2_axion"] / r["dof_axion"]
+    chi2_base_red = r["chi2_base"]
+    chi2_axion_red = r["chi2_axion"]
     print(f"{r['Ec']:.3e}   {r['p0']:.3e}   {chi2_base_red:.3f}          {chi2_axion_red:.3f}")
