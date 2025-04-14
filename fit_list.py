@@ -40,8 +40,7 @@ def fit_logpar(x, y, y_err, nobs, lowerb):
     assert np.all(np.isfinite(y_filtered)), "y_filtered has non-finite values!"
     assert np.all(np.isfinite(y_err_filtered)), "y_err_filtered has non-finite values!"
     popt, pcov = curve_fit(logpar_base, x_filtered, y_filtered,
-                           sigma=y_err_eff, absolute_sigma=True,
-                           bounds=bounds_base, p0=p0_base)
+                           sigma=y_err_eff, absolute_sigma=True, p0=p0_base)
 
     return popt, pcov, x_filtered, y_filtered, y_err_eff
 
