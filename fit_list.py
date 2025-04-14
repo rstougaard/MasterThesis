@@ -57,14 +57,10 @@ def GetCatalogueSpectrum(nn):
     names4fgl = data['Source_Name']
 
     ok = np.where(names4fgl == nn)
-    fl = data['nuFnu_Band'][ok][0]  # erg/cm2/s
-    flux_band = data['Flux_Band'][ok][0]
-    unc_flux_band = data['Unc_Flux_Band'][ok][0]
-
-    # Avoid divide by zero
-    with np.errstate(divide='ignore', invalid='ignore'):
-        ratio0 = np.where(flux_band > 0, unc_flux_band[:, 0] / flux_band, 0)
-        ratio1 = np.where(flux_band > 0, unc_flux_band[:, 1] / flux_band, 0)
+    
+    fl = data['nuFnu_Band'][ok][0] #erg/cm2/s
+    ratio0 = data['Unc_Flux_Band'][ok][0][:,0] / data['Flux_Band'][ok][0]
+    ratio1 = data['Unc_Flux_Band'][ok][0][:,1] / data['Flux_Band'][ok][0]
 
     dfl1 = -fl * ratio0
     dfl2 = fl * ratio1
@@ -126,7 +122,7 @@ with open('Source_ra_dec_specin.txt', 'r') as file:
 
         try:
             eav0, f0, df0, de0 = GetCatalogueSpectrum(source_name)
-            popt_cat, _, x_filt_cat, y_filt_cat, yerr_eff_cat = fit_logpar(eav0[1:], f0[1:], df0[1:], nobs=None, lowerb=None)
+            popt_cat, _, x_filt_cat, y_filt_cat, yerr_eff_cat = fit_logpar(eav0, f0, df0, nobs=None, lowerb=None)
             chi2_cat = compute_chi2(x_filt_cat, y_filt_cat, yerr_eff_cat, logpar_base, popt_cat)
         except Exception as e:
             print(f"Catalogue fit failed for {source_name}: {e}")
