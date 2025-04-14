@@ -32,7 +32,7 @@ def fit_logpar(x, y, y_err, nobs, lowerb):
         y_err_eff = np.append(y_err_eff0, y_err_eff1)
 
     # Fit with bounds
-    bounds_base = ([1e-14, -5.0, -5.0], [1e-9, 5.0, 3.0])
+    bounds_base = ([1e-15, -5.0, -5.0], [1e-9, 5.0, 3.0])
     #p0_base = [1e-11, 2.0, 0.001]
     
     p0_base = [1e-13, 2, 0.1]
@@ -40,7 +40,7 @@ def fit_logpar(x, y, y_err, nobs, lowerb):
     assert np.all(np.isfinite(y_filtered)), "y_filtered has non-finite values!"
     assert np.all(np.isfinite(y_err_filtered)), "y_err_filtered has non-finite values!"
     popt, pcov = curve_fit(logpar_base, x_filtered, y_filtered,
-                           sigma=y_err_eff, absolute_sigma=True, p0=p0_base)
+                           sigma=y_err_eff, absolute_sigma=True, bounds=bounds_base, p0=p0_base)
 
     return popt, pcov, x_filtered, y_filtered, y_err_eff
 
