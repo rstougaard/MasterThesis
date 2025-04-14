@@ -88,7 +88,7 @@ def compute_chi2(x, y, y_err, model, popt):
 
 # === Output setup ===
 output_lines = ["Source_Name\tChi2_Data\tChi2_Catalog\n"]
-pdf = PdfPages("source_spectra_fits.pdf")
+pdf = PdfPages("source_spectra_fits_obs.pdf")
 
 # === Main loop ===
 with open('Source_ra_dec_specin.txt', 'r') as file:
@@ -131,7 +131,7 @@ with open('Source_ra_dec_specin.txt', 'r') as file:
 
         try:
             eav0, f0, df0, de0 = GetCatalogueSpectrum(source_name)
-            popt_cat, _, x_filt_cat, y_filt_cat, yerr_eff_cat = fit_logpar(eav0, f0, df0, nobs=None, lowerb=None)
+            popt_cat, _, x_filt_cat, y_filt_cat, yerr_eff_cat = fit_logpar(eav0[1:], f0[1:], df0[1:], nobs=None, lowerb=None)
             chi2_cat = compute_chi2(x_filt_cat, y_filt_cat, yerr_eff_cat, logpar_base, popt_cat)
         except Exception as e:
             print(f"Catalogue fit failed for {source_name}: {e}")
@@ -140,26 +140,45 @@ with open('Source_ra_dec_specin.txt', 'r') as file:
         output_lines.append(f"{source_name}\t{chi2_data:.3f}\t{chi2_cat:.3f}\n")
 
         # === Plotting ===
-        fig, ax = plt.subplots(figsize=(6, 5))
+        fig, (ax_top, ax_bot) = plt.subplots(nrows=2, ncols=1, figsize=(6, 7), gridspec_kw={'height_ratios': [3, 1]}, sharex=True)
 
-        # Plot data
-        
-        ax.errorbar(x_filt_data, y_filt_data, yerr=yerr_eff_data, fmt='o', color='blue', label='Rikke Data')
+        # === TOP: SPECTRUM PLOT ===
+
+        # Data
+        ax_top.errorbar(x_filt_data, y_filt_data, yerr=yerr_eff_data, fmt='o', color='blue', label='Rikke Data')
         x_model_data = np.logspace(np.log10(x_filt_data.min()*0.8), np.log10(x_filt_data.max()*1.2), 300)
-        ax.plot(x_model_data, logpar_base(x_model_data, *popt_data), color='blue', linestyle='-', label=f'Data Fit ($\\chi^2_\\nu$={chi2_data:.2f})')
+        ax_top.plot(x_model_data, logpar_base(x_model_data, *popt_data), color='blue', linestyle='-', label=f'Data Fit ($\\chi^2_\\nu$={chi2_data:.2f})')
 
-    
-        ax.errorbar(x_filt_cat, y_filt_cat, yerr=yerr_eff_cat, fmt='s', color='green', label='4FGL Catalog')
+        # Catalogue
+        ax_top.errorbar(x_filt_cat, y_filt_cat, yerr=yerr_eff_cat, fmt='s', color='green', label='4FGL Catalog')
         x_model_cat = np.logspace(np.log10(x_filt_cat.min()*0.8), np.log10(x_filt_cat.max()*1.2), 300)
-        ax.plot(x_model_cat, logpar_base(x_model_cat, *popt_cat), color='green', linestyle='--', label=f'Catalog Fit ($\\chi^2_\\nu$={chi2_cat:.2f})')
+        ax_top.plot(x_model_cat, logpar_base(x_model_cat, *popt_cat), color='green', linestyle='--', label=f'Catalog Fit ($\\chi^2_\\nu$={chi2_cat:.2f})')
 
-        ax.set_xscale("log")
-        ax.set_yscale("log")
-        ax.set_xlabel("Energy [MeV]")
-        ax.set_ylabel("Flux [erg cm$^{-2}$ s$^{-1}$]")
-        ax.set_title(source_name)
-        ax.legend()
-        ax.grid(True, which='both', ls=':')
+        ax_top.set_xscale("log")
+        ax_top.set_yscale("log")
+        ax_top.set_ylabel("E$^2$ Flux [erg cm$^{-2}$ s$^{-1}$]")
+        ax_top.set_title(source_name)
+        ax_top.legend()
+        ax_top.grid(True, which='both', ls=':')
+
+        # === BOTTOM: RESIDUALS ===
+
+        # Compute residuals = (data - model) / error
+        resid_data = (y_filt_data - logpar_base(x_filt_data, *popt_data)) / yerr_eff_data
+        resid_cat = (y_filt_cat - logpar_base(x_filt_cat, *popt_cat)) / yerr_eff_cat
+
+        ax_bot.axhline(0, color='gray', linestyle='--', linewidth=1)
+        ax_bot.errorbar(x_filt_data, resid_data, yerr=1, fmt='o', color='blue', label='Data Residuals')
+        ax_bot.errorbar(x_filt_cat, resid_cat, yerr=1, fmt='s', color='green', label='Catalog Residuals')
+
+        ax_bot.set_xscale("log")
+        ax_bot.set_xlabel("Energy [MeV]")
+        ax_bot.set_ylabel("Residuals")
+        ax_bot.grid(True, which='both', ls=':')
+        ax_bot.legend()
+
+        # Tight layout for spacing
+
 
         pdf.savefig(fig)
         plt.close(fig)
