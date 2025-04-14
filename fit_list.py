@@ -17,7 +17,7 @@ def fit_logpar(x, y, y_err, nobs, lowerb):
         mask = nobs > 10
     elif lowerb is not None:
         mask = y > 1e-13
-    else:
+    elif nobs == None and lowerb == None:
         mask = y != 0
     x_filtered = x[mask]
     y_filtered = y[mask]
@@ -67,7 +67,7 @@ def GetCatalogueSpectrum(nn):
     dfl = np.maximum(dfl1, dfl2)
 
     # Apply flux > 0 and finite error mask
-    ok = (fl > 0) & np.isfinite(dfl)
+    ok = (fl > 0) #& np.isfinite(dfl)
 
     return eav[ok], fl[ok], dfl[ok], [de1[ok], de2[ok]]
 # === Compute reduced chi-squared ===
