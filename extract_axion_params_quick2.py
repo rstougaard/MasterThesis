@@ -132,7 +132,7 @@ def fit_data(x, y, y_err, p0, E_c, k, source_name, dataset_label, useEBL=True, f
     #,bounds=bounds_base,
     #,bounds=bounds_alp
     popt_base, pcov_base = curve_fit(
-        base, x_filtered, y_filtered, sigma=y_err_eff, p0=p0_base absolute_sigma=True, maxfev=100000)
+        base, x_filtered, y_filtered, sigma=y_err_eff, p0=p0_base, absolute_sigma=True, maxfev=100000)
     y_fit_base = base(x_filtered, *popt_base)
     chi2_base, dof_base = reduced_chi_square(y_filtered, y_fit_base, y_err_eff, len(popt_base))
     perr_base = np.sqrt(np.diag(pcov_base))
