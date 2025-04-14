@@ -87,7 +87,9 @@ with open('sources_for_heatmaps.txt', 'r') as file:
         x = sorted_data_none['geometric_mean']
         y = sorted_data_none['flux_tot_value']
         y_err = sorted_data_none['flux_tot_error']
-
+        nobs = sorted_data_none['nobs']
+        print(nobs)
+        '''
         try:
             popt_data, _, x_filt_data, y_filt_data, yerr_eff_data = fit_logpar(x, y, y_err)
             print(f"Fitted data for {source_name}: {popt_data}")
@@ -101,7 +103,7 @@ with open('sources_for_heatmaps.txt', 'r') as file:
             print(f"Fitted catalogue for {source_name}: {popt_cat}")
         except Exception as e:
             print(f"Catalogue fit failed for {source_name}: {e}")
-
+        '''
 output_lines = ["Source_Name\tChi2_Data\tChi2_Catalog\n"]
 
 def compute_chi2(x, y, y_err, model, popt):
