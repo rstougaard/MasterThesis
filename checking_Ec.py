@@ -5,7 +5,7 @@ with open("all_results_none_new0_sys_error.pkl", "rb") as file:
     all_results_none_sys = pickle.load(file)
 
 # Choose the source you're interested in
-source_name = '4FGL J0038.2-2459'
+source_name = '4FGL J1213.0+5129'
 
 # Extract results
 results_dict = all_results_none_sys[source_name]
