@@ -57,17 +57,26 @@ def GetCatalogueSpectrum(nn):
     names4fgl = data['Source_Name']
 
     ok = np.where(names4fgl == nn)
-    
-    fl = data['nuFnu_Band'][ok][0] #erg/cm2/s
-    ratio0 = data['Unc_Flux_Band'][ok][0][:,0] / data['Flux_Band'][ok][0]
-    ratio1 = data['Unc_Flux_Band'][ok][0][:,1] / data['Flux_Band'][ok][0]
+
+    fl = data['nuFnu_Band'][ok][0]  # erg/cm2/s
+    flux_band = data['Flux_Band'][ok][0]
+    unc_flux_band = data['Unc_Flux_Band'][ok][0]
+
+    # Compute relative errors safely
+    with np.errstate(divide='ignore', invalid='ignore'):
+        ratio0 = np.where(flux_band > 0, unc_flux_band[:, 0] / flux_band, np.inf)
+        ratio1 = np.where(flux_band > 0, unc_flux_band[:, 1] / flux_band, np.inf)
 
     dfl1 = -fl * ratio0
     dfl2 = fl * ratio1
     dfl = np.maximum(dfl1, dfl2)
 
-    # Apply flux > 0 and finite error mask
-    ok = (fl > 0) #& np.isfinite(dfl)
+    # Replace non-finite errors with a large default (e.g., 100% error)
+    default_large_err = 1.0 * fl  # 100% uncertainty
+    dfl = np.where(np.isfinite(dfl), dfl, default_large_err)
+
+    # Keep only positive flux values (do not mask on error anymore)
+    ok = fl > 0
 
     return eav[ok], fl[ok], dfl[ok], [de1[ok], de2[ok]]
 # === Compute reduced chi-squared ===
