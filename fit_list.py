@@ -58,17 +58,22 @@ def GetCatalogueSpectrum(nn):
 
     ok = np.where(names4fgl == nn)
     fl = data['nuFnu_Band'][ok][0]  # erg/cm2/s
+    flux_band = data['Flux_Band'][ok][0]
+    unc_flux_band = data['Unc_Flux_Band'][ok][0]
 
-    ratio0 = data['Unc_Flux_Band'][ok][0][:, 0] / data['Flux_Band'][ok][0]
-    ratio1 = data['Unc_Flux_Band'][ok][0][:, 1] / data['Flux_Band'][ok][0]
+    # Avoid divide by zero
+    with np.errstate(divide='ignore', invalid='ignore'):
+        ratio0 = np.where(flux_band > 0, unc_flux_band[:, 0] / flux_band, 0)
+        ratio1 = np.where(flux_band > 0, unc_flux_band[:, 1] / flux_band, 0)
 
     dfl1 = -fl * ratio0
     dfl2 = fl * ratio1
     dfl = np.maximum(dfl1, dfl2)
 
-    ok = fl > 0
-    return eav[ok], fl[ok], dfl[ok], [de1[ok], de2[ok]]
+    # Apply flux > 0 and finite error mask
+    ok = (fl > 0) & np.isfinite(dfl)
 
+    return eav[ok], fl[ok], dfl[ok], [de1[ok], de2[ok]]
 # === Compute reduced chi-squared ===
 def compute_chi2(x, y, y_err, model, popt):
     model_vals = model(x, *popt)
