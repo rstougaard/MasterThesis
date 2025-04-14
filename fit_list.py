@@ -61,6 +61,7 @@ def GetCatalogueSpectrum(nn):
     fl = data['nuFnu_Band'][ok][0]  # erg/cm2/s
     flux_band = data['Flux_Band'][ok][0]
     unc_flux_band = data['Unc_Flux_Band'][ok][0]
+    alpha = data['PL_Index'][ok][0]
 
     # Compute relative errors safely
     with np.errstate(divide='ignore', invalid='ignore'):
@@ -78,7 +79,7 @@ def GetCatalogueSpectrum(nn):
     # Keep only positive flux values (do not mask on error anymore)
     ok = fl > 0
 
-    return eav[ok], fl[ok], dfl[ok], [de1[ok], de2[ok]]
+    return eav[ok], fl[ok], dfl[ok], [de1[ok], de2[ok]], alpha
 # === Compute reduced chi-squared ===
 def compute_chi2(x, y, y_err, model, popt):
     model_vals = model(x, *popt)
@@ -87,8 +88,9 @@ def compute_chi2(x, y, y_err, model, popt):
     return chi2 / dof if dof > 0 else np.nan
 
 # === Output setup ===
-output_lines = ["Source_Name\tChi2_Data\tChi2_Catalog\n"]
-pdf = PdfPages("source_spectra_fits_lowerb.pdf")
+output_lines = ["Source_Name\tChi2_Data\tChi2_Catalog\tAlpha_Catalog\tAlpha_DataFit\tAlpha_CatalogFit\n"]
+
+pdf = PdfPages("source_spectra_fits_obs.pdf")
 
 # === Main loop ===
 with open('Source_ra_dec_specin.txt', 'r') as file:
@@ -124,20 +126,25 @@ with open('Source_ra_dec_specin.txt', 'r') as file:
         chi2_cat = np.nan
 
         try:
-            popt_data, _, x_filt_data, y_filt_data, yerr_eff_data = fit_logpar(x, y, y_err, nobs=None, lowerb=True)
+            popt_data, _, x_filt_data, y_filt_data, yerr_eff_data = fit_logpar(x, y, y_err, nobs=nobs, lowerb=None)
             chi2_data = compute_chi2(x_filt_data, y_filt_data, yerr_eff_data, logpar_base, popt_data)
         except Exception as e:
             print(f"Data fit failed for {source_name}: {e}")
 
         try:
-            eav0, f0, df0, de0 = GetCatalogueSpectrum(source_name)
-            popt_cat, _, x_filt_cat, y_filt_cat, yerr_eff_cat = fit_logpar(eav0[1:], f0[1:], df0[1:], nobs=None, lowerb=True)
+            eav0, f0, df0, de0, alpha = GetCatalogueSpectrum(source_name)
+            popt_cat, _, x_filt_cat, y_filt_cat, yerr_eff_cat = fit_logpar(eav0[1:], f0[1:], df0[1:], nobs=None, lowerb=None)
             chi2_cat = compute_chi2(x_filt_cat, y_filt_cat, yerr_eff_cat, logpar_base, popt_cat)
         except Exception as e:
             print(f"Catalogue fit failed for {source_name}: {e}")
 
-        # Save summary line
-        output_lines.append(f"{source_name}\t{chi2_data:.3f}\t{chi2_cat:.3f}\n")
+        alpha_data = popt_data[1] if 'popt_data' in locals() else np.nan
+        alpha_catfit = popt_cat[1] if 'popt_cat' in locals() else np.nan
+        alpha_catalog = alpha if 'alpha' in locals() else np.nan
+
+        output_lines.append(
+            f"{source_name}\t{chi2_data:.3f}\t{chi2_cat:.3f}\t{alpha_catalog:.3f}\t{alpha_data:.3f}\t{alpha_catfit:.3f}\n"
+        )
 
         # === Plotting ===
         fig, (ax_top, ax_bot) = plt.subplots(nrows=2, ncols=1, figsize=(6, 7), gridspec_kw={'height_ratios': [3, 1]}, sharex=True)
