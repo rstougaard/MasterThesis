@@ -119,7 +119,7 @@ with open('Source_ra_dec_specin.txt', 'r') as file:
         chi2_cat = np.nan
 
         try:
-            popt_data, _, x_filt_data, y_filt_data, yerr_eff_data = fit_logpar(x, y, y_err, nobs=nobs, lowerb=None)
+            popt_data, _, x_filt_data, y_filt_data, yerr_eff_data = fit_logpar(x, y, y_err, nobs=None, lowerb=True)
             chi2_data = compute_chi2(x_filt_data, y_filt_data, yerr_eff_data, logpar_base, popt_data)
         except Exception as e:
             print(f"Data fit failed for {source_name}: {e}")
