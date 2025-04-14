@@ -82,7 +82,8 @@ def simple_plot(dataset_none, dataset_snr, colors_snr, dataset_lin, colors_lin, 
              print(source_name)
              print(dataset_label)
              print(y)
-
+        else:
+             None
     ax1.legend(ncol=1, loc='lower left')
     ax1.set_ylabel(r'E$^2$dN/dE [ erg/cm²/s ]')
     ax1.set_title(f'{source} - SNR Time Intervals')
