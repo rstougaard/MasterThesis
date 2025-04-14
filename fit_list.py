@@ -138,16 +138,15 @@ with open('Source_ra_dec_specin.txt', 'r') as file:
         fig, ax = plt.subplots(figsize=(6, 5))
 
         # Plot data
-        if not np.isnan(chi2_data):
-            ax.errorbar(x_filt_data, y_filt_data, yerr=yerr_eff_data, fmt='o', color='blue', label='Rikke Data')
-            x_model_data = np.logspace(np.log10(x_filt_data.min()*0.8), np.log10(x_filt_data.max()*1.2), 300)
-            ax.plot(x_model_data, logpar_base(x_model_data, *popt_data), color='blue', linestyle='-', label=f'Data Fit ($\\chi^2_\\nu$={chi2_data:.2f})')
+        
+        ax.errorbar(x_filt_data, y_filt_data, yerr=yerr_eff_data, fmt='o', color='blue', label='Rikke Data')
+        x_model_data = np.logspace(np.log10(x_filt_data.min()*0.8), np.log10(x_filt_data.max()*1.2), 300)
+        ax.plot(x_model_data, logpar_base(x_model_data, *popt_data), color='blue', linestyle='-', label=f'Data Fit ($\\chi^2_\\nu$={chi2_data:.2f})')
 
-        # Plot catalog
-        if not np.isnan(chi2_cat):
-            ax.errorbar(x_filt_cat, y_filt_cat, yerr=yerr_eff_cat, fmt='s', color='green', label='4FGL Catalog')
-            x_model_cat = np.logspace(np.log10(x_filt_cat.min()*0.8), np.log10(x_filt_cat.max()*1.2), 300)
-            ax.plot(x_model_cat, logpar_base(x_model_cat, *popt_cat), color='green', linestyle='--', label=f'Catalog Fit ($\\chi^2_\\nu$={chi2_cat:.2f})')
+    
+        ax.errorbar(x_filt_cat, y_filt_cat, yerr=yerr_eff_cat, fmt='s', color='green', label='4FGL Catalog')
+        x_model_cat = np.logspace(np.log10(x_filt_cat.min()*0.8), np.log10(x_filt_cat.max()*1.2), 300)
+        ax.plot(x_model_cat, logpar_base(x_model_cat, *popt_cat), color='green', linestyle='--', label=f'Catalog Fit ($\\chi^2_\\nu$={chi2_cat:.2f})')
 
         ax.set_xscale("log")
         ax.set_yscale("log")
