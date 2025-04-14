@@ -62,7 +62,7 @@ def GetCatalogueSpectrum(nn):
     fl = data['nuFnu_Band'][ok][0]  # erg/cm2/s
     flux_band = data['Flux_Band'][ok][0]
     unc_flux_band = data['Unc_Flux_Band'][ok][0]
-    alpha = data['PL_Index'][ok][0]
+    alpha = data['LP_Index'][ok][0]
 
     # Compute relative errors safely
     with np.errstate(divide='ignore', invalid='ignore'):
