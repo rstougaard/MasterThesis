@@ -224,7 +224,7 @@ def plot_mean_delta_chi2_heatmap_nosys_base(all_results,
         all_results.pop(remove_source_label, None)
 
     # Extract all filter labels from the first remaining source.
-    first_source = next(iter(all_results.values()))
+    first_source = next(iter(all_results_sys.values()))
     filtering_methods = list(first_source.keys())
 
     # Build the (m_a, g_a) mesh
