@@ -283,7 +283,6 @@ def plot_mean_delta_chi2_heatmap_nosys_base(all_results,
             plot_specs.append({
                 'grid': systematic_grid,
                 'label': 'With systematics',
-                'color_pos': 'red',   'linestyle_pos': 'dashed',
                 'color_neg': 'lime',  'linestyle_neg': 'dashed'
             })
 
@@ -433,7 +432,6 @@ def plot_mean_delta_chi2_heatmap_sys_base(
             plot_specs.append({
                 'grid': systematic_grid,
                 'label': 'No systematics',
-                'color_pos': 'red',   'linestyle_pos': 'dashed',
                 'color_neg': 'lime',  'linestyle_neg': 'dashed'
             })
 
@@ -587,13 +585,13 @@ no_filtering_grid = compute_mean_delta_chi2_grid(
 ) 
 #Testing on sys base plotting function.. changes has to be done for the nosys plotting function 
 
-plot_mean_delta_chi2_heatmap_sys_base(None, all_results_none_sys, list(all_results_none.keys()), "base_sys_",  remove_source_label=None)
-plot_mean_delta_chi2_heatmap_sys_base(None, all_results_lin_sys, list(all_results_lin.keys()), "base_sys_", no_filtering_grid=no_filtering_grid_sys,no_filtering_grid_other=no_filtering_grid, remove_source_label=None)
-plot_mean_delta_chi2_heatmap_sys_base(None, all_results_snr_sys, list(all_results_snr.keys()), "base_sys_", no_filtering_grid=no_filtering_grid_sys, no_filtering_grid_other=no_filtering_grid, remove_source_label=None)
+plot_mean_delta_chi2_heatmap_sys_base(all_results_none, all_results_none_sys, list(all_results_none.keys()), "base_sys_", no_filtering_grid_other=no_filtering_grid remove_source_label=None)
+plot_mean_delta_chi2_heatmap_sys_base(all_results_lin, all_results_lin_sys, list(all_results_lin.keys()), "base_sys_", no_filtering_grid=no_filtering_grid_sys,no_filtering_grid_other=None, remove_source_label=None)
+plot_mean_delta_chi2_heatmap_sys_base(all_results_snr, all_results_snr_sys, list(all_results_snr.keys()), "base_sys_", no_filtering_grid=no_filtering_grid_sys, no_filtering_grid_other=None, remove_source_label=None)
 
-plot_mean_delta_chi2_heatmap_nosys_base(all_results_none, None, list(all_results_none.keys()), "base_nosys_",  remove_source_label=None)
-plot_mean_delta_chi2_heatmap_nosys_base(all_results_lin, None, list(all_results_lin.keys()), "base_nosys_", no_filtering_grid=no_filtering_grid, no_filtering_grid_other=no_filtering_grid_sys, remove_source_label=None)
-plot_mean_delta_chi2_heatmap_nosys_base(all_results_snr, None, list(all_results_snr.keys()), "base_nosys_", no_filtering_grid=no_filtering_grid, no_filtering_grid_other=no_filtering_grid_sys,remove_source_label=None)
+plot_mean_delta_chi2_heatmap_nosys_base(all_results_none, all_results_none_sys, list(all_results_none.keys()), "base_nosys_",no_filtering_grid_other=no_filtering_grid_sys,  remove_source_label=None)
+plot_mean_delta_chi2_heatmap_nosys_base(all_results_lin, all_results_lin_sys, list(all_results_lin.keys()), "base_nosys_", no_filtering_grid=no_filtering_grid, no_filtering_grid_other=None, remove_source_label=None)
+plot_mean_delta_chi2_heatmap_nosys_base(all_results_snr, all_results_snr_sys, list(all_results_snr.keys()), "base_nosys_", no_filtering_grid=no_filtering_grid, no_filtering_grid_other=None,remove_source_label=None)
 '''
 plot_mean_delta_chi2_heatmap_nosys_base(all_results_none, all_results_none_sys, list(all_results_none.keys()), "base_nosys_",  remove_source_label=None)
 plot_mean_delta_chi2_heatmap_nosys_base(all_results_lin, all_results_lin_sys, list(all_results_lin.keys()), "base_nosys_", no_filtering_grid=no_filtering_grid, no_filtering_grid_other=no_filtering_grid_sys, remove_source_label=None)
