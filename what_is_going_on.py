@@ -315,7 +315,7 @@ def plot_mean_delta_chi2_heatmap_nosys_base(all_results,
                             linewidths=2)
 
         # --- Build proxy legend handles for both aspects ---
-        if no_filtering_grid_other is not None:
+        if no_filtering_grid is not None:
             # 1. Legend for threshold (color) mapping:
             color_handles = [
                 Line2D([0], [0], color='red', linestyle='-', linewidth=2, label='> 6.2'),
