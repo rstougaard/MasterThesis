@@ -224,7 +224,7 @@ def plot_mean_delta_chi2_heatmap_nosys_base(all_results,
         all_results.pop(remove_source_label, None)
 
     # Extract all filter labels from the first remaining source.
-    first_source = next(iter(all_results_sys.values()))
+    first_source = next(iter(all_results.values()))
     filtering_methods = list(first_source.keys())
 
     # Build the (m_a, g_a) mesh
@@ -371,10 +371,10 @@ def plot_mean_delta_chi2_heatmap_sys_base(
 ):
     # Remove the specified source, if provided.
     if remove_source_label is not None:
-        all_results.pop(remove_source_label, None)
+        all_results_sys.pop(remove_source_label, None)
 
     # Extract all filter labels from the first remaining source.
-    first_source = next(iter(all_results.values()))
+    first_source = next(iter(all_results_sys.values()))
     filtering_methods = list(first_source.keys())
 
     # Build the (m_a, g_a) mesh
@@ -586,9 +586,6 @@ no_filtering_grid = compute_mean_delta_chi2_grid(
     ec_masked=ec_masked
 ) 
 #Testing on sys base plotting function.. changes has to be done for the nosys plotting function 
-plot_mean_delta_chi2_heatmap_nosys_base(None, all_results_none_sys, list(all_results_none.keys()), "base_nosys_",  remove_source_label=None)
-plot_mean_delta_chi2_heatmap_nosys_base(None, all_results_lin_sys, list(all_results_lin.keys()), "base_nosys_", no_filtering_grid=no_filtering_grid, no_filtering_grid_other=None, remove_source_label=None)
-plot_mean_delta_chi2_heatmap_nosys_base(None, all_results_snr_sys, list(all_results_snr.keys()), "base_nosys_", no_filtering_grid=no_filtering_grid, no_filtering_grid_other=None,remove_source_label=None)
 
 plot_mean_delta_chi2_heatmap_sys_base(None, all_results_none_sys, list(all_results_none.keys()), "base_sys_",  remove_source_label=None)
 plot_mean_delta_chi2_heatmap_sys_base(None, all_results_lin_sys, list(all_results_lin.keys()), "base_sys_", no_filtering_grid=no_filtering_grid_sys,no_filtering_grid_other=None, remove_source_label=None)
