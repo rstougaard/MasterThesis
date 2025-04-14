@@ -8,7 +8,7 @@ from matplotlib.backends.backend_pdf import PdfPages
 # === Define log-parabola function ===
 def logpar_base(x, Norm, alpha_, beta_):
     E_b = 1000  # Fixed reference energy [MeV]
-    return Norm * (x / E_b) ** (-(alpha_ + beta_ * np.log(x / E_b)))
+    return Norm*1e-8 * (x / E_b) ** (-(alpha_ + beta_ * np.log(x / E_b)))
 
 # === Fitting function with systematics and masking ===
 def fit_logpar(x, y, y_err, nobs, lowerb):
@@ -33,7 +33,9 @@ def fit_logpar(x, y, y_err, nobs, lowerb):
 
     # Fit with bounds
     bounds_base = ([1e-14, -5.0, -5.0], [1e-9, 5.0, 3.0])
-    p0_base = [1e-11, 2.0, 0.001]
+    #p0_base = [1e-11, 2.0, 0.001]
+    
+    p0_base = [10, 1, 0.1]
     assert np.all(np.isfinite(x_filtered)), "x_filtered has non-finite values!"
     assert np.all(np.isfinite(y_filtered)), "y_filtered has non-finite values!"
     assert np.all(np.isfinite(y_err_filtered)), "y_err_filtered has non-finite values!"
