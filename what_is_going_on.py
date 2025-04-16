@@ -347,12 +347,12 @@ def plot_mean_delta_chi2_heatmap_nosys_base(all_results,
 
         ##### plot contours for 0 level of syst uncertainty ##################
         data = np.load('fermi0_0_contours_ebl_6.2_scan12_jointfit.npz')
-        plt.errorbar(10**data['x'][data['y'] < 1e-11]/ 1e-9, 1.*10**data['y'][data['y'] < 1e-11], fmt='g:')
-        plt.errorbar(10**data['x1'][data['y1'] < 1e-11]/ 1e-9, 1.*10**data['y1'][data['y1'] < 1e-11], fmt='g:')
+        plt.errorbar(10**data['x'][data['y'] < 1e-11]/ 1e-9, 1.*10**data['y'][data['y'] < 1e-11], fmt='w:')
+        plt.errorbar(10**data['x1'][data['y1'] < 1e-11]/ 1e-9, 1.*10**data['y1'][data['y1'] < 1e-11], fmt='w:')
         
         data = np.load('fermi3_10_contours_06032025.npz')
         print(10**data['x1']/ 1e-9, 10**data['y1'])
-        plt.errorbar(10**data['x1']/ 1e-9, 10**data['y1'], fmt='g-')#, zorder=-10)
+        plt.errorbar(10**data['x1']/ 1e-9, 10**data['y1'], fmt='w-')#, zorder=-10)
 
         cbar = plt.colorbar(heatmap, ticks=np.linspace(vmin, vmax, 11))
         cbar.set_label(r'$\sum \Delta \chi^2$', fontsize=15)
@@ -508,12 +508,12 @@ def plot_mean_delta_chi2_heatmap_sys_base(
 
         ##### plot contours for 0 level of syst uncertainty ##################
         data = np.load('fermi0_0_contours_ebl_6.2_scan12_jointfit.npz')
-        plt.errorbar(10**data['x'][data['y'] < 1e-11]/ 1e-9, 1.*10**data['y'][data['y'] < 1e-11], fmt='g:')
-        plt.errorbar(10**data['x1'][data['y1'] < 1e-11]/ 1e-9, 1.*10**data['y1'][data['y1'] < 1e-11], fmt='g:')
+        plt.errorbar(10**data['x'][data['y'] < 1e-11]/ 1e-9, 1.*10**data['y'][data['y'] < 1e-11], fmt='w:')
+        plt.errorbar(10**data['x1'][data['y1'] < 1e-11]/ 1e-9, 1.*10**data['y1'][data['y1'] < 1e-11], fmt='w:')
         
         data = np.load('fermi3_10_contours_06032025.npz')
         print(10**data['x1']/ 1e-9, 10**data['y1'])
-        plt.errorbar(10**data['x1']/ 1e-9, 10**data['y1'], fmt='g-')#, zorder=-10)
+        plt.errorbar(10**data['x1']/ 1e-9, 10**data['y1'], fmt='w-')#, zorder=-10)
 
         cbar = plt.colorbar(heatmap, ticks=np.linspace(vmin, vmax, 11))
         cbar.set_label(r'$\sum \Delta \chi^2$', fontsize=15)
