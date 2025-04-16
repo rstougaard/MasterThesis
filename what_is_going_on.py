@@ -343,8 +343,8 @@ def plot_mean_delta_chi2_heatmap_nosys_base(all_results,
         plt.legend(handles=linestyle_handles, loc='lower left', title="Systematics")
         
         data = np.load('fermi3_10_contours_06032025.npz')
-        print(data['x1'], data['y1'])
-        plt.errorbar(data['x1'], data['y1'], fmt='g-', zorder=-10)
+        print(10**data['x1']/ 1e-9, 10**data['y1'])
+        plt.errorbar(10**data['x1']/ 1e-9, 10**data['y1'], fmt='g-', zorder=-10)
 
         cbar = plt.colorbar(heatmap, ticks=np.linspace(vmin, vmax, 11))
         cbar.set_label(r'$\sum \Delta \chi^2$', fontsize=15)
@@ -496,7 +496,7 @@ def plot_mean_delta_chi2_heatmap_sys_base(
         plt.legend(handles=linestyle_handles, loc='lower left', title="Systematics")
 
         data = np.load('fermi3_10_contours_06032025.npz')
-        plt.errorbar(10**data['x1'], 10**data['y1'], fmt='g-', zorder=-10)
+        plt.errorbar(10**data['x1']/ 1e-9, 10**data['y1'], fmt='g-', zorder=-10)
 
         cbar = plt.colorbar(heatmap, ticks=np.linspace(vmin, vmax, 11))
         cbar.set_label(r'$\sum \Delta \chi^2$', fontsize=15)
