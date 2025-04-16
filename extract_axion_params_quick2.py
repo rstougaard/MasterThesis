@@ -267,7 +267,7 @@ all_results_none_sys = {}
 all_results_snr_sys = {}
 all_results_lin_sys = {}
 
-with open('Source_ra_dec_specin.txt', 'r') as file:
+with open('sources_for_heatmaps.txt', 'r') as file:
     for line in file:
         parts = shlex.split(line.strip())
         source_name = parts[0]
