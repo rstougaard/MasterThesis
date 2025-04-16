@@ -342,8 +342,8 @@ def plot_mean_delta_chi2_heatmap_nosys_base(all_results,
         plt.gca().add_artist(legend1)
         plt.legend(handles=linestyle_handles, loc='lower left', title="Systematics")
 
-        data = np.load('fermi3_10_contours_b5.2_eta0.67_rescale.npz')
-        plt.errorbar(10**data['x1'][data['y1'] < 1e-11]/ 1e-9, 10**data['y1'][data['y1'] < 1e-11], color='b', ls=(0,(4,2,1,1,1,2)), alpha=1)
+        #data = np.load('fermi3_10_contours_b5.2_eta0.67_rescale.npz')
+        #plt.errorbar(10**data['x1'][data['y1'] < 1e-11]/ 1e-9, 10**data['y1'][data['y1'] < 1e-11], color='b', ls=(0,(4,2,1,1,1,2)), alpha=1)
 
         ##### plot contours for 0 level of syst uncertainty ##################
         data = np.load('fermi0_0_contours_ebl_6.2_scan12_jointfit.npz')
@@ -503,8 +503,8 @@ def plot_mean_delta_chi2_heatmap_sys_base(
         plt.gca().add_artist(legend1)
         plt.legend(handles=linestyle_handles, loc='lower left', title="Systematics")
 
-        data = np.load('fermi3_10_contours_b5.2_eta0.67_rescale.npz')
-        plt.errorbar(10**data['x1'][data['y1'] < 1e-11]/ 1e-9, 10**data['y1'][data['y1'] < 1e-11], color='b', ls=(0,(4,2,1,1,1,2)), alpha=1)
+        #data = np.load('fermi3_10_contours_b5.2_eta0.67_rescale.npz')
+        #plt.errorbar(10**data['x1'][data['y1'] < 1e-11]/ 1e-9, 10**data['y1'][data['y1'] < 1e-11], color='b', ls=(0,(4,2,1,1,1,2)), alpha=1)
 
         ##### plot contours for 0 level of syst uncertainty ##################
         data = np.load('fermi0_0_contours_ebl_6.2_scan12_jointfit.npz')
