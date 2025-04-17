@@ -23,7 +23,7 @@ g_all = axion_data[:, 1]    # GeV**-1
 ec_all = axion_data[:, 2] / 1e6  # MeV
 p0_all = axion_data[:, 3]
 k_all = axion_data[:, 4]
-k = np.mean(k_all)
+#k = np.mean(k_all)
 
 n_g = 40
 n_total = axion_data.shape[0]
@@ -32,6 +32,8 @@ n_mass = n_total // n_g
 # Reshape for the (E_c, p₀) grid.
 ec_all_full = (axion_data[:, 2] / 1e6).reshape(n_mass, n_g)
 p0_all_full = p0_all.reshape(n_mass, n_g)
+k_all_full = k_all.reshape(n_mass, n_g)
+
 
 # Extract unique values for (mₐ, g) plot.
 g_unique = axion_data[:n_g, 1]       # length = n_g
@@ -57,6 +59,7 @@ print("Selected g stop:", g_unique[col_stop])
 # Filter the full grid arrays.
 ec_masked = ec_all_full[row_start:row_stop+1, col_start:col_stop+1]
 p0_masked = p0_all_full[row_start:row_stop+1, col_start:col_stop+1]
+k_masked = k_all_full[row_start:row_stop+1, col_start:col_stop+1]
 
 # Also filter the unique arrays.
 m_masked = mass_unique[row_start:row_stop+1]
@@ -185,14 +188,15 @@ def process_chunk(i, j_start, j_end, x, y, y_err, source_name, dataset_label, us
     results_chunk = []
     p0_chunk = p0_masked[i, j_start:j_end]
     ec_chunk = ec_masked[i, j_start:j_end]
-    for p0_val, ec_val in zip(p0_chunk, ec_chunk):
+    k_chunk = k_masked[i, j_start:j_end]
+    for p0_val, ec_val, k_val in zip(p0_chunk, ec_chunk, k_chunk):
         fit_result = fit_data(
             x=np.array(x),
             y=np.array(y),
             y_err=np.array(y_err),
             p0=p0_val,
             E_c=ec_val,
-            k=k,  # k is defined globally.
+            k=k_val,  # k is defined globally.
             source_name=source_name,
             dataset_label=dataset_label,
             useEBL=useEBL,
@@ -379,15 +383,15 @@ with open('sources_for_heatmaps.txt', 'r') as file:
             basefunc="logpar", chunk_size=30
         )
         all_results_none[source_name] = results
-        with open("none_new0_no_sys_error.pkl", "wb") as file_out:
+        with open("k_none_new0_no_sys_error.pkl", "wb") as file_out:
             pickle.dump(all_results_none, file_out)
 
         all_results_snr[source_name] = results_snr
-        with open("snr_new0_no_sys_error.pkl", "wb") as file:
+        with open("k_snr_new0_no_sys_error.pkl", "wb") as file:
             pickle.dump(all_results_snr, file)
 
         all_results_lin[source_name] = results_lin
-        with open("lin_new0_no_sys_error.pkl", "wb") as file:
+        with open("k_lin_new0_no_sys_error.pkl", "wb") as file:
             pickle.dump(all_results_lin, file)
 
         # Run fits with systematic errors.
@@ -404,15 +408,15 @@ with open('sources_for_heatmaps.txt', 'r') as file:
             basefunc="logpar", chunk_size=30
         )
         all_results_none_sys[source_name] = results_sys
-        with open("none_new0_sys_error.pkl", "wb") as file_out:
+        with open("k_none_new0_sys_error.pkl", "wb") as file_out:
             pickle.dump(all_results_none_sys, file_out)
 
         all_results_snr_sys[source_name] = results_sys_snr
-        with open("snr_new0_sys_error.pkl", "wb") as file_out:
+        with open("k_snr_new0_sys_error.pkl", "wb") as file_out:
             pickle.dump(all_results_snr_sys, file_out)
 
         all_results_lin_sys[source_name] = results_sys_lin
-        with open("lin_new0_sys_error.pkl", "wb") as file_out:
+        with open("k_lin_new0_sys_error.pkl", "wb") as file_out:
             pickle.dump(all_results_lin_sys, file_out)
 
         # (The blocks for snr and lin datasets are currently commented out.)
