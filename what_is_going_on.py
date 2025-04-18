@@ -354,13 +354,13 @@ def plot_mean_delta_chi2_heatmap_nosys_base(all_results,
         #plt.errorbar(10**data['x1'][data['y1'] < 1e-11]/ 1e-9, 10**data['y1'][data['y1'] < 1e-11], color='b', ls=(0,(4,2,1,1,1,2)), alpha=1)
 
         ##### plot contours for 0 level of syst uncertainty ##################
-        #data = np.load('fermi0_0_contours_ebl_6.2_scan12_jointfit.npz')
-        #plt.errorbar(10**data['x'][data['y'] < 1e-11]/ 1e-9, 1.*10**data['y'][data['y'] < 1e-11], fmt='w:')
-        #plt.errorbar(10**data['x1'][data['y1'] < 1e-11]/ 1e-9, 1.*10**data['y1'][data['y1'] < 1e-11], fmt='w:')
+        data = np.load('fermi0_0_contours_ebl_6.2_scan12_jointfit.npz')
+        plt.errorbar(10**data['x'][data['y'] < 1e-11]/ 1e-9, 1.*10**data['y'][data['y'] < 1e-11], fmt='w:')
+        plt.errorbar(10**data['x1'][data['y1'] < 1e-11]/ 1e-9, 1.*10**data['y1'][data['y1'] < 1e-11], fmt='w:')
         
-        #data = np.load('fermi3_10_contours_06032025.npz')
-        #print(10**data['x1']/ 1e-9, 10**data['y1'])
-        #plt.errorbar(10**data['x1']/ 1e-9, 10**data['y1'], fmt='w-')#, zorder=-10)
+        data = np.load('fermi3_10_contours_06032025.npz')
+        print(10**data['x1']/ 1e-9, 10**data['y1'])
+        plt.errorbar(10**data['x1']/ 1e-9, 10**data['y1'], fmt='w-')#, zorder=-10)
 
         cbar = plt.colorbar(heatmap, ticks=np.linspace(vmin, vmax, 11))
         cbar.set_label(r'$\sum \Delta \chi^2$', fontsize=15)
@@ -517,13 +517,13 @@ def plot_mean_delta_chi2_heatmap_sys_base(
         #plt.errorbar(10**data['x1'][data['y1'] < 1e-11]/ 1e-9, 10**data['y1'][data['y1'] < 1e-11], color='b', ls=(0,(4,2,1,1,1,2)), alpha=1)
 
         ##### plot contours for 0 level of syst uncertainty ##################
-        #data = np.load('fermi0_0_contours_ebl_6.2_scan12_jointfit.npz')
-        #plt.errorbar(10**data['x'][data['y'] < 1e-11]/ 1e-9, 1.*10**data['y'][data['y'] < 1e-11], fmt='w:')
-        #plt.errorbar(10**data['x1'][data['y1'] < 1e-11]/ 1e-9, 1.*10**data['y1'][data['y1'] < 1e-11], fmt='w:')
+        data = np.load('fermi0_0_contours_ebl_6.2_scan12_jointfit.npz')
+        plt.errorbar(10**data['x'][data['y'] < 1e-11]/ 1e-9, 1.*10**data['y'][data['y'] < 1e-11], fmt='w:')
+        plt.errorbar(10**data['x1'][data['y1'] < 1e-11]/ 1e-9, 1.*10**data['y1'][data['y1'] < 1e-11], fmt='w:')
         
-        #data = np.load('fermi3_10_contours_06032025.npz')
-        #print(10**data['x1']/ 1e-9, 10**data['y1'])
-        #plt.errorbar(10**data['x1']/ 1e-9, 10**data['y1'], fmt='w-')#, zorder=-10)
+        data = np.load('fermi3_10_contours_06032025.npz')
+        print(10**data['x1']/ 1e-9, 10**data['y1'])
+        plt.errorbar(10**data['x1']/ 1e-9, 10**data['y1'], fmt='w-')#, zorder=-10)
 
         cbar = plt.colorbar(heatmap, ticks=np.linspace(vmin, vmax, 11))
         cbar.set_label(r'$\sum \Delta \chi^2$', fontsize=15)
@@ -555,7 +555,7 @@ with open("k_snr_new0_sys_error.pkl", "rb") as file:
 
 no_filtering_sources_sys = list(all_results_none_sys.keys()) 
 
-#plot_individual_delta_chi2_heatmap_with_pdf(all_results_none_sys, no_filtering_sources_sys, None, "sys", filtering_methods="No_Filtering", pdf_filename="NEW_indv_heatmaps_no_filter_logpar_sys_error.pdf")
+plot_individual_delta_chi2_heatmap_with_pdf(all_results_none_sys, no_filtering_sources_sys, None, "sys", filtering_methods="No_Filtering", pdf_filename="NEW_indv_heatmaps_no_filter_logpar_sys_error.pdf")
 #plot_individual_delta_chi2_heatmap_with_pdf(all_results_lin_sys, no_filtering_sources_sys, None, "sys", filtering_methods="week", pdf_filename="NEW_indv_heatmaps_week_logpar_sys_error.pdf")
 #plot_individual_delta_chi2_heatmap_with_pdf(all_results_lin_sys, no_filtering_sources_sys, None, "sys", filtering_methods="month", pdf_filename="NEW_indv_heatmaps_month_logpar_sys_error.pdf")
 
@@ -574,20 +574,6 @@ no_filtering_grid_sys = compute_mean_delta_chi2_grid(
     remove_source_label = "4FGL J1242.9+7315"
 ) 
 
-#plot_mean_delta_chi2_heatmap_nosys_base(all_results_none_sys, None,list(all_results_none_sys.keys()), "mean_sys_", remove_source_label=None)
-# For LIN filtering ("week" and "month")
-#plot_mean_delta_chi2_heatmap_nosys_base(all_results_lin_sys, None,list(all_results_lin_sys.keys()), "mean_sys_", no_filtering_grid=no_filtering_grid_sys, remove_source_label=None)
-
-# For SNR filtering ("snr_3", "snr_5", "snr_10")
-#plot_mean_delta_chi2_heatmap_nosys_base(all_results_snr_sys, None, list(all_results_snr_sys.keys()), "mean_sys_", no_filtering_grid=no_filtering_grid_sys, remove_source_label=None)
-
-#plot_mean_delta_chi2_heatmap(all_results_none, list(all_results_none.keys()), "mean", remove_source_label="4FGL J2314.0+1445")
-# For LIN filtering ("week" and "month")
-#plot_mean_delta_chi2_heatmap(all_results_lin, list(all_results_lin.keys()), "mean_", no_filtering_grid=no_filtering_grid, remove_source_label="4FGL J2314.0+1445")
-
-# For SNR filtering ("snr_3", "snr_5", "snr_10")
-#plot_mean_delta_chi2_heatmap(all_results_snr, list(all_results_snr.keys()), "mean_", no_filtering_grid=no_filtering_grid, remove_source_label="4FGL J2314.0+1445")
-
 
 ################################################################################################# NO systematic errors #######################################################################################
 
@@ -602,7 +588,7 @@ with open("k_snr_new0_no_sys_error.pkl", "rb") as file:
 
 no_filtering_sources = list(all_results_none.keys())
 
-#plot_individual_delta_chi2_heatmap_with_pdf(all_results_none, no_filtering_sources, None, "nosys", filtering_methods="No_Filtering", pdf_filename="NEW_indv_heatmaps_no_filter_logpar_no_sys_error.pdf")
+plot_individual_delta_chi2_heatmap_with_pdf(all_results_none, no_filtering_sources, None, "nosys", filtering_methods="No_Filtering", pdf_filename="NEW_indv_heatmaps_no_filter_logpar_no_sys_error.pdf")
 #plot_individual_delta_chi2_heatmap_with_pdf(all_results_lin, no_filtering_sources, None, "nosys", filtering_methods="week", pdf_filename="NEW_indv_heatmaps_week_logpar_no_sys_error.pdf")
 #plot_individual_delta_chi2_heatmap_with_pdf(all_results_lin, no_filtering_sources, None, "nosys", filtering_methods="month", pdf_filename="NEW_indv_heatmaps_month_logpar_no_sys_error.pdf")
 #plot_individual_delta_chi2_heatmap_with_pdf(all_results_snr, no_filtering_sources, None, "nosys", filtering_methods="snr_3", pdf_filename="NEW_indv_heatmaps_snr3_logpar_no_sys_error.pdf")
