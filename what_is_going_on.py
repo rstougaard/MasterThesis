@@ -243,14 +243,16 @@ def plot_mean_delta_chi2_heatmap_nosys_base(all_results,
             dataset_labels=dataset_labels,
             filter_label=filter_label,
             p0_masked=p0_masked,
-            ec_masked=ec_masked
+            ec_masked=ec_masked,
+            remove_source_label=None
         )
         systematic_grid = (compute_mean_delta_chi2_grid(
             all_results=all_results_sys,
             dataset_labels=dataset_labels,
             filter_label=filter_label,
             p0_masked=p0_masked,
-            ec_masked=ec_masked
+            ec_masked=ec_masked,
+            remove_source_label=None
         ) if all_results_sys else None)
 
         # Set up colormap.
@@ -404,14 +406,16 @@ def plot_mean_delta_chi2_heatmap_sys_base(
             dataset_labels=dataset_labels,
             filter_label=filter_label,
             p0_masked=p0_masked,
-            ec_masked=ec_masked
+            ec_masked=ec_masked,
+            remove_source_label=None
         )
         systematic_grid = (compute_mean_delta_chi2_grid(
             all_results=all_results,
             dataset_labels=dataset_labels,
             filter_label=filter_label,
             p0_masked=p0_masked,
-            ec_masked=ec_masked
+            ec_masked=ec_masked,
+            remove_source_label=None
         ) if all_results else None)
 
         # Set up colormap.
