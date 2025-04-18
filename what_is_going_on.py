@@ -346,13 +346,13 @@ def plot_mean_delta_chi2_heatmap_nosys_base(all_results,
         #plt.errorbar(10**data['x1'][data['y1'] < 1e-11]/ 1e-9, 10**data['y1'][data['y1'] < 1e-11], color='b', ls=(0,(4,2,1,1,1,2)), alpha=1)
 
         ##### plot contours for 0 level of syst uncertainty ##################
-        data = np.load('fermi0_0_contours_ebl_6.2_scan12_jointfit.npz')
-        plt.errorbar(10**data['x'][data['y'] < 1e-11]/ 1e-9, 1.*10**data['y'][data['y'] < 1e-11], fmt='w:')
-        plt.errorbar(10**data['x1'][data['y1'] < 1e-11]/ 1e-9, 1.*10**data['y1'][data['y1'] < 1e-11], fmt='w:')
+        #data = np.load('fermi0_0_contours_ebl_6.2_scan12_jointfit.npz')
+        #plt.errorbar(10**data['x'][data['y'] < 1e-11]/ 1e-9, 1.*10**data['y'][data['y'] < 1e-11], fmt='w:')
+        #plt.errorbar(10**data['x1'][data['y1'] < 1e-11]/ 1e-9, 1.*10**data['y1'][data['y1'] < 1e-11], fmt='w:')
         
-        data = np.load('fermi3_10_contours_06032025.npz')
-        print(10**data['x1']/ 1e-9, 10**data['y1'])
-        plt.errorbar(10**data['x1']/ 1e-9, 10**data['y1'], fmt='w-')#, zorder=-10)
+        #data = np.load('fermi3_10_contours_06032025.npz')
+        #print(10**data['x1']/ 1e-9, 10**data['y1'])
+        #plt.errorbar(10**data['x1']/ 1e-9, 10**data['y1'], fmt='w-')#, zorder=-10)
 
         cbar = plt.colorbar(heatmap, ticks=np.linspace(vmin, vmax, 11))
         cbar.set_label(r'$\sum \Delta \chi^2$', fontsize=15)
@@ -507,13 +507,13 @@ def plot_mean_delta_chi2_heatmap_sys_base(
         #plt.errorbar(10**data['x1'][data['y1'] < 1e-11]/ 1e-9, 10**data['y1'][data['y1'] < 1e-11], color='b', ls=(0,(4,2,1,1,1,2)), alpha=1)
 
         ##### plot contours for 0 level of syst uncertainty ##################
-        data = np.load('fermi0_0_contours_ebl_6.2_scan12_jointfit.npz')
-        plt.errorbar(10**data['x'][data['y'] < 1e-11]/ 1e-9, 1.*10**data['y'][data['y'] < 1e-11], fmt='w:')
-        plt.errorbar(10**data['x1'][data['y1'] < 1e-11]/ 1e-9, 1.*10**data['y1'][data['y1'] < 1e-11], fmt='w:')
+        #data = np.load('fermi0_0_contours_ebl_6.2_scan12_jointfit.npz')
+        #plt.errorbar(10**data['x'][data['y'] < 1e-11]/ 1e-9, 1.*10**data['y'][data['y'] < 1e-11], fmt='w:')
+        #plt.errorbar(10**data['x1'][data['y1'] < 1e-11]/ 1e-9, 1.*10**data['y1'][data['y1'] < 1e-11], fmt='w:')
         
-        data = np.load('fermi3_10_contours_06032025.npz')
-        print(10**data['x1']/ 1e-9, 10**data['y1'])
-        plt.errorbar(10**data['x1']/ 1e-9, 10**data['y1'], fmt='w-')#, zorder=-10)
+        #data = np.load('fermi3_10_contours_06032025.npz')
+        #print(10**data['x1']/ 1e-9, 10**data['y1'])
+        #plt.errorbar(10**data['x1']/ 1e-9, 10**data['y1'], fmt='w-')#, zorder=-10)
 
         cbar = plt.colorbar(heatmap, ticks=np.linspace(vmin, vmax, 11))
         cbar.set_label(r'$\sum \Delta \chi^2$', fontsize=15)
@@ -610,12 +610,12 @@ no_filtering_grid = compute_mean_delta_chi2_grid(
 #Testing on sys base plotting function.. changes has to be done for the nosys plotting function 
 
 plot_mean_delta_chi2_heatmap_sys_base(None, all_results_none_sys, list(all_results_none.keys()), "base_sys_", no_filtering_grid_other=None, remove_source_label="4FGL J1242.9+7315")
-#plot_mean_delta_chi2_heatmap_sys_base(all_results_lin, all_results_lin_sys, list(all_results_lin.keys()), "base_sys_", no_filtering_grid=no_filtering_grid_sys,no_filtering_grid_other=None, remove_source_label="4FGL J1242.9+7315")
-#plot_mean_delta_chi2_heatmap_sys_base(all_results_snr, all_results_snr_sys, list(all_results_snr.keys()), "base_sys_", no_filtering_grid=no_filtering_grid_sys, no_filtering_grid_other=None, remove_source_label="4FGL J1242.9+7315")
+plot_mean_delta_chi2_heatmap_sys_base(all_results_lin, all_results_lin_sys, list(all_results_lin.keys()), "base_sys_", no_filtering_grid=no_filtering_grid_sys,no_filtering_grid_other=None, remove_source_label="4FGL J1242.9+7315")
+plot_mean_delta_chi2_heatmap_sys_base(all_results_snr, all_results_snr_sys, list(all_results_snr.keys()), "base_sys_", no_filtering_grid=no_filtering_grid_sys, no_filtering_grid_other=None, remove_source_label="4FGL J1242.9+7315")
 
 plot_mean_delta_chi2_heatmap_nosys_base(all_results_none, all_results_none_sys, list(all_results_none.keys()), "base_nosys_",no_filtering_grid_other=None,  remove_source_label="4FGL J1242.9+7315")
-#plot_mean_delta_chi2_heatmap_nosys_base(all_results_lin, all_results_lin_sys, list(all_results_lin.keys()), "base_nosys_", no_filtering_grid=no_filtering_grid, no_filtering_grid_other=None, remove_source_label="4FGL J1242.9+7315")
-#plot_mean_delta_chi2_heatmap_nosys_base(all_results_snr, all_results_snr_sys, list(all_results_snr.keys()), "base_nosys_", no_filtering_grid=no_filtering_grid, no_filtering_grid_other=None,remove_source_label="4FGL J1242.9+7315")
+plot_mean_delta_chi2_heatmap_nosys_base(all_results_lin, all_results_lin_sys, list(all_results_lin.keys()), "base_nosys_", no_filtering_grid=no_filtering_grid, no_filtering_grid_other=None, remove_source_label="4FGL J1242.9+7315")
+plot_mean_delta_chi2_heatmap_nosys_base(all_results_snr, all_results_snr_sys, list(all_results_snr.keys()), "base_nosys_", no_filtering_grid=no_filtering_grid, no_filtering_grid_other=None,remove_source_label="4FGL J1242.9+7315")
 '''
 plot_mean_delta_chi2_heatmap_nosys_base(all_results_none, all_results_none_sys, list(all_results_none.keys()), "base_nosys_",  remove_source_label=None)
 plot_mean_delta_chi2_heatmap_nosys_base(all_results_lin, all_results_lin_sys, list(all_results_lin.keys()), "base_nosys_", no_filtering_grid=no_filtering_grid, no_filtering_grid_other=no_filtering_grid_sys, remove_source_label=None)
