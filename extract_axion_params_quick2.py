@@ -271,33 +271,44 @@ all_results_none_sys = {}
 all_results_snr_sys = {}
 all_results_lin_sys = {}
 
-def GetCatalogueSpectrum(nn):
+def GetCatalogueSpectrum(nn, min_frac=0.03, abs_floor=None):
     with fits.open('test/gll_psc_v35.fit') as f:
-        data = f[1].data
-        ebounds = f[5].data
-        emin = np.unique( ebounds['LowerEnergy'] )
-        emax = np.unique( ebounds['UpperEnergy'] )
-            
-    names4fgl = data['Source_Name']
-        
-    eav = (emin*emax)**0.5
-    de1 = eav - emin
-    de2 = emax - eav
-        
-    ok = np.where(names4fgl==nn)
+        data   = f[1].data
+        ebounds= f[5].data
 
-    fl = data['nuFnu_Band'][ok][0] #erg/cm2/s
+    emin = np.unique( ebounds['LowerEnergy'] )
+    emax = np.unique( ebounds['UpperEnergy'] )
+    eav  = np.sqrt(emin * emax)
+
+    # pick out your source
+    ok = np.where(data['Source_Name'] == nn)
+    fl     = data['nuFnu_Band'][ok][0]
     ratio0 = data['Unc_Flux_Band'][ok][0][:,0] / data['Flux_Band'][ok][0]
     ratio1 = data['Unc_Flux_Band'][ok][0][:,1] / data['Flux_Band'][ok][0]
 
-    dfl1 = -fl*ratio0
-    dfl2 = fl*ratio1
+    dfl1 = -fl * ratio0
+    dfl2 = +fl * ratio1
 
-    dfl = np.maximum(dfl1, dfl2) #+ systematics*fl #add systematics
-    
-    ok = fl>0#1e-13
-    
-    return eav[ok][1:], fl[ok][1:], dfl[ok][1:], [de1[ok][1:],de2[ok][1:]] # flux to erg/cm2/s
+    # raw error
+    dfl_raw = np.maximum(dfl1, dfl2)
+
+    # 1) absolute floor: replace zeros with a tiny ε
+    if abs_floor is not None:
+        eps = abs_floor
+    else:
+        # default to machine‐epsilon times a scale:
+        eps = np.finfo(float).eps * np.max(fl)
+    dfl = np.where(dfl_raw == 0, eps, dfl_raw)
+
+    # 2) fractional floor: at least `min_frac` of the flux
+    frac_floor = min_frac * fl
+    dfl = np.maximum(dfl, frac_floor)
+
+    # now mask out any non‐positive flux bins and drop the first channel
+    good = fl > 0
+    return (eav[good][1:], fl[good][1:], dfl[good][1:], 
+            [eav[good][1:] - emin[good][1:], emax[good][1:] - eav[good][1:]])
+
 
 with open('sources_for_heatmaps.txt', 'r') as file:
     for line in file:
