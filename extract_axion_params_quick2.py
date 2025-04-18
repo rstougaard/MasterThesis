@@ -238,7 +238,7 @@ def nested_fits_combined_mp(datasets, source_name, useEBL=True, fitting_method="
     """
     results = {}
     num_rows = p0_masked.shape[0]
-    for dataset_label, (x, y, y_err, emin, emax) in datasets.items():
+    for dataset_label, (x, y, y_err) in datasets.items():
         # Check if y data exists (or is non-empty)
         if y is None or len(y) == 0:
             with open(f"{general_path_for_slurm}/missing_data.txt", "a") as f:
@@ -271,6 +271,34 @@ all_results_none_sys = {}
 all_results_snr_sys = {}
 all_results_lin_sys = {}
 
+def GetCatalogueSpectrum(nn):
+    with fits.open('test/gll_psc_v35.fit') as f:
+        data = f[1].data
+        ebounds = f[5].data
+        emin = np.unique( ebounds['LowerEnergy'] )
+        emax = np.unique( ebounds['UpperEnergy'] )
+            
+    names4fgl = data['Source_Name']
+        
+    eav = (emin*emax)**0.5
+    de1 = eav - emin
+    de2 = emax - eav
+        
+    ok = np.where(names4fgl==nn)
+
+    fl = data['nuFnu_Band'][ok][0] #erg/cm2/s
+    ratio0 = data['Unc_Flux_Band'][ok][0][:,0] / data['Flux_Band'][ok][0]
+    ratio1 = data['Unc_Flux_Band'][ok][0][:,1] / data['Flux_Band'][ok][0]
+
+    dfl1 = -fl*ratio0
+    dfl2 = fl*ratio1
+
+    dfl = np.maximum(dfl1, dfl2) #+ systematics*fl #add systematics
+    
+    ok = fl>0#1e-13
+    
+    return eav[ok][1:], fl[ok][1:], dfl[ok][1:], [de1[ok][1:],de2[ok][1:]] # flux to erg/cm2/s
+
 with open('sources_for_heatmaps.txt', 'r') as file:
     for line in file:
         parts = shlex.split(line.strip())
@@ -284,7 +312,7 @@ with open('sources_for_heatmaps.txt', 'r') as file:
                                              .replace("+", "plus")
                                              .replace("-", "minus")
                                              .replace('"', ''))
-        
+        '''
         f_bin = fits.open(f'./fit_results/{source_name_cleaned}_fit_data_NONE.fits')
         f_bin_snr = fits.open(f'./fit_results/{source_name_cleaned}_fit_data_SNR.fits')
         f_bin_lin = fits.open(f'./fit_results/{source_name_cleaned}_fit_data_LIN.fits')
@@ -313,9 +341,8 @@ with open('sources_for_heatmaps.txt', 'r') as file:
         month = bin_data_lin[bin_data_lin['loop_item'] == 'month']
         sorted_indices_lin_month = np.argsort(month['emin'])
         sorted_data_lin_month = month[sorted_indices_lin_month]
-
-        colors_snr = ['blue', 'orange', 'green']
-        colors_lin = ['purple', 'brown']
+        
+        
         bin_size = np.array(sorted_data_none['emax']) - np.array(sorted_data_none['emin'])
         e_lowers = sorted_data_none['geometric_mean'] - sorted_data_none['emin']
         e_uppers = np.array(sorted_data_none['emax']) - np.array(sorted_data_none['geometric_mean'])
@@ -367,13 +394,25 @@ with open('sources_for_heatmaps.txt', 'r') as file:
                 sorted_data_lin_month['emax']
             )
         }
+        '''
+        eav0, f0, df0, de0 = GetCatalogueSpectrum(source_name)
+        datasets = {
+            "Catalogue": (
+                eav0,
+                f0,
+                df0
+            )
+        }
+        
+        #colors_snr = ['blue', 'orange', 'green']
+        #colors_lin = ['purple', 'brown']
         print(source_name)
         # Run fits without systematic errors.
         results = nested_fits_combined_mp(
             datasets, source_name, useEBL=True, fitting_method="no_sys_error",
             basefunc="logpar", chunk_size=30
         )
-
+        '''
         results_snr = nested_fits_combined_mp(
             datasets_snr, source_name, useEBL=True, fitting_method="no_sys_error",
             basefunc="logpar", chunk_size=30
@@ -382,10 +421,11 @@ with open('sources_for_heatmaps.txt', 'r') as file:
             datasets_lin, source_name, useEBL=True, fitting_method="no_sys_error",
             basefunc="logpar", chunk_size=30
         )
+        '''
         all_results_none[source_name] = results
-        with open("k_none_new0_no_sys_error.pkl", "wb") as file_out:
+        with open("catalogue_no_sys_error.pkl", "wb") as file_out:
             pickle.dump(all_results_none, file_out)
-
+        '''
         all_results_snr[source_name] = results_snr
         with open("k_snr_new0_no_sys_error.pkl", "wb") as file:
             pickle.dump(all_results_snr, file)
@@ -393,12 +433,14 @@ with open('sources_for_heatmaps.txt', 'r') as file:
         all_results_lin[source_name] = results_lin
         with open("k_lin_new0_no_sys_error.pkl", "wb") as file:
             pickle.dump(all_results_lin, file)
+        '''
 
         # Run fits with systematic errors.
         results_sys = nested_fits_combined_mp(
             datasets, source_name, useEBL=True, fitting_method="sys_error",
             basefunc="logpar", chunk_size=30
         )
+        '''
         results_sys_snr = nested_fits_combined_mp(
             datasets_snr, source_name, useEBL=True, fitting_method="sys_error",
             basefunc="logpar", chunk_size=30
@@ -407,10 +449,11 @@ with open('sources_for_heatmaps.txt', 'r') as file:
             datasets_lin, source_name, useEBL=True, fitting_method="sys_error",
             basefunc="logpar", chunk_size=30
         )
+        '''
         all_results_none_sys[source_name] = results_sys
-        with open("k_none_new0_sys_error.pkl", "wb") as file_out:
+        with open("catalogue_sys_error.pkl", "wb") as file_out:
             pickle.dump(all_results_none_sys, file_out)
-
+        '''
         all_results_snr_sys[source_name] = results_sys_snr
         with open("k_snr_new0_sys_error.pkl", "wb") as file_out:
             pickle.dump(all_results_snr_sys, file_out)
@@ -418,7 +461,7 @@ with open('sources_for_heatmaps.txt', 'r') as file:
         all_results_lin_sys[source_name] = results_sys_lin
         with open("k_lin_new0_sys_error.pkl", "wb") as file_out:
             pickle.dump(all_results_lin_sys, file_out)
-
+        '''
         # (The blocks for snr and lin datasets are currently commented out.)
         
 # Optionally, call additional plotting functions below.
