@@ -202,7 +202,7 @@ def plot_individual_delta_chi2_heatmap_with_pdf(all_results, dataset_labels, sys
                 cbar.set_label(r'$ \Delta \chi^2 $', fontsize=15)
                 plt.xlabel(r'$m_a$ [neV]', fontsize=15)
                 plt.ylabel(r'$g_{a\gamma}$ [GeV$^{-1}$]', fontsize=15)
-                plt.title(fr'{source_name} | {filter_label} $ \Delta \chi^2 $ Heatmap', fontsize=15)
+                plt.title(f'{source_name} | {filter_label} $ \Delta \chi^2 $ Heatmap', fontsize=15)
                 plt.xscale('log')
                 plt.yscale('log')
                 ax = plt.gca()
