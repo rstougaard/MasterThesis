@@ -304,6 +304,7 @@ def plot_mean_delta_chi2_heatmap_nosys_base(all_results,
             plot_specs.append({
                 'grid': systematic_grid,
                 'label': 'With systematics',
+                'color_pos': 'red',   'linestyle_pos': 'dashed',
                 'color_neg': 'lime',  'linestyle_neg': 'dashed'
             })
 
@@ -474,6 +475,7 @@ def plot_mean_delta_chi2_heatmap_sys_base(
             plot_specs.append({
                 'grid': systematic_grid,
                 'label': 'No systematics',
+                'color_pos': 'red',   'linestyle_pos': 'dashed',
                 'color_neg': 'lime',  'linestyle_neg': 'dashed'
             })
 
