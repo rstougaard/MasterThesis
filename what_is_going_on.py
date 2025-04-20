@@ -246,8 +246,8 @@ def plot_individual_delta_chi2_heatmap_with_pdf(all_results, dataset_labels, sys
                 # --- Build proxy legend handles for both aspects ---
                 
                 color_handles = [
-                    Line2D([0], [0], color='red', linestyle='-', linewidth=2, label='$\> 6.2$'),
-                    Line2D([0], [0], color='lime', linestyle='-', linewidth=2, label='$\< -6.2$')
+                    Line2D([0], [0], color='red', linestyle='-', linewidth=2, label=f'$\> 6.2$'),
+                    Line2D([0], [0], color='lime', linestyle='-', linewidth=2, label=f'$\< -6.2$')
                 ]
 
 
@@ -267,17 +267,17 @@ def plot_individual_delta_chi2_heatmap_with_pdf(all_results, dataset_labels, sys
                 plt.xlabel(r'$m_a$ [neV]')
                 plt.ylabel(r'$g_{a\gamma}$ [GeV$^{-1}$]')
                 if filter_label == "No_Filtering":
-                    plt.title(f'{source_name} | No filtering $ \Delta \chi^2 $ Heatmap')
+                    plt.title(f'{source_name} : No filtering $ \Delta \chi^2 $ Heatmap')
                 elif filter_label == "week":
-                    plt.title(f'{source_name} | Weekly filter $ \Delta \chi^2 $ Heatmap')
+                    plt.title(f'{source_name} : Weekly filter $ \Delta \chi^2 $ Heatmap')
                 elif filter_label == "month":
-                    plt.title(f'{source_name} | Monthly filter $ \Delta \chi^2 $ Heatmap')
+                    plt.title(f'{source_name} : Monthly filter $ \Delta \chi^2 $ Heatmap')
                 elif filter_label == "snr_3":
-                    plt.title(f'{source_name} | SNR 3 filter $ \Delta \chi^2 $ Heatmap')
+                    plt.title(f'{source_name} : SNR 3 filter $ \Delta \chi^2 $ Heatmap')
                 elif filter_label == "snr_5":
-                    plt.title(f'{source_name} | SNR 5 filter $ \Delta \chi^2 $ Heatmap')
+                    plt.title(f'{source_name} : SNR 5 filter $ \Delta \chi^2 $ Heatmap')
                 elif filter_label == "snr_10":
-                    plt.title(f'{source_name} | SNR 10 filter $ \Delta \chi^2 $ Heatmap')
+                    plt.title(f'{source_name} : SNR 10 filter $ \Delta \chi^2 $ Heatmap')
                 plt.xscale('log')
                 plt.yscale('log')
                 ax = plt.gca()
@@ -419,16 +419,16 @@ def plot_mean_delta_chi2_heatmap_nosys_base(all_results,
         if no_filtering_grid is not None:
             # 1. Legend for threshold (color) mapping:
             color_handles = [
-                Line2D([0], [0], color='red', linestyle='-', linewidth=2, label='$\> 6.2)$'),
-                Line2D([0], [0], color='lime', linestyle='-', linewidth=2, label='$\< -6.2$'),
+                Line2D([0], [0], color='red', linestyle='-', linewidth=2, label=f'$\> 6.2)$'),
+                Line2D([0], [0], color='lime', linestyle='-', linewidth=2, label=f'$\< -6.2$'),
                 # For "No filtering" the color is white. Use a marker with a black edge to make it visible.
                 Line2D([0], [0], marker='s', markersize=8, markerfacecolor='white', 
                     markeredgecolor='black', linestyle='-', linewidth=2, label='No filtering (white)')
             ]
         else:
             color_handles = [
-                Line2D([0], [0], color='red', linestyle='-', linewidth=2, label='\> 6.2'),
-                Line2D([0], [0], color='lime', linestyle='-', linewidth=2, label='\< -6.2')
+                Line2D([0], [0], color='red', linestyle='-', linewidth=2, label=f'$\> 6.2$'),
+                Line2D([0], [0], color='lime', linestyle='-', linewidth=2, label=f'$\< -6.2$')
             ]
 
 
