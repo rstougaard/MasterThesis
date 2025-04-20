@@ -170,7 +170,7 @@ def plot_individual_delta_chi2_heatmap_with_pdf(all_results, dataset_labels, sys
     # Create a PdfPages object to collect plots.
     with PdfPages(f'./fit_results/{pdf_filename}') as pdf:
         # Loop over each source in the results.
-        for source_name, source_data in all_results.items():
+        for source_name, source_data in (all_results.items(), systematic_results.items()):
             for filter_label in filtering_methods:
                 # Compute the mean Δχ² grid for the current source and filtering method.
                 mean_delta_chi2_grid = compute_mean_delta_chi2_grid(
@@ -181,10 +181,7 @@ def plot_individual_delta_chi2_heatmap_with_pdf(all_results, dataset_labels, sys
                     ec_masked=ec_masked,
                     remove_source_label=None
                 )
-            if (systematic_results != None):
-                for source_name, source_data in systematic_results.items():
-                    for filter_label in filtering_methods:
-                        mean_systematic_results = compute_mean_delta_chi2_grid(
+                mean_systematic_results = compute_mean_delta_chi2_grid(
                                 all_results={source_name: source_data},  
                                 dataset_labels=dataset_labels,
                                 filter_label=filter_label,
