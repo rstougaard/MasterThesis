@@ -240,6 +240,7 @@ def plot_mean_delta_chi2_heatmap_nosys_base(all_results,
 
         for lbl in labels_to_remove:
             all_results.pop(lbl, None)
+            all_results_sys.pop(lbl, None)
 
     # Extract all filter labels from the first remaining source.
     first_source = next(iter(all_results.values()))
@@ -409,6 +410,7 @@ def plot_mean_delta_chi2_heatmap_sys_base(
 
         for lbl in labels_to_remove:
             all_results.pop(lbl, None)
+            all_results_sys.pop(lbl, None)
 
     # Extract all filter labels from the first remaining source.
     first_source = next(iter(all_results_sys.values()))
@@ -623,7 +625,7 @@ no_filtering_grid = compute_mean_delta_chi2_grid(
 
 ) 
 # Summed heatmaps for no filter
-plot_mean_delta_chi2_heatmap_sys_base(None, all_results_none_sys, list(all_results_none.keys()), "base_sys_", no_filtering_grid_other=None, remove_source_label="4FGL J1242.9+7315")
+plot_mean_delta_chi2_heatmap_sys_base(all_results_none, all_results_none_sys, list(all_results_none.keys()), "base_sys_", no_filtering_grid_other=None, remove_source_label="4FGL J1242.9+7315")
 plot_mean_delta_chi2_heatmap_nosys_base(all_results_none, all_results_none_sys, list(all_results_none.keys()), "base_nosys_",no_filtering_grid_other=None,  remove_source_label="4FGL J1242.9+7315")
 
 # Summed heatmaps for month and week
