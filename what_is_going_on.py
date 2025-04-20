@@ -23,9 +23,6 @@ plt.rcParams.update({
     "ytick.labelsize":    20,
 })
 plt.rcParams.update({
-    # tick‐label color
-    "xtick.color":       "black",
-    "ytick.color":       "black",
     # tick‐label font size
     "xtick.labelsize":   18,
     "ytick.labelsize":   18,
@@ -455,9 +452,9 @@ def plot_mean_delta_chi2_heatmap_nosys_base(all_results,
         ]
 
         # Create the two legends. Add the first legend to the axes so that the second does not overwrite it.
-        legend1 = plt.legend(handles=color_handles, loc='upper left', title="Threshold")
-        plt.gca().add_artist(legend1)
-        plt.legend(handles=linestyle_handles, loc='lower left', title="Systematics")
+        #legend1 = plt.legend(handles=color_handles, loc='upper left', title="Threshold")
+        #plt.gca().add_artist(legend1)
+        #plt.legend(handles=linestyle_handles, loc='lower left', title="Systematics")
 
         #data = np.load('fermi3_10_contours_b5.2_eta0.67_rescale.npz')
         #plt.errorbar(10**data['x1'][data['y1'] < 1e-11]/ 1e-9, 10**data['y1'][data['y1'] < 1e-11], color='b', ls=(0,(4,2,1,1,1,2)), alpha=1)
@@ -493,6 +490,15 @@ def plot_mean_delta_chi2_heatmap_nosys_base(all_results,
         #plt.xticks(fontsize=15)
         #plt.yticks(fontsize=15)
         #plt.gca().xaxis.set_major_formatter(ticker.FormatStrFormatter("%g"))
+        plt.tick_params(
+        axis='both',
+        which='both',
+        color='white',       # tick *lines*
+        labelcolor='black',  # tick *labels*
+        labelsize=14,        # if you want to override tick‐label size here
+        direction='in',
+        top=True, right=True
+    )
         plt.xlim(0.3, 6)
         plt.tight_layout()
         plt.savefig(f'{path_to_save_heatmap_m_g}{png_naming}_{filter_label}_ma_ga.png', dpi=300)
