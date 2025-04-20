@@ -12,26 +12,38 @@ plt.rcParams["font.serif"]     = ["Computer Modern Roman"]
 plt.rcParams["mathtext.fontset"] = "cm"
 plt.rcParams.update({
     # Base font size for text in figures
-    "font.size":          18,   # controls default text size (e.g. axis labels)
+    "font.size":          20,   # controls default text size (e.g. axis labels)
     # Legend
-    "legend.fontsize":    18,   # default legend text size
+    "legend.fontsize":    20,   # default legend text size
     # Title and label sizes (override font.size if you like)
-    "axes.titlesize":     18,
-    "axes.labelsize":     18,
+    "axes.titlesize":     20,
+    "axes.labelsize":     20,
     # Tick labels
-    "xtick.labelsize":    18,
-    "ytick.labelsize":    18,
+    "xtick.labelsize":    20,
+    "ytick.labelsize":    20,
 })
 plt.rcParams.update({
-    # make tick labels white
-    "xtick.color":      "white",
-    "ytick.color":      "white",
-    # draw ticks pointing inwards
-    "xtick.direction":  "in",
-    "ytick.direction":  "in",
-    # (optionally) also draw ticks on the top and right spines
-    "xtick.top":        True,
-    "ytick.right":      True,
+    # tick‐label color
+    "xtick.color":       "black",
+    "ytick.color":       "black",
+    # tick‐label font size
+    "xtick.labelsize":   18,
+    "ytick.labelsize":   18,
+    # tick direction and which sides
+    "xtick.direction":   "in",
+    "ytick.direction":   "in",
+    "xtick.top":         True,
+    "ytick.right":       True,
+    # tick length (points)
+    "xtick.major.size":  7,
+    "ytick.major.size":  7,
+    "xtick.minor.size":  4,
+    "ytick.minor.size":  4,
+    # tick width (points)
+    "xtick.major.width": 1.2,
+    "ytick.major.width": 1.2,
+    "xtick.minor.width": 0.8,
+    "ytick.minor.width": 0.8,
 })
 
 path_to_save_heatmap_m_g = "./fit_results/heatmaps_m_g/"
@@ -172,15 +184,17 @@ def plot_individual_delta_chi2_heatmap_with_pdf(all_results, dataset_labels, sys
                     ec_masked=ec_masked,
                     remove_source_label=None
                 )
-                if (systematic_results != None):
+        if (systematic_results != None):
+            for source_name, source_data in systematic_results.items():
+                for filter_label in filtering_methods:
                     mean_systematic_results = compute_mean_delta_chi2_grid(
-                        all_results=systematic_results,  
-                        dataset_labels=dataset_labels,
-                        filter_label=filter_label,
-                        p0_masked=p0_masked,
-                        ec_masked=ec_masked,
-                        remove_source_label=None
-                    )
+                            all_results={source_name: source_data},  
+                            dataset_labels=dataset_labels,
+                            filter_label=filter_label,
+                            p0_masked=p0_masked,
+                            ec_masked=ec_masked,
+                            remove_source_label=None
+                        )
                                 
                 print(f"Source: {source_name} | Filter: {filter_label} | min: {np.min(mean_delta_chi2_grid)}, max: {np.max(mean_delta_chi2_grid)}")
                 
@@ -189,7 +203,9 @@ def plot_individual_delta_chi2_heatmap_with_pdf(all_results, dataset_labels, sys
                 grid_max = np.max(mean_delta_chi2_grid)
 
                 # If both the min and max are within [-1, 1], use fixed values.
-                if grid_min > -1 and grid_max < 1:
+                if source_name == "4FGL J0319.8+4130":
+                    vmin, vmax = -10 , 25
+                elif grid_min > -1 and grid_max < 1:
                     vmin, vmax = -1, 1
                 else:
                     vmin, vmax = grid_min, grid_max
@@ -281,7 +297,7 @@ def plot_individual_delta_chi2_heatmap_with_pdf(all_results, dataset_labels, sys
                 plt.xscale('log')
                 plt.yscale('log')
                 ax = plt.gca()
-                ax.xaxis.set_major_formatter(ticker.FormatStrFormatter("%g"))
+                #ax.xaxis.set_major_formatter(ticker.FormatStrFormatter("%g"))
                 ax.set_xlim(0.3, 10)
                 #plt.xticks(fontsize=15)
                 #plt.yticks(fontsize=15)
@@ -476,7 +492,7 @@ def plot_mean_delta_chi2_heatmap_nosys_base(all_results,
         plt.yscale('log')
         #plt.xticks(fontsize=15)
         #plt.yticks(fontsize=15)
-        plt.gca().xaxis.set_major_formatter(ticker.FormatStrFormatter("%g"))
+        #plt.gca().xaxis.set_major_formatter(ticker.FormatStrFormatter("%g"))
         plt.xlim(0.3, 6)
         plt.tight_layout()
         plt.savefig(f'{path_to_save_heatmap_m_g}{png_naming}_{filter_label}_ma_ga.png', dpi=300)
@@ -690,12 +706,12 @@ with open("snr_new0_no_sys_error.pkl", "rb") as file:
 
 no_filtering_sources = list(all_results_none.keys())
 
-plot_individual_delta_chi2_heatmap_with_pdf(all_results_none, no_filtering_sources, all_results_none_sys, "nosys", filtering_methods="No_Filtering", pdf_filename="NEW_indv_heatmaps_no_filter_logpar_no_sys_error.pdf")
-plot_individual_delta_chi2_heatmap_with_pdf(all_results_lin, no_filtering_sources, all_results_lin_sys, "nosys", filtering_methods="week", pdf_filename="NEW_indv_heatmaps_week_logpar_no_sys_error.pdf")
-plot_individual_delta_chi2_heatmap_with_pdf(all_results_lin, no_filtering_sources, all_results_lin_sys, "nosys", filtering_methods="month", pdf_filename="NEW_indv_heatmaps_month_logpar_no_sys_error.pdf")
-plot_individual_delta_chi2_heatmap_with_pdf(all_results_snr, no_filtering_sources, all_results_snr_sys, "nosys", filtering_methods="snr_3", pdf_filename="NEW_indv_heatmaps_snr3_logpar_no_sys_error.pdf")
-plot_individual_delta_chi2_heatmap_with_pdf(all_results_snr, no_filtering_sources, all_results_snr_sys, "nosys", filtering_methods="snr_5", pdf_filename="NEW_indv_heatmaps_snr5_logpar_no_sys_error.pdf")
-plot_individual_delta_chi2_heatmap_with_pdf(all_results_snr, no_filtering_sources, all_results_snr_sys, "nosys", filtering_methods="snr_10", pdf_filename="NEW_indv_heatmaps_snr10_logpar_no_sys_error.pdf")
+#plot_individual_delta_chi2_heatmap_with_pdf(all_results_none, no_filtering_sources, all_results_none_sys, "nosys", filtering_methods="No_Filtering", pdf_filename="NEW_indv_heatmaps_no_filter_logpar_no_sys_error.pdf")
+#plot_individual_delta_chi2_heatmap_with_pdf(all_results_lin, no_filtering_sources, all_results_lin_sys, "nosys", filtering_methods="week", pdf_filename="NEW_indv_heatmaps_week_logpar_no_sys_error.pdf")
+#plot_individual_delta_chi2_heatmap_with_pdf(all_results_lin, no_filtering_sources, all_results_lin_sys, "nosys", filtering_methods="month", pdf_filename="NEW_indv_heatmaps_month_logpar_no_sys_error.pdf")
+#plot_individual_delta_chi2_heatmap_with_pdf(all_results_snr, no_filtering_sources, all_results_snr_sys, "nosys", filtering_methods="snr_3", pdf_filename="NEW_indv_heatmaps_snr3_logpar_no_sys_error.pdf")
+#plot_individual_delta_chi2_heatmap_with_pdf(all_results_snr, no_filtering_sources, all_results_snr_sys, "nosys", filtering_methods="snr_5", pdf_filename="NEW_indv_heatmaps_snr5_logpar_no_sys_error.pdf")
+#plot_individual_delta_chi2_heatmap_with_pdf(all_results_snr, no_filtering_sources, all_results_snr_sys, "nosys", filtering_methods="snr_10", pdf_filename="NEW_indv_heatmaps_snr10_logpar_no_sys_error.pdf")
 
 print('Plotting summed chi-squared heatmap!') # e.g. ["No_Filtering"] or sometimes multiple sources
 
