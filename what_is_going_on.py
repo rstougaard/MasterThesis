@@ -202,25 +202,7 @@ def plot_individual_delta_chi2_heatmap_with_pdf(all_results, dataset_labels, sys
                 fig = plt.figure(figsize=(10, 6))
                 heatmap = plt.pcolormesh(ma_mesh / 1e-9, g_mesh, mean_delta_chi2_grid,
                                          cmap=cmap, norm=norm, shading='auto')
-                
-                if (systematic_results != None):
-                    if np.any(mean_systematic_results >= 6.2):
-                        plt.contour(ma_mesh / 1e-9, g_mesh, mean_systematic_results,
-                                        levels=[6.2], colors='red', linewidths=2)
-                # Overlay no_filtering_grid contour if provided and if we aren't plotting "No_Filtering" itself.
-                if (no_filtering_grid is not None) and (filter_label != "No_Filtering"):
-                    if np.any(no_filtering_grid <= -6.2):
-                        plt.contour(ma_mesh / 1e-9, g_mesh, no_filtering_grid,
-                                    levels=[-6.2], colors='lime', linewidths=2)
-                
-                if np.any(mean_delta_chi2_grid <= -6.2):
-                    plt.contour(ma_mesh / 1e-9, g_mesh, mean_delta_chi2_grid,
-                                levels=[-6.2], colors='lime', linewidths=2)
-                
-                if np.any(mean_delta_chi2_grid >= 6.2):
-                    plt.contour(ma_mesh / 1e-9, g_mesh, mean_delta_chi2_grid,
-                                levels=[6.2], colors='red', linewidths=2)
-                    
+                                    
                 plot_specs = []
                 # — Mean (filtered) —
                 if mean_delta_chi2_grid is not None:
@@ -264,8 +246,8 @@ def plot_individual_delta_chi2_heatmap_with_pdf(all_results, dataset_labels, sys
                 # --- Build proxy legend handles for both aspects ---
                 
                 color_handles = [
-                    Line2D([0], [0], color='red', linestyle='-', linewidth=2, label='\> 6.2'),
-                    Line2D([0], [0], color='lime', linestyle='-', linewidth=2, label='\< -6.2')
+                    Line2D([0], [0], color='red', linestyle='-', linewidth=2, label='$\> 6.2$'),
+                    Line2D([0], [0], color='lime', linestyle='-', linewidth=2, label='$\< -6.2$')
                 ]
 
 
@@ -437,8 +419,8 @@ def plot_mean_delta_chi2_heatmap_nosys_base(all_results,
         if no_filtering_grid is not None:
             # 1. Legend for threshold (color) mapping:
             color_handles = [
-                Line2D([0], [0], color='red', linestyle='-', linewidth=2, label='\> 6.2)'),
-                Line2D([0], [0], color='lime', linestyle='-', linewidth=2, label='\< -6.2'),
+                Line2D([0], [0], color='red', linestyle='-', linewidth=2, label='$\> 6.2)$'),
+                Line2D([0], [0], color='lime', linestyle='-', linewidth=2, label='$\< -6.2$'),
                 # For "No filtering" the color is white. Use a marker with a black edge to make it visible.
                 Line2D([0], [0], marker='s', markersize=8, markerfacecolor='white', 
                     markeredgecolor='black', linestyle='-', linewidth=2, label='No filtering (white)')
