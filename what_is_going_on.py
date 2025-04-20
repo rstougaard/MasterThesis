@@ -10,6 +10,29 @@ plt.rcParams["text.usetex"]     = True
 plt.rcParams["font.family"]    = "serif"
 plt.rcParams["font.serif"]     = ["Computer Modern Roman"]
 plt.rcParams["mathtext.fontset"] = "cm"
+plt.rcParams.update({
+    # Base font size for text in figures
+    "font.size":          18,   # controls default text size (e.g. axis labels)
+    # Legend
+    "legend.fontsize":    18,   # default legend text size
+    # Title and label sizes (override font.size if you like)
+    "axes.titlesize":     18,
+    "axes.labelsize":     18,
+    # Tick labels
+    "xtick.labelsize":    18,
+    "ytick.labelsize":    18,
+})
+plt.rcParams.update({
+    # make tick labels white
+    "xtick.color":      "white",
+    "ytick.color":      "white",
+    # draw ticks pointing inwards
+    "xtick.direction":  "in",
+    "ytick.direction":  "in",
+    # (optionally) also draw ticks on the top and right spines
+    "xtick.top":        True,
+    "ytick.right":      True,
+})
 
 path_to_save_heatmap_m_g = "./fit_results/heatmaps_m_g/"
 path_to_save_heatmap_Ec_p0 = "./fit_results/heatmaps_Ec_p0/"
@@ -183,44 +206,103 @@ def plot_individual_delta_chi2_heatmap_with_pdf(all_results, dataset_labels, sys
                 if (systematic_results != None):
                     if np.any(mean_systematic_results >= 6.2):
                         plt.contour(ma_mesh / 1e-9, g_mesh, mean_systematic_results,
-                                        levels=[6.2], colors='#3690c0', linewidths=2)
+                                        levels=[6.2], colors='red', linewidths=2)
                 # Overlay no_filtering_grid contour if provided and if we aren't plotting "No_Filtering" itself.
                 if (no_filtering_grid is not None) and (filter_label != "No_Filtering"):
                     if np.any(no_filtering_grid <= -6.2):
                         plt.contour(ma_mesh / 1e-9, g_mesh, no_filtering_grid,
-                                    levels=[-6.2], colors='#f16913', linewidths=2)
+                                    levels=[-6.2], colors='lime', linewidths=2)
                 
                 if np.any(mean_delta_chi2_grid <= -6.2):
                     plt.contour(ma_mesh / 1e-9, g_mesh, mean_delta_chi2_grid,
-                                levels=[-6.2], colors='#78c679', linewidths=2)
+                                levels=[-6.2], colors='lime', linewidths=2)
                 
                 if np.any(mean_delta_chi2_grid >= 6.2):
                     plt.contour(ma_mesh / 1e-9, g_mesh, mean_delta_chi2_grid,
                                 levels=[6.2], colors='red', linewidths=2)
+                    
+                plot_specs = []
+                # — Mean (filtered) —
+                if mean_delta_chi2_grid is not None:
+                    plot_specs.append({
+                        'grid': mean_delta_chi2_grid,
+                        'label': 'Without systematics',
+                        'color_pos': 'red',   'linestyle_pos': 'solid',
+                        'color_neg': 'lime',  'linestyle_neg': 'solid'
+                    })
+
+                # — Systematics (filtered) —
+                if systematic_results is not None:
+                    plot_specs.append({
+                        'grid': mean_systematic_results,
+                        'label': 'With systematics',
+                        'color_pos': 'red',   'linestyle_pos': 'dashed',
+                        'color_neg': 'lime',  'linestyle_neg': 'dashed'
+                    })
+
+
+                # --- Plot contours (remove label= from contour calls) ---
+                for spec in plot_specs:
+                    grid = spec['grid']
+                    x = ma_mesh / 1e-9
+                    y = g_mesh
+
+                    if spec.get('color_pos') and np.any(grid >= 6.2):
+                        plt.contour(x, y, grid,
+                                    levels=[6.2],
+                                    colors=spec['color_pos'],
+                                    linestyles=spec['linestyle_pos'],
+                                    linewidths=2)
+
+                    if spec.get('color_neg') and np.any(grid <= -6.2):
+                        plt.contour(x, y, grid,
+                                    levels=[-6.2],
+                                    colors=spec['color_neg'],
+                                    linestyles=spec['linestyle_neg'],
+                                    linewidths=2)
+
+                # --- Build proxy legend handles for both aspects ---
+                
+                color_handles = [
+                    Line2D([0], [0], color='red', linestyle='-', linewidth=2, label='\> 6.2'),
+                    Line2D([0], [0], color='lime', linestyle='-', linewidth=2, label='\< -6.2')
+                ]
+
+
+                # 2. Legend for systematics (line style) mapping:
+                linestyle_handles = [
+                    Line2D([0], [0], color='black', linestyle='solid', linewidth=2, label='Without systematics'),
+                    Line2D([0], [0], color='black', linestyle='dashed', linewidth=2, label='With systematics')
+                ]
+
+                # Create the two legends. Add the first legend to the axes so that the second does not overwrite it.
+                legend1 = plt.legend(handles=color_handles, loc='upper left', title="Threshold")
+                plt.gca().add_artist(legend1)
+                plt.legend(handles=linestyle_handles, loc='lower left', title="Systematics")
                         
                 cbar = plt.colorbar(heatmap, ticks=np.linspace(vmin, vmax, 11))
-                cbar.set_label(r'$ \Delta \chi^2 $', fontsize=15)
-                plt.xlabel(r'$m_a$ [neV]', fontsize=15)
-                plt.ylabel(r'$g_{a\gamma}$ [GeV$^{-1}$]', fontsize=15)
+                cbar.set_label(r'$ \Delta \chi^2 $')
+                plt.xlabel(r'$m_a$ [neV]')
+                plt.ylabel(r'$g_{a\gamma}$ [GeV$^{-1}$]')
                 if filter_label == "No_Filtering":
-                    plt.title(f'{source_name} | No filtering $ \Delta \chi^2 $ Heatmap', fontsize=15)
+                    plt.title(f'{source_name} | No filtering $ \Delta \chi^2 $ Heatmap')
                 elif filter_label == "week":
-                    plt.title(f'{source_name} | Weekly filter $ \Delta \chi^2 $ Heatmap', fontsize=15)
+                    plt.title(f'{source_name} | Weekly filter $ \Delta \chi^2 $ Heatmap')
                 elif filter_label == "month":
-                    plt.title(f'{source_name} | Monthly filter $ \Delta \chi^2 $ Heatmap', fontsize=15)
+                    plt.title(f'{source_name} | Monthly filter $ \Delta \chi^2 $ Heatmap')
                 elif filter_label == "snr_3":
-                    plt.title(f'{source_name} | SNR 3 filter $ \Delta \chi^2 $ Heatmap', fontsize=15)
+                    plt.title(f'{source_name} | SNR 3 filter $ \Delta \chi^2 $ Heatmap')
                 elif filter_label == "snr_5":
-                    plt.title(f'{source_name} | SNR 5 filter $ \Delta \chi^2 $ Heatmap', fontsize=15)
+                    plt.title(f'{source_name} | SNR 5 filter $ \Delta \chi^2 $ Heatmap')
                 elif filter_label == "snr_10":
-                    plt.title(f'{source_name} | SNR 10 filter $ \Delta \chi^2 $ Heatmap', fontsize=15)
+                    plt.title(f'{source_name} | SNR 10 filter $ \Delta \chi^2 $ Heatmap')
                 plt.xscale('log')
                 plt.yscale('log')
                 ax = plt.gca()
                 ax.xaxis.set_major_formatter(ticker.FormatStrFormatter("%g"))
                 ax.set_xlim(0.3, 10)
-                plt.xticks(fontsize=15)
-                plt.yticks(fontsize=15)
+                #plt.xticks(fontsize=15)
+                #plt.yticks(fontsize=15)
                 plt.tight_layout()
                 
                 # Save the current figure as a PNG file.
@@ -355,16 +437,16 @@ def plot_mean_delta_chi2_heatmap_nosys_base(all_results,
         if no_filtering_grid is not None:
             # 1. Legend for threshold (color) mapping:
             color_handles = [
-                Line2D([0], [0], color='red', linestyle='-', linewidth=2, label='> 6.2'),
-                Line2D([0], [0], color='lime', linestyle='-', linewidth=2, label='< -6.2'),
+                Line2D([0], [0], color='red', linestyle='-', linewidth=2, label='\> 6.2)'),
+                Line2D([0], [0], color='lime', linestyle='-', linewidth=2, label='\< -6.2'),
                 # For "No filtering" the color is white. Use a marker with a black edge to make it visible.
                 Line2D([0], [0], marker='s', markersize=8, markerfacecolor='white', 
                     markeredgecolor='black', linestyle='-', linewidth=2, label='No filtering (white)')
             ]
         else:
             color_handles = [
-                Line2D([0], [0], color='red', linestyle='-', linewidth=2, label='> 6.2'),
-                Line2D([0], [0], color='lime', linestyle='-', linewidth=2, label='< -6.2')
+                Line2D([0], [0], color='red', linestyle='-', linewidth=2, label='\> 6.2'),
+                Line2D([0], [0], color='lime', linestyle='-', linewidth=2, label='\< -6.2')
             ]
 
 
@@ -392,26 +474,26 @@ def plot_mean_delta_chi2_heatmap_nosys_base(all_results,
         plt.errorbar(10**data['x1']/ 1e-9, 10**data['y1'], fmt='w-')#, zorder=-10)
         '''
         cbar = plt.colorbar(heatmap, ticks=np.linspace(vmin, vmax, 11))
-        cbar.set_label(r'$\sum \Delta \chi^2$', fontsize=15)
-        plt.xlabel(r'$m_a$ [neV]', fontsize=15)
-        plt.ylabel(r'$g_{a\gamma}$ [GeV$^{-1}$]', fontsize=15)
+        cbar.set_label(r'$\sum \Delta \chi^2$')
+        plt.xlabel(r'$m_a$ [neV]')
+        plt.ylabel(r'$g_{a\gamma}$ [GeV$^{-1}$]')
         #plt.title(f'Summed $\Delta \chi^2$ Heatmap for {filter_label}', fontsize=15)
         if filter_label == "No_Filtering":
-            plt.title(f'Summed $\Delta \chi^2$ Heatmap for No filtering', fontsize=15)
+            plt.title(f'Summed $\Delta \chi^2$ Heatmap for No filtering')
         elif filter_label == "week":
-            plt.title(f'Summed $\Delta \chi^2$ Heatmap for Weekly filter', fontsize=15)
+            plt.title(f'Summed $\Delta \chi^2$ Heatmap for Weekly filter')
         elif filter_label == "month":
-            plt.title(f'Summed $\Delta \chi^2$ Heatmap for Monthly filter', fontsize=15)
+            plt.title(f'Summed $\Delta \chi^2$ Heatmap for Monthly filter')
         elif filter_label == "snr_3":
-            plt.title(f'Summed $\Delta \chi^2$ Heatmap for| SNR 3 filter', fontsize=15)
+            plt.title(f'Summed $\Delta \chi^2$ Heatmap for| SNR 3 filter')
         elif filter_label == "snr_5":
-            plt.title(f'Summed $\Delta \chi^2$ Heatmap for SNR 5 filter', fontsize=15)
+            plt.title(f'Summed $\Delta \chi^2$ Heatmap for SNR 5 filter')
         elif filter_label == "snr_10":
-            plt.title(f'Summed $\Delta \chi^2$ Heatmap for SNR 10 filter', fontsize=15)
+            plt.title(f'Summed $\Delta \chi^2$ Heatmap for SNR 10 filter')
         plt.xscale('log')
         plt.yscale('log')
-        plt.xticks(fontsize=15)
-        plt.yticks(fontsize=15)
+        #plt.xticks(fontsize=15)
+        #plt.yticks(fontsize=15)
         plt.gca().xaxis.set_major_formatter(ticker.FormatStrFormatter("%g"))
         plt.xlim(0.3, 6)
         plt.tight_layout()
@@ -626,12 +708,12 @@ with open("snr_new0_no_sys_error.pkl", "rb") as file:
 
 no_filtering_sources = list(all_results_none.keys())
 
-plot_individual_delta_chi2_heatmap_with_pdf(all_results_none, no_filtering_sources, None, "nosys", filtering_methods="No_Filtering", pdf_filename="NEW_indv_heatmaps_no_filter_logpar_no_sys_error.pdf")
-plot_individual_delta_chi2_heatmap_with_pdf(all_results_lin, no_filtering_sources, None, "nosys", filtering_methods="week", pdf_filename="NEW_indv_heatmaps_week_logpar_no_sys_error.pdf")
-plot_individual_delta_chi2_heatmap_with_pdf(all_results_lin, no_filtering_sources, None, "nosys", filtering_methods="month", pdf_filename="NEW_indv_heatmaps_month_logpar_no_sys_error.pdf")
-plot_individual_delta_chi2_heatmap_with_pdf(all_results_snr, no_filtering_sources, None, "nosys", filtering_methods="snr_3", pdf_filename="NEW_indv_heatmaps_snr3_logpar_no_sys_error.pdf")
-plot_individual_delta_chi2_heatmap_with_pdf(all_results_snr, no_filtering_sources, None, "nosys", filtering_methods="snr_5", pdf_filename="NEW_indv_heatmaps_snr5_logpar_no_sys_error.pdf")
-plot_individual_delta_chi2_heatmap_with_pdf(all_results_snr, no_filtering_sources, None, "nosys", filtering_methods="snr_10", pdf_filename="NEW_indv_heatmaps_snr10_logpar_no_sys_error.pdf")
+plot_individual_delta_chi2_heatmap_with_pdf(all_results_none, no_filtering_sources, all_results_none_sys, "nosys", filtering_methods="No_Filtering", pdf_filename="NEW_indv_heatmaps_no_filter_logpar_no_sys_error.pdf")
+plot_individual_delta_chi2_heatmap_with_pdf(all_results_lin, no_filtering_sources, all_results_lin_sys, "nosys", filtering_methods="week", pdf_filename="NEW_indv_heatmaps_week_logpar_no_sys_error.pdf")
+plot_individual_delta_chi2_heatmap_with_pdf(all_results_lin, no_filtering_sources, all_results_lin_sys, "nosys", filtering_methods="month", pdf_filename="NEW_indv_heatmaps_month_logpar_no_sys_error.pdf")
+plot_individual_delta_chi2_heatmap_with_pdf(all_results_snr, no_filtering_sources, all_results_snr_sys, "nosys", filtering_methods="snr_3", pdf_filename="NEW_indv_heatmaps_snr3_logpar_no_sys_error.pdf")
+plot_individual_delta_chi2_heatmap_with_pdf(all_results_snr, no_filtering_sources, all_results_snr_sys, "nosys", filtering_methods="snr_5", pdf_filename="NEW_indv_heatmaps_snr5_logpar_no_sys_error.pdf")
+plot_individual_delta_chi2_heatmap_with_pdf(all_results_snr, no_filtering_sources, all_results_snr_sys, "nosys", filtering_methods="snr_10", pdf_filename="NEW_indv_heatmaps_snr10_logpar_no_sys_error.pdf")
 
 print('Plotting summed chi-squared heatmap!') # e.g. ["No_Filtering"] or sometimes multiple sources
 
