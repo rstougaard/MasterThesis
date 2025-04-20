@@ -6,6 +6,11 @@ from matplotlib.lines import Line2D
 import numpy as np
 from matplotlib.backends.backend_pdf import PdfPages
 
+plt.rcParams["text.usetex"]     = True
+plt.rcParams["font.family"]    = "serif"
+plt.rcParams["font.serif"]     = ["Computer Modern Roman"]
+plt.rcParams["mathtext.fontset"] = "cm"
+
 path_to_save_heatmap_m_g = "./fit_results/heatmaps_m_g/"
 path_to_save_heatmap_Ec_p0 = "./fit_results/heatmaps_Ec_p0/"
 
@@ -169,8 +174,7 @@ def plot_individual_delta_chi2_heatmap_with_pdf(all_results, dataset_labels, sys
                 boundaries = np.linspace(vmin, vmax, num_colors + 1)
                 cmap = plt.get_cmap('gnuplot2', num_colors)
                 norm = mcolors.BoundaryNorm(boundaries=boundaries, ncolors=num_colors, clip=True)
-                plt.rcParams["font.family"] = "serif"
-                plt.rcParams["mathtext.fontset"] = "cm"
+                
                 # Create the figure.
                 fig = plt.figure(figsize=(10, 6))
                 heatmap = plt.pcolormesh(ma_mesh / 1e-9, g_mesh, mean_delta_chi2_grid,
@@ -198,7 +202,7 @@ def plot_individual_delta_chi2_heatmap_with_pdf(all_results, dataset_labels, sys
                 cbar.set_label(r'$ \Delta \chi^2 $', fontsize=15)
                 plt.xlabel(r'$m_a$ [neV]', fontsize=15)
                 plt.ylabel(r'$g_{a\gamma}$ [GeV$^{-1}$]', fontsize=15)
-                plt.title(f'{source_name} | {filter_label} Δχ² Heatmap in ($m_a$, $g_{{a\gamma}}$) Space', fontsize=15)
+                plt.title(fr'{source_name} | {filter_label} $ \Delta \chi^2 $ Heatmap', fontsize=15)
                 plt.xscale('log')
                 plt.yscale('log')
                 ax = plt.gca()
@@ -380,7 +384,7 @@ def plot_mean_delta_chi2_heatmap_nosys_base(all_results,
         cbar.set_label(r'$\sum \Delta \chi^2$', fontsize=15)
         plt.xlabel(r'$m_a$ [neV]', fontsize=15)
         plt.ylabel(r'$g_{a\gamma}$ [GeV$^{-1}$]', fontsize=15)
-        plt.title(f'Mean $\Delta \chi^2$ Heatmap for {filter_label}', fontsize=15)
+        plt.title(f'Summed $\Delta \chi^2$ Heatmap for {filter_label}', fontsize=15)
         plt.xscale('log')
         plt.yscale('log')
         plt.xticks(fontsize=15)
@@ -599,12 +603,12 @@ with open("snr_new0_no_sys_error.pkl", "rb") as file:
 
 no_filtering_sources = list(all_results_none.keys())
 
-#plot_individual_delta_chi2_heatmap_with_pdf(all_results_none, no_filtering_sources, None, "nosys", filtering_methods="No_Filtering", pdf_filename="NEW_indv_heatmaps_no_filter_logpar_no_sys_error.pdf")
-#plot_individual_delta_chi2_heatmap_with_pdf(all_results_lin, no_filtering_sources, None, "nosys", filtering_methods="week", pdf_filename="NEW_indv_heatmaps_week_logpar_no_sys_error.pdf")
-#plot_individual_delta_chi2_heatmap_with_pdf(all_results_lin, no_filtering_sources, None, "nosys", filtering_methods="month", pdf_filename="NEW_indv_heatmaps_month_logpar_no_sys_error.pdf")
-#plot_individual_delta_chi2_heatmap_with_pdf(all_results_snr, no_filtering_sources, None, "nosys", filtering_methods="snr_3", pdf_filename="NEW_indv_heatmaps_snr3_logpar_no_sys_error.pdf")
-#plot_individual_delta_chi2_heatmap_with_pdf(all_results_snr, no_filtering_sources, None, "nosys", filtering_methods="snr_5", pdf_filename="NEW_indv_heatmaps_snr5_logpar_no_sys_error.pdf")
-#plot_individual_delta_chi2_heatmap_with_pdf(all_results_snr, no_filtering_sources, None, "nosys", filtering_methods="snr_10", pdf_filename="NEW_indv_heatmaps_snr10_logpar_no_sys_error.pdf")
+plot_individual_delta_chi2_heatmap_with_pdf(all_results_none, no_filtering_sources, None, "nosys", filtering_methods="No_Filtering", pdf_filename="NEW_indv_heatmaps_no_filter_logpar_no_sys_error.pdf")
+plot_individual_delta_chi2_heatmap_with_pdf(all_results_lin, no_filtering_sources, None, "nosys", filtering_methods="week", pdf_filename="NEW_indv_heatmaps_week_logpar_no_sys_error.pdf")
+plot_individual_delta_chi2_heatmap_with_pdf(all_results_lin, no_filtering_sources, None, "nosys", filtering_methods="month", pdf_filename="NEW_indv_heatmaps_month_logpar_no_sys_error.pdf")
+plot_individual_delta_chi2_heatmap_with_pdf(all_results_snr, no_filtering_sources, None, "nosys", filtering_methods="snr_3", pdf_filename="NEW_indv_heatmaps_snr3_logpar_no_sys_error.pdf")
+plot_individual_delta_chi2_heatmap_with_pdf(all_results_snr, no_filtering_sources, None, "nosys", filtering_methods="snr_5", pdf_filename="NEW_indv_heatmaps_snr5_logpar_no_sys_error.pdf")
+plot_individual_delta_chi2_heatmap_with_pdf(all_results_snr, no_filtering_sources, None, "nosys", filtering_methods="snr_10", pdf_filename="NEW_indv_heatmaps_snr10_logpar_no_sys_error.pdf")
 
 print('Plotting summed chi-squared heatmap!') # e.g. ["No_Filtering"] or sometimes multiple sources
 
