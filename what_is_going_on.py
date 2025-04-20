@@ -181,17 +181,17 @@ def plot_individual_delta_chi2_heatmap_with_pdf(all_results, dataset_labels, sys
                     ec_masked=ec_masked,
                     remove_source_label=None
                 )
-        if (systematic_results != None):
-            for source_name, source_data in systematic_results.items():
-                for filter_label in filtering_methods:
-                    mean_systematic_results = compute_mean_delta_chi2_grid(
-                            all_results={source_name: source_data},  
-                            dataset_labels=dataset_labels,
-                            filter_label=filter_label,
-                            p0_masked=p0_masked,
-                            ec_masked=ec_masked,
-                            remove_source_label=None
-                        )
+            if (systematic_results != None):
+                for source_name, source_data in systematic_results.items():
+                    for filter_label in filtering_methods:
+                        mean_systematic_results = compute_mean_delta_chi2_grid(
+                                all_results={source_name: source_data},  
+                                dataset_labels=dataset_labels,
+                                filter_label=filter_label,
+                                p0_masked=p0_masked,
+                                ec_masked=ec_masked,
+                                remove_source_label=None
+                            )
                                 
                 print(f"Source: {source_name} | Filter: {filter_label} | min: {np.min(mean_delta_chi2_grid)}, max: {np.max(mean_delta_chi2_grid)}")
                 
