@@ -650,9 +650,27 @@ no_filtering_grid = compute_mean_delta_chi2_grid(
 plot_mean_delta_chi2_heatmap_sys_base(all_results_lin, all_results_lin_sys, list(all_results_lin.keys()), "base_sys_", no_filtering_grid=no_filtering_grid_sys,no_filtering_grid_other=None, remove_source_label=["4FGL J1242.9+7315", "4FGL J0912.5+1556", "4FGL J1516.8+2918"])
 plot_mean_delta_chi2_heatmap_nosys_base(all_results_lin, all_results_lin_sys, list(all_results_lin.keys()), "base_nosys_", no_filtering_grid=no_filtering_grid, no_filtering_grid_other=None, remove_source_label=["4FGL J1242.9+7315", "4FGL J0912.5+1556", "4FGL J1516.8+2918"])
 
+# summed heatmaps for snr
+no_filtering_grid_sys = compute_mean_delta_chi2_grid(
+    all_results=all_results_none_sys,
+    dataset_labels=no_filtering_sources_sys,
+    filter_label="No_Filtering",
+    p0_masked=p0_masked,
+    ec_masked=ec_masked,
+    remove_source_label = ["4FGL J1242.9+7315", "4FGL J1516.8+2918"]
+) 
 
-#plot_mean_delta_chi2_heatmap_nosys_base(all_results_snr, all_results_snr_sys, list(all_results_snr.keys()), "base_nosys_", no_filtering_grid=no_filtering_grid, no_filtering_grid_other=None,remove_source_label="4FGL J1242.9+7315")
-#plot_mean_delta_chi2_heatmap_sys_base(all_results_snr, all_results_snr_sys, list(all_results_snr.keys()), "base_sys_", no_filtering_grid=no_filtering_grid_sys, no_filtering_grid_other=None, remove_source_label="4FGL J1242.9+7315")
+no_filtering_grid = compute_mean_delta_chi2_grid(
+    all_results=all_results_none,
+    dataset_labels=no_filtering_sources,
+    filter_label="No_Filtering",
+    p0_masked=p0_masked,
+    ec_masked=ec_masked,
+    remove_source_label = ["4FGL J1242.9+7315", "4FGL J1516.8+2918"]
+
+) 
+plot_mean_delta_chi2_heatmap_nosys_base(all_results_snr, all_results_snr_sys, list(all_results_snr.keys()), "base_nosys_", no_filtering_grid=no_filtering_grid, no_filtering_grid_other=None,remove_source_label=["4FGL J1242.9+7315", "4FGL J1516.8+2918"])
+plot_mean_delta_chi2_heatmap_sys_base(all_results_snr, all_results_snr_sys, list(all_results_snr.keys()), "base_sys_", no_filtering_grid=no_filtering_grid_sys, no_filtering_grid_other=None, remove_source_label=["4FGL J1242.9+7315", "4FGL J1516.8+2918"])
 
 
 '''
