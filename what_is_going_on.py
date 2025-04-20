@@ -352,7 +352,7 @@ def plot_mean_delta_chi2_heatmap_nosys_base(all_results,
 
         #data = np.load('fermi3_10_contours_b5.2_eta0.67_rescale.npz')
         #plt.errorbar(10**data['x1'][data['y1'] < 1e-11]/ 1e-9, 10**data['y1'][data['y1'] < 1e-11], color='b', ls=(0,(4,2,1,1,1,2)), alpha=1)
-
+        '''
         ##### plot contours for 0 level of syst uncertainty ##################
         data = np.load('fermi0_0_contours_ebl_6.2_scan12_jointfit.npz')
         plt.errorbar(10**data['x'][data['y'] < 1e-11]/ 1e-9, 1.*10**data['y'][data['y'] < 1e-11], fmt='w:')
@@ -361,7 +361,7 @@ def plot_mean_delta_chi2_heatmap_nosys_base(all_results,
         data = np.load('fermi3_10_contours_06032025.npz')
         print(10**data['x1']/ 1e-9, 10**data['y1'])
         plt.errorbar(10**data['x1']/ 1e-9, 10**data['y1'], fmt='w-')#, zorder=-10)
-
+        '''
         cbar = plt.colorbar(heatmap, ticks=np.linspace(vmin, vmax, 11))
         cbar.set_label(r'$\sum \Delta \chi^2$', fontsize=15)
         plt.xlabel(r'$m_a$ [neV]', fontsize=15)
@@ -517,6 +517,7 @@ def plot_mean_delta_chi2_heatmap_sys_base(
         #plt.errorbar(10**data['x1'][data['y1'] < 1e-11]/ 1e-9, 10**data['y1'][data['y1'] < 1e-11], color='b', ls=(0,(4,2,1,1,1,2)), alpha=1)
 
         ##### plot contours for 0 level of syst uncertainty ##################
+        '''
         data = np.load('fermi0_0_contours_ebl_6.2_scan12_jointfit.npz')
         plt.errorbar(10**data['x'][data['y'] < 1e-11]/ 1e-9, 1.*10**data['y'][data['y'] < 1e-11], fmt='w:')
         plt.errorbar(10**data['x1'][data['y1'] < 1e-11]/ 1e-9, 1.*10**data['y1'][data['y1'] < 1e-11], fmt='w:')
@@ -524,7 +525,7 @@ def plot_mean_delta_chi2_heatmap_sys_base(
         data = np.load('fermi3_10_contours_06032025.npz')
         print(10**data['x1']/ 1e-9, 10**data['y1'])
         plt.errorbar(10**data['x1']/ 1e-9, 10**data['y1'], fmt='w-')#, zorder=-10)
-
+        '''
         cbar = plt.colorbar(heatmap, ticks=np.linspace(vmin, vmax, 11))
         cbar.set_label(r'$\sum \Delta \chi^2$', fontsize=15)
         plt.xlabel(r'$m_a$ [neV]', fontsize=15)
@@ -544,26 +545,46 @@ def plot_mean_delta_chi2_heatmap_sys_base(
 
 ################################################################################################# WITH systematic errors #######################################################################################
 
-with open("k_none_new0_sys_error.pkl", "rb") as file:
+with open("none_new0_sys_error.pkl", "rb") as file:
     all_results_none_sys = pickle.load(file)
 
-with open("k_lin_new0_sys_error.pkl", "rb") as file:
+with open("lin_new0_sys_error.pkl", "rb") as file:
     all_results_lin_sys = pickle.load(file)
 
-with open("k_snr_new0_sys_error.pkl", "rb") as file:
+with open("snr_new0_sys_error.pkl", "rb") as file:
     all_results_snr_sys = pickle.load(file)
 
 no_filtering_sources_sys = list(all_results_none_sys.keys()) 
 
 plot_individual_delta_chi2_heatmap_with_pdf(all_results_none_sys, no_filtering_sources_sys, None, "sys", filtering_methods="No_Filtering", pdf_filename="NEW_indv_heatmaps_no_filter_logpar_sys_error.pdf")
-#plot_individual_delta_chi2_heatmap_with_pdf(all_results_lin_sys, no_filtering_sources_sys, None, "sys", filtering_methods="week", pdf_filename="NEW_indv_heatmaps_week_logpar_sys_error.pdf")
-#plot_individual_delta_chi2_heatmap_with_pdf(all_results_lin_sys, no_filtering_sources_sys, None, "sys", filtering_methods="month", pdf_filename="NEW_indv_heatmaps_month_logpar_sys_error.pdf")
+plot_individual_delta_chi2_heatmap_with_pdf(all_results_lin_sys, no_filtering_sources_sys, None, "sys", filtering_methods="week", pdf_filename="NEW_indv_heatmaps_week_logpar_sys_error.pdf")
+plot_individual_delta_chi2_heatmap_with_pdf(all_results_lin_sys, no_filtering_sources_sys, None, "sys", filtering_methods="month", pdf_filename="NEW_indv_heatmaps_month_logpar_sys_error.pdf")
 
-#plot_individual_delta_chi2_heatmap_with_pdf(all_results_snr_sys, no_filtering_sources_sys, None, "sys", filtering_methods="snr_3", pdf_filename="NEW_indv_heatmaps_snr3_logpar_sys_error.pdf")
-#plot_individual_delta_chi2_heatmap_with_pdf(all_results_snr_sys, no_filtering_sources_sys, None, "sys", filtering_methods="snr_5", pdf_filename="NEW_indv_heatmaps_snr5_logpar_sys_error.pdf")
-#plot_individual_delta_chi2_heatmap_with_pdf(all_results_snr_sys, no_filtering_sources_sys, None, "sys", filtering_methods="snr_10", pdf_filename="NEW_indv_heatmaps_snr10_logpar_sys_error.pdf")
+plot_individual_delta_chi2_heatmap_with_pdf(all_results_snr_sys, no_filtering_sources_sys, None, "sys", filtering_methods="snr_3", pdf_filename="NEW_indv_heatmaps_snr3_logpar_sys_error.pdf")
+plot_individual_delta_chi2_heatmap_with_pdf(all_results_snr_sys, no_filtering_sources_sys, None, "sys", filtering_methods="snr_5", pdf_filename="NEW_indv_heatmaps_snr5_logpar_sys_error.pdf")
+plot_individual_delta_chi2_heatmap_with_pdf(all_results_snr_sys, no_filtering_sources_sys, None, "sys", filtering_methods="snr_10", pdf_filename="NEW_indv_heatmaps_snr10_logpar_sys_error.pdf")
 
-print('Plotting mean chi-squared heatmap!')
+################################################################################################# NO systematic errors #######################################################################################
+
+with open("none_new0_no_sys_error.pkl", "rb") as file:
+    all_results_none = pickle.load(file)
+
+with open("lin_new0_no_sys_error.pkl", "rb") as file:
+    all_results_lin = pickle.load(file)
+
+with open("snr_new0_no_sys_error.pkl", "rb") as file:
+    all_results_snr = pickle.load(file)
+
+no_filtering_sources = list(all_results_none.keys())
+
+plot_individual_delta_chi2_heatmap_with_pdf(all_results_none, no_filtering_sources, None, "nosys", filtering_methods="No_Filtering", pdf_filename="NEW_indv_heatmaps_no_filter_logpar_no_sys_error.pdf")
+plot_individual_delta_chi2_heatmap_with_pdf(all_results_lin, no_filtering_sources, None, "nosys", filtering_methods="week", pdf_filename="NEW_indv_heatmaps_week_logpar_no_sys_error.pdf")
+plot_individual_delta_chi2_heatmap_with_pdf(all_results_lin, no_filtering_sources, None, "nosys", filtering_methods="month", pdf_filename="NEW_indv_heatmaps_month_logpar_no_sys_error.pdf")
+plot_individual_delta_chi2_heatmap_with_pdf(all_results_snr, no_filtering_sources, None, "nosys", filtering_methods="snr_3", pdf_filename="NEW_indv_heatmaps_snr3_logpar_no_sys_error.pdf")
+plot_individual_delta_chi2_heatmap_with_pdf(all_results_snr, no_filtering_sources, None, "nosys", filtering_methods="snr_5", pdf_filename="NEW_indv_heatmaps_snr5_logpar_no_sys_error.pdf")
+plot_individual_delta_chi2_heatmap_with_pdf(all_results_snr, no_filtering_sources, None, "nosys", filtering_methods="snr_10", pdf_filename="NEW_indv_heatmaps_snr10_logpar_no_sys_error.pdf")
+
+print('Plotting summed chi-squared heatmap!') # e.g. ["No_Filtering"] or sometimes multiple sources
 
 no_filtering_grid_sys = compute_mean_delta_chi2_grid(
     all_results=all_results_none_sys,
@@ -574,29 +595,6 @@ no_filtering_grid_sys = compute_mean_delta_chi2_grid(
     remove_source_label = "4FGL J1242.9+7315"
 ) 
 
-
-################################################################################################# NO systematic errors #######################################################################################
-
-with open("k_none_new0_no_sys_error.pkl", "rb") as file:
-    all_results_none = pickle.load(file)
-
-with open("k_lin_new0_no_sys_error.pkl", "rb") as file:
-    all_results_lin = pickle.load(file)
-
-with open("k_snr_new0_no_sys_error.pkl", "rb") as file:
-    all_results_snr = pickle.load(file)
-
-no_filtering_sources = list(all_results_none.keys())
-
-plot_individual_delta_chi2_heatmap_with_pdf(all_results_none, no_filtering_sources, None, "nosys", filtering_methods="No_Filtering", pdf_filename="NEW_indv_heatmaps_no_filter_logpar_no_sys_error.pdf")
-#plot_individual_delta_chi2_heatmap_with_pdf(all_results_lin, no_filtering_sources, None, "nosys", filtering_methods="week", pdf_filename="NEW_indv_heatmaps_week_logpar_no_sys_error.pdf")
-#plot_individual_delta_chi2_heatmap_with_pdf(all_results_lin, no_filtering_sources, None, "nosys", filtering_methods="month", pdf_filename="NEW_indv_heatmaps_month_logpar_no_sys_error.pdf")
-#plot_individual_delta_chi2_heatmap_with_pdf(all_results_snr, no_filtering_sources, None, "nosys", filtering_methods="snr_3", pdf_filename="NEW_indv_heatmaps_snr3_logpar_no_sys_error.pdf")
-#plot_individual_delta_chi2_heatmap_with_pdf(all_results_snr, no_filtering_sources, None, "nosys", filtering_methods="snr_5", pdf_filename="NEW_indv_heatmaps_snr5_logpar_no_sys_error.pdf")
-#plot_individual_delta_chi2_heatmap_with_pdf(all_results_snr, no_filtering_sources, None, "nosys", filtering_methods="snr_10", pdf_filename="NEW_indv_heatmaps_snr10_logpar_no_sys_error.pdf")
-
-print('Plotting mean chi-squared heatmap!') # e.g. ["No_Filtering"] or sometimes multiple sources
-
 no_filtering_grid = compute_mean_delta_chi2_grid(
     all_results=all_results_none,
     dataset_labels=no_filtering_sources,
@@ -606,15 +604,21 @@ no_filtering_grid = compute_mean_delta_chi2_grid(
     remove_source_label = "4FGL J1242.9+7315"
 
 ) 
-#Testing on sys base plotting function.. changes has to be done for the nosys plotting function 
-
+# Summed heatmaps for no filter
 plot_mean_delta_chi2_heatmap_sys_base(None, all_results_none_sys, list(all_results_none.keys()), "base_sys_", no_filtering_grid_other=None, remove_source_label="4FGL J1242.9+7315")
+plot_mean_delta_chi2_heatmap_nosys_base(all_results_none, all_results_none_sys, list(all_results_none.keys()), "base_nosys_",no_filtering_grid_other=None,  remove_source_label="4FGL J1242.9+7315")
+
+# Summed heatmaps for 
+
 #plot_mean_delta_chi2_heatmap_sys_base(all_results_lin, all_results_lin_sys, list(all_results_lin.keys()), "base_sys_", no_filtering_grid=no_filtering_grid_sys,no_filtering_grid_other=None, remove_source_label="4FGL J1242.9+7315")
 #plot_mean_delta_chi2_heatmap_sys_base(all_results_snr, all_results_snr_sys, list(all_results_snr.keys()), "base_sys_", no_filtering_grid=no_filtering_grid_sys, no_filtering_grid_other=None, remove_source_label="4FGL J1242.9+7315")
 
-plot_mean_delta_chi2_heatmap_nosys_base(all_results_none, all_results_none_sys, list(all_results_none.keys()), "base_nosys_",no_filtering_grid_other=None,  remove_source_label="4FGL J1242.9+7315")
+
 #plot_mean_delta_chi2_heatmap_nosys_base(all_results_lin, all_results_lin_sys, list(all_results_lin.keys()), "base_nosys_", no_filtering_grid=no_filtering_grid, no_filtering_grid_other=None, remove_source_label="4FGL J1242.9+7315")
 #plot_mean_delta_chi2_heatmap_nosys_base(all_results_snr, all_results_snr_sys, list(all_results_snr.keys()), "base_nosys_", no_filtering_grid=no_filtering_grid, no_filtering_grid_other=None,remove_source_label="4FGL J1242.9+7315")
+
+
+
 '''
 plot_mean_delta_chi2_heatmap_nosys_base(all_results_none, all_results_none_sys, list(all_results_none.keys()), "base_nosys_",  remove_source_label=None)
 plot_mean_delta_chi2_heatmap_nosys_base(all_results_lin, all_results_lin_sys, list(all_results_lin.keys()), "base_nosys_", no_filtering_grid=no_filtering_grid, no_filtering_grid_other=no_filtering_grid_sys, remove_source_label=None)
