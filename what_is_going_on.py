@@ -12,30 +12,30 @@ plt.rcParams["font.serif"]     = ["Computer Modern Roman"]
 plt.rcParams["mathtext.fontset"] = "cm"
 plt.rcParams.update({
     # Base font size for text in figures
-    "font.size":          20,   # controls default text size (e.g. axis labels)
+    "font.size":          22,   # controls default text size (e.g. axis labels)
     # Legend
-    "legend.fontsize":    20,   # default legend text size
+    "legend.fontsize":    22,   # default legend text size
     # Title and label sizes (override font.size if you like)
-    "axes.titlesize":     20,
-    "axes.labelsize":     20,
+    "axes.titlesize":     22,
+    "axes.labelsize":     22,
     # Tick labels
-    "xtick.labelsize":    20,
-    "ytick.labelsize":    20,
+    "xtick.labelsize":    22,
+    "ytick.labelsize":    22,
 })
 plt.rcParams.update({
     # tick‐label font size
-    "xtick.labelsize":   18,
-    "ytick.labelsize":   18,
+    "xtick.labelsize":   20,
+    "ytick.labelsize":   20,
     # tick direction and which sides
     "xtick.direction":   "in",
     "ytick.direction":   "in",
     "xtick.top":         True,
     "ytick.right":       True,
     # tick length (points)
-    "xtick.major.size":  7,
-    "ytick.major.size":  7,
-    "xtick.minor.size":  4,
-    "ytick.minor.size":  4,
+    "xtick.major.size":  8,
+    "ytick.major.size":  8,
+    "xtick.minor.size":  5,
+    "ytick.minor.size":  5,
     # tick width (points)
     "xtick.major.width": 1.2,
     "ytick.major.width": 1.2,
@@ -271,9 +271,9 @@ def plot_individual_delta_chi2_heatmap_with_pdf(all_results, dataset_labels, sys
                 ]
 
                 # Create the two legends. Add the first legend to the axes so that the second does not overwrite it.
-                legend1 = plt.legend(handles=color_handles, loc='upper left', title="Threshold")
-                plt.gca().add_artist(legend1)
-                plt.legend(handles=linestyle_handles, loc='lower left', title="Systematics")
+                #legend1 = plt.legend(handles=color_handles, loc='upper left', title="Threshold")
+                #plt.gca().add_artist(legend1)
+                #plt.legend(handles=linestyle_handles, loc='lower left', title="Systematics")
                         
                 cbar = plt.colorbar(heatmap, ticks=np.linspace(vmin, vmax, 11))
                 cbar.set_label(r'$ \Delta \chi^2 $')
@@ -296,8 +296,14 @@ def plot_individual_delta_chi2_heatmap_with_pdf(all_results, dataset_labels, sys
                 ax = plt.gca()
                 #ax.xaxis.set_major_formatter(ticker.FormatStrFormatter("%g"))
                 ax.set_xlim(0.3, 10)
-                #plt.xticks(fontsize=15)
-                #plt.yticks(fontsize=15)
+                plt.tick_params(
+                axis='both',
+                which='both',
+                color='white',       # tick *lines*
+                labelcolor='black',  # tic        # if you want to override tick‐label size here
+                direction='in',
+                top=True, right=True
+                )
                 plt.tight_layout()
                 
                 # Save the current figure as a PNG file.
@@ -494,11 +500,10 @@ def plot_mean_delta_chi2_heatmap_nosys_base(all_results,
         axis='both',
         which='both',
         color='white',       # tick *lines*
-        labelcolor='black',  # tick *labels*
-        labelsize=14,        # if you want to override tick‐label size here
+        labelcolor='black',        # if you want to override tick‐label size here
         direction='in',
         top=True, right=True
-    )
+        )
         plt.xlim(0.3, 6)
         plt.tight_layout()
         plt.savefig(f'{path_to_save_heatmap_m_g}{png_naming}_{filter_label}_ma_ga.png', dpi=300)
