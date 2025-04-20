@@ -202,7 +202,18 @@ def plot_individual_delta_chi2_heatmap_with_pdf(all_results, dataset_labels, sys
                 cbar.set_label(r'$ \Delta \chi^2 $', fontsize=15)
                 plt.xlabel(r'$m_a$ [neV]', fontsize=15)
                 plt.ylabel(r'$g_{a\gamma}$ [GeV$^{-1}$]', fontsize=15)
-                plt.title(f'{source_name} | {filter_label} $ \Delta \chi^2 $ Heatmap', fontsize=15)
+                if filter_label == "No_Filtering":
+                    plt.title(f'{source_name} | No filtering $ \Delta \chi^2 $ Heatmap', fontsize=15)
+                elif filter_label == "week":
+                    plt.title(f'{source_name} | Weekly filter $ \Delta \chi^2 $ Heatmap', fontsize=15)
+                elif filter_label == "month":
+                    plt.title(f'{source_name} | Monthly filter $ \Delta \chi^2 $ Heatmap', fontsize=15)
+                elif filter_label == "snr_3":
+                    plt.title(f'{source_name} | SNR 3 filter $ \Delta \chi^2 $ Heatmap', fontsize=15)
+                elif filter_label == "snr_5":
+                    plt.title(f'{source_name} | SNR 5 filter $ \Delta \chi^2 $ Heatmap', fontsize=15)
+                elif filter_label == "snr_10":
+                    plt.title(f'{source_name} | SNR 10 filter $ \Delta \chi^2 $ Heatmap', fontsize=15)
                 plt.xscale('log')
                 plt.yscale('log')
                 ax = plt.gca()
@@ -384,7 +395,19 @@ def plot_mean_delta_chi2_heatmap_nosys_base(all_results,
         cbar.set_label(r'$\sum \Delta \chi^2$', fontsize=15)
         plt.xlabel(r'$m_a$ [neV]', fontsize=15)
         plt.ylabel(r'$g_{a\gamma}$ [GeV$^{-1}$]', fontsize=15)
-        plt.title(f'Summed $\Delta \chi^2$ Heatmap for {filter_label}', fontsize=15)
+        #plt.title(f'Summed $\Delta \chi^2$ Heatmap for {filter_label}', fontsize=15)
+        if filter_label == "No_Filtering":
+            plt.title(f'Summed $\Delta \chi^2$ Heatmap for No filtering', fontsize=15)
+        elif filter_label == "week":
+            plt.title(f'Summed $\Delta \chi^2$ Heatmap for Weekly filter', fontsize=15)
+        elif filter_label == "month":
+            plt.title(f'Summed $\Delta \chi^2$ Heatmap for Monthly filter', fontsize=15)
+        elif filter_label == "snr_3":
+            plt.title(f'Summed $\Delta \chi^2$ Heatmap for| SNR 3 filter', fontsize=15)
+        elif filter_label == "snr_5":
+            plt.title(f'Summed $\Delta \chi^2$ Heatmap for SNR 5 filter', fontsize=15)
+        elif filter_label == "snr_10":
+            plt.title(f'Summed $\Delta \chi^2$ Heatmap for SNR 10 filter', fontsize=15)
         plt.xscale('log')
         plt.yscale('log')
         plt.xticks(fontsize=15)
@@ -631,7 +654,7 @@ no_filtering_grid = compute_mean_delta_chi2_grid(
 
 ) 
 # Summed heatmaps for no filter
-plot_mean_delta_chi2_heatmap_sys_base(all_results_none, all_results_none_sys, list(all_results_none.keys()), "base_sys_", no_filtering_grid_other=None, remove_source_label="4FGL J1242.9+7315")
+#plot_mean_delta_chi2_heatmap_sys_base(all_results_none, all_results_none_sys, list(all_results_none.keys()), "base_sys_", no_filtering_grid_other=None, remove_source_label="4FGL J1242.9+7315")
 plot_mean_delta_chi2_heatmap_nosys_base(all_results_none, all_results_none_sys, list(all_results_none.keys()), "base_nosys_",no_filtering_grid_other=None,  remove_source_label="4FGL J1242.9+7315")
 
 # Summed heatmaps for month and week
@@ -653,7 +676,7 @@ no_filtering_grid = compute_mean_delta_chi2_grid(
     remove_source_label = ["4FGL J1242.9+7315", "4FGL J0912.5+1556", "4FGL J1516.8+2918"]
 
 ) 
-plot_mean_delta_chi2_heatmap_sys_base(all_results_lin, all_results_lin_sys, list(all_results_lin.keys()), "base_sys_", no_filtering_grid=no_filtering_grid_sys,no_filtering_grid_other=None, remove_source_label=["4FGL J1242.9+7315", "4FGL J0912.5+1556", "4FGL J1516.8+2918"])
+#plot_mean_delta_chi2_heatmap_sys_base(all_results_lin, all_results_lin_sys, list(all_results_lin.keys()), "base_sys_", no_filtering_grid=no_filtering_grid_sys,no_filtering_grid_other=None, remove_source_label=["4FGL J1242.9+7315", "4FGL J0912.5+1556", "4FGL J1516.8+2918"])
 plot_mean_delta_chi2_heatmap_nosys_base(all_results_lin, all_results_lin_sys, list(all_results_lin.keys()), "base_nosys_", no_filtering_grid=no_filtering_grid, no_filtering_grid_other=None, remove_source_label=["4FGL J1242.9+7315", "4FGL J0912.5+1556", "4FGL J1516.8+2918"])
 
 # summed heatmaps for snr
@@ -676,7 +699,7 @@ no_filtering_grid = compute_mean_delta_chi2_grid(
 
 ) 
 plot_mean_delta_chi2_heatmap_nosys_base(all_results_snr, all_results_snr_sys, list(all_results_snr.keys()), "base_nosys_", no_filtering_grid=no_filtering_grid, no_filtering_grid_other=None,remove_source_label=["4FGL J1242.9+7315", "4FGL J1516.8+2918"])
-plot_mean_delta_chi2_heatmap_sys_base(all_results_snr, all_results_snr_sys, list(all_results_snr.keys()), "base_sys_", no_filtering_grid=no_filtering_grid_sys, no_filtering_grid_other=None, remove_source_label=["4FGL J1242.9+7315", "4FGL J1516.8+2918"])
+#plot_mean_delta_chi2_heatmap_sys_base(all_results_snr, all_results_snr_sys, list(all_results_snr.keys()), "base_sys_", no_filtering_grid=no_filtering_grid_sys, no_filtering_grid_other=None, remove_source_label=["4FGL J1242.9+7315", "4FGL J1516.8+2918"])
 
 
 '''
