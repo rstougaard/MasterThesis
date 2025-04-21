@@ -194,6 +194,7 @@ def simple_plot_fit(dataset_none, fit_results_none, source, png_naming=""):
         i, j = np.where(mask_grid)
         m_val = m_masked[mask_grid]
         g_val = g_masked[mask_grid]
+        print('m, g')
         print(m_val, g_val)
         fitspec[tag] = {
             "base": base_curve,
