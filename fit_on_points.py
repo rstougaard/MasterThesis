@@ -133,20 +133,16 @@ def simple_plot_fit(dataset_dict, fit_results_dict, source):
             }
 
     # target Δχ² only
-    target_delta = -2.299
-    target_mass = 1.1e-9
-    match = None
-    for spec in fitspec.values():
-        if np.isclose(spec["m"], target_mass, atol=1e-3):
-            match = spec
-            #print(f"Exact Δχ² match found: Δχ² = {spec['delta']}")
-            print(f"Exact Δχ² match found: m = {spec['m']}")
-            break
-    if match is None:
-        print("No exact Δχ² match. Finding nearest Δχ²...")
-        match_key = min(fitspec, key=lambda k: abs(fitspec[k]["delta"] - target_delta))
-        match = fitspec[match_key]
-        print(f"Using nearest Δχ²: Δχ² = {match['delta']}")
+    target_mass = 1.1e-9  # eV
+    # filter specs to this mass
+    same_mass = [spec for spec in fitspec.values() 
+                 if np.isclose(spec["m"], target_mass, atol=1e-12)]
+    if not same_mass:
+        raise RuntimeError(f"No fits found at mass {target_mass}")
+    # choose the one with minimal delta
+    match = min(same_mass, key=lambda s: s["delta"])
+    print(f"Selected m={match['m']:.3e}, Δχ²={match['delta']:.3f}")
+
 
     # ensure parameters present
     params_b = match["params_base"]
