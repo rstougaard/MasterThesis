@@ -307,7 +307,7 @@ if source == "4FGL J0617.7-1715":
 '''
 
 # Generate the two figures
-fig_best, fig_worst = simple_plot_fit(datasets, all_results_none, source_name)
+fig_best = simple_plot_fit(datasets, all_results_none, source_name)
 
 
 #print(f"Saved all best/worst fits into {output_pdf}")
