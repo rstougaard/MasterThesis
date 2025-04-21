@@ -97,8 +97,10 @@ ec_masked = ec_all_full[row_start:row_stop+1, col_start:col_stop+1]
 p0_masked = p0_all_full[row_start:row_stop+1, col_start:col_stop+1]
 
 # Also filter the unique arrays.
-m_masked = mass_all_ful[row_start:row_stop+1, col_start:col_stop+1]
-g_masked = g_all_full[row_start:row_stop+1, col_start:col_stop+1]
+#m_masked = mass_all_ful[row_start:row_stop+1, col_start:col_stop+1]
+#g_masked = g_all_full[row_start:row_stop+1, col_start:col_stop+1]
+m_masked = mass_unique[row_start:row_stop+1]
+g_masked = g_unique[col_start:col_stop+1]
 
 
 def find_best_worst_fits(fits):
@@ -190,10 +192,10 @@ def simple_plot_fit(dataset_none, fit_results_none, source, png_naming=""):
         base_curve = logpar_base(x_grid, *fit["Base"]["params"])
         axion_curve = axion_func(x_grid, *fit["Axion"]["params"], p0, ec)
         # find indices in grid
-        mask_grid = np.isclose(p0_masked, p0_best) & np.isclose(ec_masked, ec_best)
+        mask_grid = np.isclose(p0_masked, p0) & np.isclose(ec_masked, ec)
         i, j = np.where(mask_grid)
-        m_val = m_masked[mask_grid]
-        g_val = g_masked[mask_grid]
+        m_val = m_masked[i]
+        g_val = g_masked[j]
         print(m_val, g_val)
         fitspec[tag] = {
             "base": base_curve,
