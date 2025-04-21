@@ -113,6 +113,8 @@ def simple_plot_fit(dataset_dict, fit_results_dict, source):
             bdof = r["fit_result"]["Base"]["dof"]
             achi = r["fit_result"]["Axion"]["chi2"]
             adof = r["fit_result"]["Axion"]["dof"]
+            params_b = r["fit_result"]["Base"]["params"]
+            params_a = r["fit_result"]["Axion"]["params"]
             # grid lookup
             mask_g = np.isclose(_p0, p0v) & np.isclose(_ec, ecv)
             ii, jj = np.where(mask_g)
@@ -123,6 +125,7 @@ def simple_plot_fit(dataset_dict, fit_results_dict, source):
                 "p0": p0v, "ec": ecv, "delta": dchi,
                 "chi2_base": bchi, "dof_base": bdof,
                 "chi2_axion": achi, "dof_axion": adof,
+                "params_base": params_b, "params_axion": params_a,
                 "m": mval, "g": gval
             }
 
@@ -139,14 +142,21 @@ def simple_plot_fit(dataset_dict, fit_results_dict, source):
         match_key = min(fitspec, key=lambda k: abs(fitspec[k]["delta"] - target_delta))
         match = fitspec[match_key]
         print(f"Using nearest Δχ²: Δχ² = {match['delta']}")
-    print(match)
+
+    # ensure parameters present
+    params_b = match.get("params_base")
+    params_a = match.get("params_axion")
+    if params_b is None or params_a is None:
+        raise RuntimeError("Missing fit parameters for Base or Axion in the matched fit.")
+
     # compute model curves
     x_grid = np.logspace(np.log10(x_m.min()), np.log10(x_m.max()), 300)
-    base_c = logpar_base(x_grid, *match.get("params_base"), z)
-    axion_c= axion_mod(x_grid, *match.get("params_axion"), match["p0"], match["ec"], z)
+    base_c = logpar_base(x_grid, *params_b, z)
+    axion_c= axion_mod(x_grid, *params_a, match["p0"], match["ec"], z)
 
     # plotting
-    fig, (ax_top, ax_bot) = plt.subplots(2,1, sharex=True, figsize=(10,8), gridspec_kw={"height_ratios":[3,1]})
+    fig, (ax_top, ax_bot) = plt.subplots(2,1, sharex=True, figsize=(10,8),
+                                          gridspec_kw={"height_ratios":[3,1]})
     ax_top.errorbar(x_m, y_m, yerr=err_m, fmt='o', color='k', capsize=3, label='Data')
     ax_top.plot(x_grid, base_c, color='orange', lw=2, label='Base fit')
     ax_top.plot(x_grid, axion_c, color='green', ls='--', lw=2, label='Axion fit')
@@ -156,20 +166,23 @@ def simple_plot_fit(dataset_dict, fit_results_dict, source):
     ax_top.grid(True, which='both', ls='--')
 
     # residuals
-    resid_b = (y_m - logpar_base(x_m, *match.get("params_base"), z)) / err_m
-    resid_a = (y_m - axion_mod(x_m, *match.get("params_axion"), match["p0"], match["ec"], z)) / err_m
+    resid_b = (y_m - logpar_base(x_m, *params_b, z)) / err_m
+    resid_a = (y_m - axion_mod(x_m, *params_a, match["p0"], match["ec"], z)) / err_m
     ax_bot.errorbar(x_m, resid_b, fmt='s', color='orange', label='Base resid')
     ax_bot.errorbar(x_m, resid_a, fmt='o', color='green', label='Axion resid')
-    for lvl, style in zip([0,1,-1,2,-2], ['-','--','--',':',':']): ax_bot.axhline(lvl, ls=style)
-    ax_bot.set_xscale('log'); ax_bot.set_ylim(-3,3)
-    ax_bot.set_xlabel('Energy [MeV]'); ax_bot.set_ylabel('Norm. Resid.')
+    for lvl, style in zip([0,1,-1,2,-2], ['-','--','--',':',':']):
+        ax_bot.axhline(lvl, ls=style)
+    ax_bot.set_xscale('log')
+    ax_bot.set_ylim(-3,3)
+    ax_bot.set_xlabel('Energy [MeV]')
+    ax_bot.set_ylabel('Norm. Resid.')
     ax_bot.grid(True, ls='--')
 
     # annotation with LaTeX χ²
     textstr = (
-        f"$\chi^2_{{\mathrm{{base}}}}/\mathrm{{dof}} = {match['chi2_base']:.2f}/{match['dof_base']}$\n"
-        f"$\chi^2_{{\mathrm{{axion}}}}/\mathrm{{dof}} = {match['chi2_axion']:.2f}/{match['dof_axion']}$\n"
-        f"$\Delta\chi^2 = {match['delta']:.2f}$\n"
+        f"$\\chi^2_{{\\mathrm{{base}}}}/\\mathrm{{dof}} = {match['chi2_base']:.2f}/{match['dof_base']}$\n"
+        f"$\\chi^2_{{\\mathrm{{axion}}}}/\\mathrm{{dof}} = {match['chi2_axion']:.2f}/{match['dof_axion']}$\n"
+        f"$\\Delta\\chi^2 = {match['delta']:.2f}$\n"
     )
     ax_top.text(0.05, 0.05, textstr,
                 transform=ax_top.transAxes,
