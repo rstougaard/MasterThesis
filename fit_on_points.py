@@ -64,7 +64,8 @@ n_mass = n_total // n_g
 # Reshape the columns for E_c (converted to MeV) and p₀ into a (n_mass, n_g) grid.
 ec_all_full = (axion_data[:, 2] / 1e6).reshape(n_mass, n_g)
 p0_all_full = axion_data[:, 3].reshape(n_mass, n_g)
-
+g_all_full =  axion_data[:, 1].reshape(n_mass, n_g)
+mass_all_ful =  axion_data[:, 0].reshape(n_mass, n_g)
 # For the (mₐ, g) plot, extract the unique values.
 # g is assumed to be the same for every mass, taken from the first 40 rows.
 g_unique = axion_data[:n_g, 1]       # length = n_g
@@ -191,8 +192,9 @@ def simple_plot_fit(dataset_none, fit_results_none, source, png_naming=""):
         # find indices in grid
         mask_grid = np.isclose(p0_masked, p0) & np.isclose(ec_masked, ec)
         i, j = np.where(mask_grid)
-        m_val = m_masked[i[0]] if i.size else np.nan
-        g_val = g_masked[j[0]] if j.size else np.nan
+        m_val = mass_all_ful[mask_grid]
+        g_val = g_all_full[mask_grid]
+        print(m_val, g_val)
         fitspec[tag] = {
             "base": base_curve,
             "axion": axion_curve,
@@ -229,8 +231,8 @@ def simple_plot_fit(dataset_none, fit_results_none, source, png_naming=""):
         for level,style in zip([0,1,-1,2,-2], ['-','--','--',':',':']):
             ax_bot.axhline(level, linestyle=style)
         ax_bot.set_xscale('log'); ax_bot.set_ylim(-3,3)
-        ax_bot.set_xlabel('Energy [MeV]'); ax_bot.set_ylabel('Residuals')
-        ax_bot.grid(True, which='both', linestyle='--')
+        ax_bot.set_xlabel('Energy [MeV]'); ax_bot.set_ylabel('Normalized Residuals')
+        ax_bot.grid(True, linestyle='--')
         base_chi2, base_dof = spec['chi2_base'], spec['dof_base']
         axion_chi2, axion_dof = spec['chi2_axion'], spec['dof_axion']
         delta = spec['delta']
@@ -247,13 +249,12 @@ def simple_plot_fit(dataset_none, fit_results_none, source, png_naming=""):
         ax_top.text(
             0.05, 0.05, textstr,
             transform=ax_top.transAxes,
-            fontsize=10,
             verticalalignment='bottom',
             horizontalalignment='left',
             bbox=dict(boxstyle="round", facecolor="white", alpha=0.7)
         )
 
-        ax_top.set_title(f"{source} : {tag.capitalize()} Fit ($\Delta \chi ^2$={spec['delta']:.2f})")
+        #ax_top.set_title(f"{source} : {tag.capitalize()} Fit ($\Delta \chi ^2$={spec['delta']:.2f})")
         fig.tight_layout()
         plt.savefig("./fit_results/NGC1275_bestfits.png", dpi=300)
         return fig
