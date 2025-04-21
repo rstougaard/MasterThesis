@@ -5,7 +5,7 @@ with open("none_new0_sys_error.pkl", "rb") as file:
     all_results_none_sys = pickle.load(file)
 
 # Choose the source you're interested in
-source_name = '4FGL J1242.9+7315' #16
+source_name = "4FGL J0319.8+4130" #16
 
 # Extract results
 results_dict = all_results_none_sys[source_name]
@@ -31,7 +31,7 @@ for row in results_list:
         })
 
 # Sort by Ec
-flat_results_sorted = sorted(flat_results, key=lambda x: x["Ec"])
+flat_results_sorted = sorted(flat_results, key=lambda x: x["delta_chi2"])
 
 # Print results
 print("E_c [MeV]      p₀         χ²_base      χ²_axion      Δχ²")
