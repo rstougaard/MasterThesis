@@ -160,18 +160,19 @@ def simple_plot_fit(dataset_dict, fit_results_dict, source):
         2, 1, sharex=True, figsize=(10,8),
         gridspec_kw={"height_ratios":[3,1]}
     )
-    ax_top.errorbar(
-        x_m, y_m,
-        xerr=[x_m-emin_m, emax_m-x_m],
-        yerr=err_m,
-        fmt='o', color='k', capsize=3, label='No filter data'
-    )
+    
     ax_top.plot(x_grid, base_c,  color='darkorange', lw=2, label='Base fit')
     ax_top.plot(x_grid, axion_c, color='blue',  ls='--', lw=2, label='Axion fit')
     ax_top.set_yscale('log')
     ax_top.set_ylabel(r'E$^2$dN/dE [erg/cm$^2$/s]')
     ax_top.legend(loc='upper right')
     ax_top.grid(True, which='both', ls='--')
+    ax_top.errorbar(
+        x_m, y_m,
+        xerr=[x_m-emin_m, emax_m-x_m],
+        yerr=err_m,
+        fmt='o', color='k', capsize=3, label='No filter data'
+    )
 
     # residuals
     resid_b = (y_m - logpar_base(x_m, *params_b, z)) / err_m
