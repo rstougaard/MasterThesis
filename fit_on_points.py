@@ -194,7 +194,7 @@ def simple_plot_fit(dataset_dict, fit_results_dict, source):
         f"Base params: {', '.join(f'{v:.3g}' for v in params_b)}\n"
         f"Axion params: {', '.join(f'{v:.3g}' for v in params_a)}\n\n"
         f"$p_0 = {match['p0']:.3f},\\;E_c = {match['ec']:.1f}\\,$MeV\n"
-        f"$m = {match['m']/1e-9:.3f}\\,\\mathrm{{neV}},\\;g = {match['g']:.3e}$"
+        f"$m = {match['m']/1e-9:.3f}\\,\\mathrm{{neV}},\\;g = {match['g']:.3f}$"
     )
     ax_top.text(
         0.05, 0.05, textstr,
