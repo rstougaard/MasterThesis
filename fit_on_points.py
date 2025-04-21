@@ -255,7 +255,7 @@ def simple_plot_fit(dataset_none, fit_results_none, source, png_naming=""):
 
         ax_top.set_title(f"{source} — {tag.capitalize()} Fit (Δχ²={spec['delta']:.2f})")
         fig.tight_layout()
-        plt.savefig("NGC1275_bestfits.png", dpi=300)
+        plt.savefig("./fit_results/NGC1275_bestfits.png", dpi=300)
         return fig
 
     fig_best = make_figure("best")
