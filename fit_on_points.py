@@ -165,7 +165,7 @@ def simple_plot_fit(dataset_dict, fit_results_dict, source):
     ax_top.plot(x_grid, axion_c, color='blue',  ls='--', lw=2, label='Axion fit')
     ax_top.set_yscale('log')
     ax_top.set_ylabel(r'E$^2$dN/dE [erg/cm$^2$/s]')
-    ax_top.legend(loc='upper right')
+    
     ax_top.grid(True, which='both', ls='--')
     ax_top.errorbar(
         x_m, y_m,
@@ -173,6 +173,7 @@ def simple_plot_fit(dataset_dict, fit_results_dict, source):
         yerr=err_m,
         fmt='o', color='k', capsize=3, label='No filter data'
     )
+    ax_top.legend(loc='upper right')
 
     # residuals
     resid_b = (y_m - logpar_base(x_m, *params_b, z)) / err_m
