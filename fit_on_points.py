@@ -131,7 +131,7 @@ def simple_plot_fit(dataset_dict, fit_results_dict, source):
                 "params_base": params_b, "params_axion": params_a,
                 "m": mval, "g": gval
             }
-
+    print(fitspec)
     target_mass = 1.1e-9   # eV
     target_g    = 3e-12    # GeV⁻¹
     # select only specs at that (m, g) within tolerance
