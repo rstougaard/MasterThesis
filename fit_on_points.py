@@ -237,6 +237,9 @@ def simple_plot_fit(dataset_none, fit_results_none, source, png_naming=""):
         axion_chi2, axion_dof = spec['chi2_axion'], spec['dof_axion']
         delta = spec['delta']
         print(base_chi2, base_dof)
+        base_chi2 = float(base_chi2)
+        axion_chi2 = float(spec['chi2_axion'])
+        delta      = float(spec['delta'])
         textstr = (
             f"Base $\chi ^2$/dof = {base_chi2:.2f}/{base_dof}\n"
             f"Axion $\chi ^2$/dof = {axion_chi2:.2f}/{axion_dof}\n"
