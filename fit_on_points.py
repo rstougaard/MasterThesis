@@ -233,9 +233,10 @@ def simple_plot_fit(dataset_none, fit_results_none, source, png_naming=""):
         ax_bot.set_xscale('log'); ax_bot.set_ylim(-3,3)
         ax_bot.set_xlabel('Energy [MeV]'); ax_bot.set_ylabel('Normalized Residuals')
         ax_bot.grid(True, linestyle='--')
-        base_chi2, base_dof = spec['chi2_base'].item(), spec['dof_base']
+        base_chi2, base_dof = spec['chi2_base'], spec['dof_base']
         axion_chi2, axion_dof = spec['chi2_axion'], spec['dof_axion']
         delta = spec['delta']
+        print(base_chi2, base_dof)
         textstr = (
             f"Base $\chi ^2$/dof = {base_chi2:.2f}/{base_dof}\n"
             f"Axion $\chi ^2$/dof = {axion_chi2:.2f}/{axion_dof}\n"
