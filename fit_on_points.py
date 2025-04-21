@@ -132,16 +132,19 @@ def simple_plot_fit(dataset_dict, fit_results_dict, source):
                 "m": mval, "g": gval
             }
 
-    # target Δχ² only
-    target_mass = 1.1e-9  # eV
-    # filter specs to this mass
-    same_mass = [spec for spec in fitspec.values() 
-                 if np.isclose(spec["m"], target_mass, atol=1e-12)]
-    if not same_mass:
-        raise RuntimeError(f"No fits found at mass {target_mass}")
-    # choose the one with minimal delta
-    match = min(same_mass, key=lambda s: s["delta"])
-    print(f"Selected m={match['m']:.3e}, Δχ²={match['delta']:.3f}")
+    target_mass = 1.1e-9   # eV
+    target_g    = 3e-12    # GeV⁻¹
+    # select only specs at that (m, g) within tolerance
+    slice_specs = [
+        spec for spec in fitspec.values()
+        if np.isclose(spec["m"], target_mass, atol=1e-12)
+        and np.isclose(spec["g"], target_g,    atol=1e-14)
+    ]
+    if not slice_specs:
+        raise RuntimeError(f"No fits at m={target_mass} and g={target_g}")
+    # from that slice choose the one with smallest delta
+    match = min(slice_specs, key=lambda s: s["delta"])
+    print(f"Selected m={match['m']:.3e}, g={match['g']:.3e}, Δχ²={match['delta']:.3f}")
 
 
     # ensure parameters present
