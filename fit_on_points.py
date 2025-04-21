@@ -185,16 +185,15 @@ def simple_plot_fit(dataset_none, fit_results_none, source, png_naming=""):
         return logpar_base(E, Norm, alpha, beta) * (1 - (p00/(1+(E_c/E)**k)))
 
     fitspec = {}
-    for tag, res, p0, ec in ("best", best, p0_best, ec_best):
+    for tag, res, p0, ec in [("best", best, p0_best, ec_best), ("worst", worst, p0_worst, ec_worst)]:
         fit = res["fit_result"]
         base_curve = logpar_base(x_grid, *fit["Base"]["params"])
         axion_curve = axion_func(x_grid, *fit["Axion"]["params"], p0, ec)
         # find indices in grid
-        mask_grid = np.isclose(p0_masked, p0) & np.isclose(ec_masked, ec)
+        mask_grid = np.isclose(p0_masked, p0_best) & np.isclose(ec_masked, ec_best)
         i, j = np.where(mask_grid)
         m_val = m_masked[mask_grid]
         g_val = g_masked[mask_grid]
-        print('m, g')
         print(m_val, g_val)
         fitspec[tag] = {
             "base": base_curve,
