@@ -185,7 +185,7 @@ def simple_plot_fit(dataset_none, fit_results_none, source, png_naming=""):
         return logpar_base(E, Norm, alpha, beta) * (1 - (p00/(1+(E_c/E)**k)))
 
     fitspec = {}
-    for tag, res, p0, ec in [("best", best, p0_best, ec_best), ("worst", worst, p0_worst, ec_worst)]:
+    for tag, res, p0, ec in ("best", best, p0_best, ec_best):
         fit = res["fit_result"]
         base_curve = logpar_base(x_grid, *fit["Base"]["params"])
         axion_curve = axion_func(x_grid, *fit["Axion"]["params"], p0, ec)
