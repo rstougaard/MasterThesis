@@ -166,8 +166,8 @@ def simple_plot_fit(dataset_dict, fit_results_dict, source):
         yerr=err_m,
         fmt='o', color='k', capsize=3, label='No filter data'
     )
-    ax_top.plot(x_grid, base_c,  color='orange', lw=2, label='Base fit')
-    ax_top.plot(x_grid, axion_c, color='green',  ls='--', lw=2, label='Axion fit')
+    ax_top.plot(x_grid, base_c,  color='darkorange', lw=2, label='Base fit')
+    ax_top.plot(x_grid, axion_c, color='blue',  ls='--', lw=2, label='Axion fit')
     ax_top.set_yscale('log')
     ax_top.set_ylabel(r'E$^2$dN/dE [erg/cm$^2$/s]')
     ax_top.legend(loc='upper right')
@@ -176,8 +176,8 @@ def simple_plot_fit(dataset_dict, fit_results_dict, source):
     # residuals
     resid_b = (y_m - logpar_base(x_m, *params_b, z)) / err_m
     resid_a = (y_m - axion_mod(x_m, *params_a, match["p0"], match["ec"], z)) / err_m
-    ax_bot.errorbar(x_m, resid_b, fmt='s', color='orange', label='Base resid')
-    ax_bot.errorbar(x_m, resid_a, fmt='o', color='green',  label='Axion resid')
+    ax_bot.errorbar(x_m, resid_b, fmt='s', color='darkorange', label='Base resid')
+    ax_bot.errorbar(x_m, resid_a, fmt='o', color='blue',  label='Axion resid')
     for lvl, style in zip([0,1,-1,2,-2], ['-','--','--',':',':']):
         ax_bot.axhline(lvl, ls=style)
     ax_bot.set_xscale('log')
@@ -194,7 +194,7 @@ def simple_plot_fit(dataset_dict, fit_results_dict, source):
         f"Base params: {', '.join(f'{v:.3g}' for v in params_b)}\n"
         f"Axion params: {', '.join(f'{v:.3g}' for v in params_a)}\n\n"
         f"$p_0 = {match['p0']:.3f},\\;E_c = {match['ec']:.1f}\\,$MeV\n"
-        f"$m = {match['m']/1e-9:.3f}\\,\\mathrm{{neV}},\\;g = {match['g']:.3f}$"
+        f"$m = {match['m']/1e-9:.3f}\\,\\mathrm{{neV}},\\;g = {match['g']:.3g}$"
     )
     ax_top.text(
         0.05, 0.05, textstr,
