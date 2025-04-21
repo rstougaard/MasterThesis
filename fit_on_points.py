@@ -236,7 +236,9 @@ def simple_plot_fit(dataset_none, fit_results_none, source, png_naming=""):
         base_chi2, base_dof = spec['chi2_base'], spec['dof_base']
         axion_chi2, axion_dof = spec['chi2_axion'], spec['dof_axion']
         delta = spec['delta']
-        print(base_chi2, base_dof)
+        print("type(base_chi2) =", type(base_chi2))
+        print("type(delta)     =", type(delta))
+
         base_chi2 = float(base_chi2)
         axion_chi2 = float(spec['chi2_axion'])
         delta      = float(spec['delta'])
