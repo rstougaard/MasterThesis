@@ -1,332 +1,195 @@
-from astropy.io import fits
-import matplotlib.pyplot as plt
 import numpy as np
-from scipy.optimize import curve_fit
-import shlex
-from iminuit.cost import LeastSquares
-from iminuit import Minuit
-from matplotlib.backends.backend_pdf import PdfPages
-import pickle
+import matplotlib.pyplot as plt
+from astropy.io import fits
 from naima.models import EblAbsorptionModel
+import pickle
 import astropy.units as u
-plt.rcParams["text.usetex"]     = True
-plt.rcParams["font.family"]    = "serif"
-plt.rcParams["font.serif"]     = ["Computer Modern Roman"]
+
+# ————— Global plotting settings —————
+plt.rcParams["text.usetex"]      = True
+plt.rcParams["font.family"]      = "serif"
+plt.rcParams["font.serif"]       = ["Computer Modern Roman"]
 plt.rcParams["mathtext.fontset"] = "cm"
 plt.rcParams.update({
-    # Base font size for text in figures
-    "font.size":          24,   # controls default text size (e.g. axis labels)
-    # Legend
-    "legend.fontsize":    22,   # default legend text size
-    # Title and label sizes (override font.size if you like)
-    "axes.titlesize":     24,
-    "axes.labelsize":     24,
-    # Tick labels
-    "xtick.labelsize":    22,
-    "ytick.labelsize":    22,
-})
-plt.rcParams.update({
-    # tick‐label font size
-    "xtick.labelsize":   20,
-    "ytick.labelsize":   20,
-    # tick direction and which sides
-    "xtick.direction":   "in",
-    "ytick.direction":   "in",
-    "xtick.top":         True,
-    "ytick.right":       True,
-    # tick length (points)
-    "xtick.major.size":  8,
-    "ytick.major.size":  8,
-    "xtick.minor.size":  5,
-    "ytick.minor.size":  5,
-    # tick width (points)
+    "font.size":        24,
+    "legend.fontsize":  22,
+    "axes.titlesize":   24,
+    "axes.labelsize":   24,
+    "xtick.labelsize":  22,
+    "ytick.labelsize":  22,
+    "xtick.direction":  "in",
+    "ytick.direction":  "in",
+    "xtick.top":        True,
+    "ytick.right":      True,
+    "xtick.major.size": 8,
+    "ytick.major.size": 8,
+    "xtick.minor.size": 5,
+    "ytick.minor.size": 5,
     "xtick.major.width": 1.2,
     "ytick.major.width": 1.2,
     "xtick.minor.width": 0.8,
     "ytick.minor.width": 0.8,
 })
 
-source_name = "4FGL J0319.8+4130"
-
+# ————— Load grid scan data —————
 axion_data = np.load('./denys/Rikke/Data/scan12.npy')
-ma_all = axion_data[:,0] #eV
-g_all = axion_data[:,1] # GeV**-1
-ec_all = axion_data[:,2]/1e6 #MeV
+ma_all = axion_data[:,0]    # eV
+g_all = axion_data[:,1]     # GeV^-1
+ec_all = axion_data[:,2]/1e6 # MeV
 p0_all = axion_data[:,3]
-k_all = axion_data[:,4]
-k = np.mean(k_all)
 
-n_g = 40
+n_g     = 40
 n_total = axion_data.shape[0]
-n_mass = n_total // n_g
+n_mass  = n_total // n_g
 
-# For the (E_c, p₀) plot, we want the full grid.
-# Reshape the columns for E_c (converted to MeV) and p₀ into a (n_mass, n_g) grid.
-ec_all_full = (axion_data[:, 2] / 1e6).reshape(n_mass, n_g)
-p0_all_full = axion_data[:, 3].reshape(n_mass, n_g)
-g_all_full =  axion_data[:, 1].reshape(n_mass, n_g)
-mass_all_ful =  axion_data[:, 0].reshape(n_mass, n_g)
-# For the (mₐ, g) plot, extract the unique values.
-# g is assumed to be the same for every mass, taken from the first 40 rows.
-g_unique = axion_data[:n_g, 1]       # length = n_g
-# mₐ is taken from every 40th row (i.e. each new mass in the outer loop)
-mass_unique = axion_data[::n_g, 0]     # length = n_mass
+# reshape into (n_mass, n_g)
+ec_all_full   = ec_all.reshape(n_mass, n_g)
+p0_all_full   = p0_all.reshape(n_mass, n_g)
+mass_all_full = ma_all.reshape(n_mass, n_g)
+g_all_full    = g_all.reshape(n_mass, n_g)
 
-# Define your desired start and stop values
-m_start_val = 1e-10
-g_start_val = 7.5e-13 #1e-13
-m_stop_val  = 1e-8
-g_stop_val  = 1e-11
+# unique axes
+g_unique    = g_all[:n_g]
+mass_unique = ma_all[::n_g]
 
-# Find the row (mass) and column (g) indices closest to the desired start values.
-row_start = np.argmin(np.abs(mass_unique - m_start_val))
-col_start = np.argmin(np.abs(g_unique - g_start_val))
+# full grid for lookup
+_ec = ec_all_full
+_p0 = p0_all_full
+_m  = mass_all_full
+_g  = g_all_full
 
-# Similarly, find the indices closest to the desired stop values.
-row_stop  = np.argmin(np.abs(mass_unique - m_stop_val))
-col_stop  = np.argmin(np.abs(g_unique - g_stop_val))
+# ————— Load fit results —————
+with open("none_new0_sys_error.pkl", "rb") as f:
+    all_results_none = pickle.load(f)
 
-# For clarity, you can print out the selected values:
-print("Selected mass start:", mass_unique[row_start])
-print("Selected g start:", g_unique[col_start])
-print("Selected mass stop:", mass_unique[row_stop])
-print("Selected g stop:", g_unique[col_stop])
-
-# Now filter the full grid arrays.
-ec_masked = ec_all_full[row_start:row_stop+1, col_start:col_stop+1]
-p0_masked = p0_all_full[row_start:row_stop+1, col_start:col_stop+1]
-
-# Also filter the unique arrays.
-#m_masked = mass_all_ful[row_start:row_stop+1, col_start:col_stop+1]
-#g_masked = g_all_full[row_start:row_stop+1, col_start:col_stop+1]
-m_masked = mass_unique[row_start:row_stop+1]
-g_masked = g_unique[col_start:col_stop+1]
-
-
-def find_best_worst_fits(fits):
-    # Normalize into a flat list of result‑dicts
-    if isinstance(fits, dict) and "fit_result" in fits:
-        results = [fits]
-    elif isinstance(fits, list):
-        results = fits
-    elif isinstance(fits, dict):
-        results = list(fits.values())
-    else:
-        raise ValueError("find_best_worst_fits() got unsupported type")
-
-    best, worst = None, None
-    best_delta, worst_delta = np.inf, -np.inf
-
-    for result in results:
-        delta = result["fit_result"]["DeltaChi2"]
-        if delta < best_delta:
-            best_delta, best = delta, result
-        if delta > worst_delta:
-            worst_delta, worst = delta, result
-
-    return {"best": best, "worst": worst}
-
-
-def simple_plot_fit(dataset_none, fit_results_none, source, png_naming=""):
-    import numpy as np
-    import matplotlib.pyplot as plt
-    from astropy.io import fits
-    with fits.open('table-4LAC-DR3-h.fits') as f:
-        data1 = f[1].data
-        idx = (data1['Source_Name'] == source)
-        z = data1['Redshift'][idx][0]
-
-    def logpar_base(x, Norm, alpha_, beta_):
-        E_b = 1000  # Fixed E_b value
-        ebl = EblAbsorptionModel(z).transmission(x * u.MeV)
-        return Norm * (x / E_b) ** (-(alpha_ + beta_ * np.log(x / E_b)))*ebl
-    # ————— Load data & plot points —————
-    
-    # Pick first dataset for residuals
-    first = next(iter(dataset_none.values()))
-    x_data, y_data, y_err, emin_arr, emax_arr = map(np.array, first)
-    #bin_size = emax_arr - emin_arr
-    
-    # ————— Find best & worst —————
-    best, worst = None, None
-    best_delta, worst_delta = np.inf, -np.inf
-    for row in fit_results_none[source]["No_Filtering"]:
-        for r in row:
-            d = r["fit_result"]["DeltaChi2"]
-            if d < best_delta:
-                best_delta, best = d, r
-            if d > worst_delta:
-                worst_delta, worst = d, r
-
-    p0_best, ec_best = best["p0"], best["E_c"]
-    p0_worst, ec_worst = worst["p0"], worst["E_c"]
-
-    mask = (y_data != 0) & (np.abs(y_data) >= 1e-13)
-    #binsize_masked = bin_size[mask]
-    x_masked   = x_data[mask]
-    y_masked   = y_data[mask]
-    yerr_masked = y_err[mask]
-    if not mask[-1]:
-            y_err_eff = yerr_masked + 0.03 * y_masked
-    else:
-        y_err_eff0 = yerr_masked[:-1] + 0.03 * y_masked[:-1]
-        y_err_eff1 = yerr_masked[-1] + 0.10 * y_masked[-1]
-        y_err_eff = np.append(y_err_eff0, y_err_eff1)
-    y_err_eff = np.array(y_err_eff)
-
-    print(source)
-    print(y_masked)
-    
-
-    all_x = np.concatenate([np.array(vals[0]) for vals in dataset_none.values()])
-    x_grid = np.logspace(np.log10(x_masked.min()), np.log10(x_masked.max()), 300)
-
-    # Model functions
-    def axion_func(E, Norm, alpha, beta, w, p0, E_c, k=2.71):
-        p00 = p0*(1+0.2*np.tanh(w))
-        return logpar_base(E, Norm, alpha, beta) * (1 - (p00/(1+(E_c/E)**k)))
-
-    fitspec = {}
-    for tag, res, p0, ec in [("best", best, p0_best, ec_best), ("worst", worst, p0_worst, ec_worst)]:
-        fit = res["fit_result"]
-        base_curve = logpar_base(x_grid, *fit["Base"]["params"])
-        axion_curve = axion_func(x_grid, *fit["Axion"]["params"], p0, ec)
-        # find indices in grid
-        mask_grid = np.isclose(p0_masked, p0) & np.isclose(ec_masked, ec)
-        i, j = np.where(mask_grid)
-        m_val = m_masked[i]
-        g_val = g_masked[j]
-        print(m_val, g_val)
-        fitspec[tag] = {
-            "base": base_curve,
-            "axion": axion_curve,
-            "delta": res["fit_result"]["DeltaChi2"],
-            "chi2_base": fit["Base"]["chi2"], "dof_base": fit["Base"]["dof"],
-            "chi2_axion": fit["Axion"]["chi2"], "dof_axion": fit["Axion"]["dof"],
-            "p0": p0, "ec": ec, "m": m_val, "g": g_val,
-            "params_axion": fit["Axion"]["params"],
-            "params_base": fit["Base"]["params"]
-        }
-
-    def make_figure(tag):
-        fig, (ax_top, ax_bot) = plt.subplots(2,1, sharex=True, figsize=(10,8), gridspec_kw={"height_ratios":[3,1]})
-        spec = fitspec[tag]
-
-
-        # Upper: data + fits
-        #ax_top.errorbar(eav[1:], fl[1:], yerr=[-dfl0[1:],dfl1[1:]], fmt='o', uplims=ul[1:], label="gll_psc_v35")
-        for label,(x,y,y_err,emin_arr,emax_arr) in dataset_none.items():
-            ax_top.errorbar(x,y,xerr=[x-emin_arr,emax_arr-x], yerr=y_err, fmt='o', color="black", capsize=3, label=label)
-        ax_top.plot(x_grid, spec["base"], label=f"{tag.capitalize()} Base", color="orange",linewidth=2)
-        ax_top.plot(x_grid, spec["axion"], linestyle="--", color="green",label=f"{tag.capitalize()} Axion", linewidth=2)
-        ax_top.set_ylabel(r'E$^2$dN/dE [erg/cm$^2$/s]')
-        ax_top.set_yscale('log'); ax_top.legend(loc='upper right')
-        ax_top.grid(True, which='both', linestyle='--')
-
-
-                # Axion residuals
-        base_resid = (y_masked - logpar_base(x_masked, *spec['params_base'])) / yerr_masked
-        axion_resid = (y_masked - axion_func(x_masked, *spec['params_axion'], spec['p0'], spec['ec'])) / yerr_masked
-
-        ax_bot.errorbar(x_masked, base_resid, fmt='s', color="orange", label='Base residuals')
-        ax_bot.errorbar(x_masked, axion_resid, fmt='o', color="green", label='Axion residuals')
-        for level,style in zip([0,1,-1,2,-2], ['-','--','--',':',':']):
-            ax_bot.axhline(level, linestyle=style)
-        ax_bot.set_xscale('log'); ax_bot.set_ylim(-3,3)
-        ax_bot.set_xlabel('Energy [MeV]'); ax_bot.set_ylabel('Normalized Residuals')
-        ax_bot.grid(True, linestyle='--')
-        base_chi2, base_dof = spec['chi2_base'], spec['dof_base']
-        axion_chi2, axion_dof = spec['chi2_axion'], spec['dof_axion']
-        delta = spec['delta']
-        for name, val in [
-            ("base_chi2", base_chi2),
-            ("base_dof",   base_dof),
-            ("axion_chi2", axion_chi2),
-            ("axion_dof",  axion_dof),
-            ("delta",      delta),
-            ("p0",         spec['p0']),
-            ("ec",         spec['ec']),
-            ("m",          spec['m']),
-            ("g",          spec['g']),
-        ]:
-            print(f"{name:>10}  → {type(val)};  repr={val!r}")
-        
-        base_chi2 = float(base_chi2)
-        axion_chi2 = float(spec['chi2_axion'])
-        delta      = float(spec['delta'])
-        textstr = (
-            f"Base $\chi ^2$/dof = {base_chi2:.2f}/{base_dof}\n"
-            f"Axion $\chi ^2$/dof = {axion_chi2:.2f}/{axion_dof}\n"
-            f"$\Delta \chi ^2$ = {delta:.2f}\n"
-            f"Base params: {', '.join(f'{v:.3g}' for v in spec['params_base'])}\n"
-            f"Axion params: {', '.join(f'{v:.3g}' for v in spec['params_axion'])}\n\n"
-            f"p$_0$={spec['p0']:.3f}, E$_c$={spec['ec']:.1f}\n"
-            f"m={spec['m']/1e-9:.3f}, g={spec['g']:.3e}"
-        )
-
-        ax_top.text(
-            0.05, 0.05, textstr,
-            transform=ax_top.transAxes,
-            verticalalignment='bottom',
-            horizontalalignment='left',
-            bbox=dict(boxstyle="round", facecolor="white", alpha=0.7)
-        )
-
-        #ax_top.set_title(f"{source} : {tag.capitalize()} Fit ($\Delta \chi ^2$={spec['delta']:.2f})")
-        fig.tight_layout()
-        plt.savefig("./fit_results/NGC1275_bestfits.png", dpi=300)
-        return fig
-
-    fig_best = make_figure("best")
-    #fig_worst = make_figure("worst")
-    return fig_best
-
-
-with open("none_new0_sys_error.pkl", "rb") as file:
-    all_results_none = pickle.load(file)
-
-# Clean filename exactly as you already do
-cleaned = (
-    source_name.replace(" ", "")
-            .replace(".", "dot")
-            .replace("+", "plus")
-            .replace("-", "minus")
-            .replace('"', "")
-)
-
-# Load & sort that source’s spectral‑points FITS
+# ————— Prepare data points —————
+source_name = "4FGL J0319.8+4130"
+cleaned = (source_name.replace(" ", "").replace(".", "dot")
+                         .replace("+", "plus").replace("-", "minus").replace('"',''))
 f_bin = fits.open(f'./fit_results/{cleaned}_fit_data_NONE.fits')
-bin_data = f_bin[1].data
-sorted_idx = np.argsort(bin_data['emin'])
-sd = bin_data[sorted_idx]
-
-# Build the single “No_Filtering” dataset dict
+sd = f_bin[1].data
+sorted_idx = np.argsort(sd['emin'])
+sd = sd[sorted_idx]
 datasets = {
     "No_Filtering": (
         sd['geometric_mean'], sd['flux_tot_value'], sd['flux_tot_error'],
         sd['emin'], sd['emax']
     )
 }
-'''
-if source == "4FGL J0617.7-1715":
-    # Stack the arrays as columns; ensure that they are numpy arrays (or convert them if needed)
-    data = np.column_stack((
-        sd['geometric_mean'], 
-        sd['flux_tot_value'], 
-        sd['flux_tot_error'],
-        sd['emin'], 
-        sd['emax']
-    ))
-    
-    # Define a header for clarity in the text file
-    header = "geometric_mean flux flux_error emin emax"
-    
-    # Save the data to a text file. Adjust the format (here '%f') if you need different precision.
-    np.savetxt("output_newmodel.txt", data, header=header, fmt='%s')
-'''
 
-# Generate the two figures
-fig_best = simple_plot_fit(datasets, all_results_none, source_name)
+# ————— Model definitions —————
+def logpar_base(x, Norm, alpha_, beta_, z):
+    E_b = 1000  # MeV
+    ebl = EblAbsorptionModel(z).transmission(x * u.MeV)
+    return Norm * (x/E_b)**(-(alpha_ + beta_*np.log(x/E_b))) * ebl
 
+def axion_mod(E, Norm, alpha, beta, w, p0, E_c, z, k=2.71):
+    p00 = p0*(1 + 0.2*np.tanh(w))
+    return logpar_base(E, Norm, alpha, beta, z) * (1 - (p00/(1 + (E_c/E)**k)))
 
-#print(f"Saved all best/worst fits into {output_pdf}")
+# ————— Plotting function —————
+def simple_plot_fit(dataset_dict, fit_results_dict, source):
+    # load redshift
+    with fits.open('table-4LAC-DR3-h.fits') as f:
+        data1 = f[1].data
+        z = data1['Redshift'][data1['Source_Name']==source][0]
+
+    # data points
+    x_data, y_data, y_err, emin_arr, emax_arr = map(np.array, next(iter(dataset_dict.values())))
+    mask = (y_data != 0) & (np.abs(y_data) >= 1e-13)
+    x_m = x_data[mask]
+    y_m = y_data[mask]
+    err_m = y_err[mask]
+    err_m[-1] += 0.10 * y_m[-1]
+
+    # flatten all fits
+    fitspec = {}
+    for i_row, row in enumerate(fit_results_dict[source]["No_Filtering"]):
+        for j_col, r in enumerate(row):
+            p0v  = r["p0"]
+            ecv  = r["E_c"]
+            dchi = r["fit_result"]["DeltaChi2"]
+            bchi = r["fit_result"]["Base"]["chi2"]
+            bdof = r["fit_result"]["Base"]["dof"]
+            achi = r["fit_result"]["Axion"]["chi2"]
+            adof = r["fit_result"]["Axion"]["dof"]
+            # grid lookup
+            mask_g = np.isclose(_p0, p0v) & np.isclose(_ec, ecv)
+            ii, jj = np.where(mask_g)
+            if ii.size:
+                mval = float(_m[ii[0], jj[0]])
+                gval = float(_g[ii[0], jj[0]])
+            else:
+                mval = np.nan
+                gval = np.nan
+            key = f"fit_{i_row}_{j_col}"
+            fitspec[key] = {
+                "p0": p0v, "ec": ecv, "delta": dchi,
+                "chi2_base": bchi, "dof_base": bdof,
+                "chi2_axion": achi, "dof_axion": adof,
+                "m": mval, "g": gval,
+                "params_base": r["fit_result"]["Base"]["params"],
+                "params_axion": r["fit_result"]["Axion"]["params"]
+            }
+
+    # target and match
+    target = {"ec":7.980e4, "p0":3.086e-1, "delta":-2.299}
+    tol    = {"ec":1e-1,   "p0":1e-3,     "delta":1e-3}
+    match = None
+    for spec in fitspec.values():
+        if (np.isclose(spec["ec"], target["ec"], atol=tol["ec"]) and
+            np.isclose(spec["p0"], target["p0"], atol=tol["p0"]) and
+            np.isclose(spec["delta"], target["delta"], atol=tol["delta"])):
+            match = spec
+            break
+    if match is None:
+        raise RuntimeError("No fit matched the desired (E_c, p0, Δχ²).")
+
+    # compute curves
+    x_grid = np.logspace(np.log10(x_m.min()), np.log10(x_m.max()), 300)
+    base_c = logpar_base(x_grid, *match["params_base"], z)
+    axion_c= axion_mod(x_grid, *match["params_axion"], match["p0"], match["ec"], z)
+
+    # plotting
+    fig, (ax_top, ax_bot) = plt.subplots(2,1, sharex=True, figsize=(10,8),
+        gridspec_kw={"height_ratios":[3,1]})
+    ax_top.errorbar(x_m, y_m, yerr=err_m, fmt='o', color='k', capsize=3)
+    ax_top.plot(x_grid, base_c, color='orange', lw=2, label='Base')
+    ax_top.plot(x_grid, axion_c, color='green', ls='--', lw=2, label='Axion')
+    ax_top.set_yscale('log')
+    ax_top.set_ylabel(r'E$^2$dN/dE [erg/cm$^2$/s]')
+    ax_top.legend(loc='upper right')
+    ax_top.grid(True, which='both', ls='--')
+
+    # residuals
+    resid_b = (y_m - logpar_base(x_m, *match["params_base"], z))/err_m
+    resid_a = (y_m - axion_mod(x_m, *match["params_axion"], match["p0"], match["ec"], z))/err_m
+    ax_bot.errorbar(x_m, resid_b, fmt='s', color='orange')
+    ax_bot.errorbar(x_m, resid_a, fmt='o', color='green')
+    for lvl, style in zip([0,1,-1,2,-2], ['-','--','--',':',':']):
+        ax_bot.axhline(lvl, ls=style)
+    ax_bot.set_xscale('log')
+    ax_bot.set_ylim(-3,3)
+    ax_bot.set_xlabel('Energy [MeV]')
+    ax_bot.set_ylabel('Norm. Resid.')
+    ax_bot.grid(True, ls='--')
+
+    # annotation with LaTeX chi2
+    textstr = (
+        f"$\chi^2_{{\mathrm{{base}}}}\,/\,\mathrm{{dof}} = {match['chi2_base']:.2f}\,/\,{match['dof_base']}$\n"
+        f"$\chi^2_{{\mathrm{{axion}}}}\,/\,\mathrm{{dof}} = {match['chi2_axion']:.2f}\,/\,{match['dof_axion']}$\n"
+        f"$\Delta\chi^2 = {match['delta']:.2f}$\n\n"
+        f"$p_0 = {match['p0']:.3f},\;E_c = {match['ec']:.1f}\,$MeV\n"
+        f"$m = {match['m']/1e-9:.3f}\,\mathrm{{neV}},\;g = {match['g']:.3e}$"
+    )
+    ax_top.text(0.05, 0.05, textstr,
+                transform=ax_top.transAxes,
+                va='bottom', ha='left',
+                bbox=dict(boxstyle='round', facecolor='white', alpha=0.7))
+
+    fig.tight_layout()
+    plt.savefig(f"./fit_results/NGC_bestfits.png", dpi=300)
+    return fig
+
+if __name__ == '__main__':
+    fig = simple_plot_fit(datasets, all_results_none, source_name)
