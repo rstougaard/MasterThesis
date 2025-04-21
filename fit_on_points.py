@@ -142,8 +142,8 @@ def simple_plot_fit(dataset_dict, fit_results_dict, source):
 
     # compute model curves
     x_grid = np.logspace(np.log10(x_m.min()), np.log10(x_m.max()), 300)
-    base_c = logpar_base(x_grid, *match.get("params_base", []), z)
-    axion_c= axion_mod(x_grid, *match.get("params_axion", []), match["p0"], match["ec"], z)
+    base_c = logpar_base(x_grid, *match.get("params_base"), z)
+    axion_c= axion_mod(x_grid, *match.get("params_axion"), match["p0"], match["ec"], z)
 
     # plotting
     fig, (ax_top, ax_bot) = plt.subplots(2,1, sharex=True, figsize=(10,8), gridspec_kw={"height_ratios":[3,1]})
@@ -156,8 +156,8 @@ def simple_plot_fit(dataset_dict, fit_results_dict, source):
     ax_top.grid(True, which='both', ls='--')
 
     # residuals
-    resid_b = (y_m - logpar_base(x_m, *match.get("params_base", []), z)) / err_m
-    resid_a = (y_m - axion_mod(x_m, *match.get("params_axion", []), match["p0"], match["ec"], z)) / err_m
+    resid_b = (y_m - logpar_base(x_m, *match.get("params_base"), z)) / err_m
+    resid_a = (y_m - axion_mod(x_m, *match.get("params_axion"), match["p0"], match["ec"], z)) / err_m
     ax_bot.errorbar(x_m, resid_b, fmt='s', color='orange', label='Base resid')
     ax_bot.errorbar(x_m, resid_a, fmt='o', color='green', label='Axion resid')
     for lvl, style in zip([0,1,-1,2,-2], ['-','--','--',':',':']): ax_bot.axhline(lvl, ls=style)
