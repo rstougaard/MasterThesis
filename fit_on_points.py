@@ -131,20 +131,19 @@ def simple_plot_fit(dataset_dict, fit_results_dict, source):
                 "params_base": params_b, "params_axion": params_a,
                 "m": mval, "g": gval
             }
-    print(fitspec)
-    target_mass = 1.1e-9   # eV
-    target_g    = 3e-12    # GeV⁻¹
-    # select only specs at that (m, g) within tolerance
-    slice_specs = [
-        spec for spec in fitspec.values()
-        if np.isclose(spec["m"], target_mass, atol=1e-12)
-        and np.isclose(spec["g"], target_g,    atol=1e-14)
-    ]
-    if not slice_specs:
-        raise RuntimeError(f"No fits at m={target_mass} and g={target_g}")
-    # from that slice choose the one with smallest delta
-    match = min(slice_specs, key=lambda s: s["delta"])
-    print(f"Selected m={match['m']:.3e}, g={match['g']:.3e}, Δχ²={match['delta']:.3f}")
+    target_delta = -2.729
+    # find exact or nearest by Δχ²
+    match = None
+    for spec in fitspec.values():
+        if np.isclose(spec["delta"], target_delta, atol=1e-3):
+            match = spec
+            print(f"Exact Δχ² match: Δχ² = {spec['delta']}")
+            break
+    if match is None:
+        print("No exact Δχ² match. Using nearest Δχ²...")
+        nearest_key = min(fitspec, key=lambda k: abs(fitspec[k]["delta"] - target_delta))
+        match = fitspec[nearest_key]
+        print(f"Nearest Δχ² = {match['delta']}")
 
 
     # ensure parameters present
