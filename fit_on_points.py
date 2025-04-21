@@ -12,7 +12,7 @@ plt.rcParams["font.serif"]       = ["Computer Modern Roman"]
 plt.rcParams["mathtext.fontset"] = "cm"
 plt.rcParams.update({
     "font.size":        24,
-    "legend.fontsize":  22,
+    "legend.fontsize":  16,
     "axes.titlesize":   24,
     "axes.labelsize":   24,
     "xtick.labelsize":  22,
@@ -134,11 +134,13 @@ def simple_plot_fit(dataset_dict, fit_results_dict, source):
 
     # target Δχ² only
     target_delta = -2.299
+    target_mass = 1e-9
     match = None
     for spec in fitspec.values():
-        if np.isclose(spec["delta"], target_delta, atol=1e-3):
+        if np.isclose(spec["m"], target_mass, atol=1e-3):
             match = spec
-            print(f"Exact Δχ² match found: Δχ² = {spec['delta']}")
+            #print(f"Exact Δχ² match found: Δχ² = {spec['delta']}")
+            print(f"Exact Δχ² match found: m = {spec['m']}")
             break
     if match is None:
         print("No exact Δχ² match. Finding nearest Δχ²...")
