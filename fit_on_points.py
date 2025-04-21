@@ -237,7 +237,7 @@ def simple_plot_fit(dataset_none, fit_results_none, source, png_naming=""):
         axion_chi2, axion_dof = spec['chi2_axion'], spec['dof_axion']
         delta = spec['delta']
         textstr = (
-            f"Base $\chi ^2$/dof = {base_chi2[0]:.2f}/{base_dof}\n"
+            f"Base $\chi ^2$/dof = {float(base_chi2):.2f}/{base_dof}\n"
             f"Axion $\chi ^2$/dof = {axion_chi2:.2f}/{axion_dof}\n"
             f"$\Delta \chi ^2$ = {delta:.2f}\n"
             f"Base params: {', '.join(f'{v:.3g}' for v in spec['params_base'])}\n"
