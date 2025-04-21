@@ -97,25 +97,28 @@ def simple_plot_fit(dataset_dict, fit_results_dict, source):
     # data points
     x_data, y_data, y_err, emin_arr, emax_arr = map(np.array, next(iter(dataset_dict.values())))
     mask = (y_data != 0) & (np.abs(y_data) >= 1e-13)
-    x_m = x_data[mask]
-    y_m = y_data[mask]
+    x_m   = x_data[mask]
+    y_m   = y_data[mask]
     err_m = y_err[mask]
+    emin_m = emin_arr[mask]
+    emax_m = emax_arr[mask]
+    # error floor for last point
     err_m[-1] += 0.10 * y_m[-1]
 
     # flatten all fits into a dict
     fitspec = {}
     for i_row, row in enumerate(fit_results_dict[source]["No_Filtering"]):
         for j_col, r in enumerate(row):
-            p0v  = r["p0"]
-            ecv  = r["E_c"]
-            dchi = r["fit_result"]["DeltaChi2"]
-            bchi = r["fit_result"]["Base"]["chi2"]
-            bdof = r["fit_result"]["Base"]["dof"]
-            achi = r["fit_result"]["Axion"]["chi2"]
-            adof = r["fit_result"]["Axion"]["dof"]
-            params_b = r["fit_result"]["Base"]["params"]
-            params_a = r["fit_result"]["Axion"]["params"]
-            # grid lookup
+            p0v       = r["p0"]
+            ecv       = r["E_c"]
+            dchi      = r["fit_result"]["DeltaChi2"]
+            bchi      = r["fit_result"]["Base"]["chi2"]
+            bdof      = r["fit_result"]["Base"]["dof"]
+            achi      = r["fit_result"]["Axion"]["chi2"]
+            adof      = r["fit_result"]["Axion"]["dof"]
+            params_b  = r["fit_result"]["Base"]["params"]
+            params_a  = r["fit_result"]["Axion"]["params"]
+            # grid lookup for m,g
             mask_g = np.isclose(_p0, p0v) & np.isclose(_ec, ecv)
             ii, jj = np.where(mask_g)
             mval = float(_m[ii[0], jj[0]]) if ii.size else np.nan
@@ -129,7 +132,7 @@ def simple_plot_fit(dataset_dict, fit_results_dict, source):
                 "m": mval, "g": gval
             }
 
-    # — target Δχ² only —
+    # target Δχ² only
     target_delta = -2.299
     match = None
     for spec in fitspec.values():
@@ -144,22 +147,27 @@ def simple_plot_fit(dataset_dict, fit_results_dict, source):
         print(f"Using nearest Δχ²: Δχ² = {match['delta']}")
 
     # ensure parameters present
-    params_b = match.get("params_base")
-    params_a = match.get("params_axion")
-    if params_b is None or params_a is None:
-        raise RuntimeError("Missing fit parameters for Base or Axion in the matched fit.")
+    params_b = match["params_base"]
+    params_a = match["params_axion"]
 
     # compute model curves
     x_grid = np.logspace(np.log10(x_m.min()), np.log10(x_m.max()), 300)
-    base_c = logpar_base(x_grid, *params_b, z)
-    axion_c= axion_mod(x_grid, *params_a, match["p0"], match["ec"], z)
+    base_c  = logpar_base(x_grid, *params_b, z)
+    axion_c = axion_mod(x_grid, *params_a, match["p0"], match["ec"], z)
 
     # plotting
-    fig, (ax_top, ax_bot) = plt.subplots(2,1, sharex=True, figsize=(10,8),
-                                          gridspec_kw={"height_ratios":[3,1]})
-    ax_top.errorbar(x_m, y_m, yerr=err_m, fmt='o', color='k', capsize=3, label='Data')
-    ax_top.plot(x_grid, base_c, color='orange', lw=2, label='Base fit')
-    ax_top.plot(x_grid, axion_c, color='green', ls='--', lw=2, label='Axion fit')
+    fig, (ax_top, ax_bot) = plt.subplots(
+        2, 1, sharex=True, figsize=(10,8),
+        gridspec_kw={"height_ratios":[3,1]}
+    )
+    ax_top.errorbar(
+        x_m, y_m,
+        xerr=[x_m-emin_m, emax_m-x_m],
+        yerr=err_m,
+        fmt='o', color='k', capsize=3, label='No filter data'
+    )
+    ax_top.plot(x_grid, base_c,  color='orange', lw=2, label='Base fit')
+    ax_top.plot(x_grid, axion_c, color='green',  ls='--', lw=2, label='Axion fit')
     ax_top.set_yscale('log')
     ax_top.set_ylabel(r'E$^2$dN/dE [erg/cm$^2$/s]')
     ax_top.legend(loc='upper right')
@@ -169,7 +177,7 @@ def simple_plot_fit(dataset_dict, fit_results_dict, source):
     resid_b = (y_m - logpar_base(x_m, *params_b, z)) / err_m
     resid_a = (y_m - axion_mod(x_m, *params_a, match["p0"], match["ec"], z)) / err_m
     ax_bot.errorbar(x_m, resid_b, fmt='s', color='orange', label='Base resid')
-    ax_bot.errorbar(x_m, resid_a, fmt='o', color='green', label='Axion resid')
+    ax_bot.errorbar(x_m, resid_a, fmt='o', color='green',  label='Axion resid')
     for lvl, style in zip([0,1,-1,2,-2], ['-','--','--',':',':']):
         ax_bot.axhline(lvl, ls=style)
     ax_bot.set_xscale('log')
@@ -178,16 +186,22 @@ def simple_plot_fit(dataset_dict, fit_results_dict, source):
     ax_bot.set_ylabel('Norm. Resid.')
     ax_bot.grid(True, ls='--')
 
-    # annotation with LaTeX χ²
+    # annotation with LaTeX χ² and parameters
     textstr = (
         f"$\\chi^2_{{\\mathrm{{base}}}}/\\mathrm{{dof}} = {match['chi2_base']:.2f}/{match['dof_base']}$\n"
         f"$\\chi^2_{{\\mathrm{{axion}}}}/\\mathrm{{dof}} = {match['chi2_axion']:.2f}/{match['dof_axion']}$\n"
-        f"$\\Delta\\chi^2 = {match['delta']:.2f}$\n"
+        f"$\\Delta\\chi^2 = {match['delta']:.2f}$\n\n"
+        f"Base params: {', '.join(f'{v:.3g}' for v in params_b)}\n"
+        f"Axion params: {', '.join(f'{v:.3g}' for v in params_a)}\n\n"
+        f"$p_0 = {match['p0']:.3f},\\;E_c = {match['ec']:.1f}\\,$MeV\n"
+        f"$m = {match['m']/1e-9:.3f}\\,\\mathrm{{neV}},\\;g = {match['g']:.3e}$"
     )
-    ax_top.text(0.05, 0.05, textstr,
-                transform=ax_top.transAxes,
-                va='bottom', ha='left',
-                bbox=dict(boxstyle='round', facecolor='white', alpha=0.7))
+    ax_top.text(
+        0.05, 0.05, textstr,
+        transform=ax_top.transAxes,
+        va='bottom', ha='left',
+        bbox=dict(boxstyle='round', facecolor='white', alpha=0.7)
+    )
 
     fig.tight_layout()
     plt.savefig(f"./fit_results/NGC_bestfits.png", dpi=300)
