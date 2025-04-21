@@ -9,6 +9,45 @@ from matplotlib.backends.backend_pdf import PdfPages
 import pickle
 from naima.models import EblAbsorptionModel
 import astropy.units as u
+plt.rcParams["text.usetex"]     = True
+plt.rcParams["font.family"]    = "serif"
+plt.rcParams["font.serif"]     = ["Computer Modern Roman"]
+plt.rcParams["mathtext.fontset"] = "cm"
+plt.rcParams.update({
+    # Base font size for text in figures
+    "font.size":          24,   # controls default text size (e.g. axis labels)
+    # Legend
+    "legend.fontsize":    22,   # default legend text size
+    # Title and label sizes (override font.size if you like)
+    "axes.titlesize":     24,
+    "axes.labelsize":     24,
+    # Tick labels
+    "xtick.labelsize":    22,
+    "ytick.labelsize":    22,
+})
+plt.rcParams.update({
+    # tick‐label font size
+    "xtick.labelsize":   20,
+    "ytick.labelsize":   20,
+    # tick direction and which sides
+    "xtick.direction":   "in",
+    "ytick.direction":   "in",
+    "xtick.top":         True,
+    "ytick.right":       True,
+    # tick length (points)
+    "xtick.major.size":  8,
+    "ytick.major.size":  8,
+    "xtick.minor.size":  5,
+    "ytick.minor.size":  5,
+    # tick width (points)
+    "xtick.major.width": 1.2,
+    "ytick.major.width": 1.2,
+    "xtick.minor.width": 0.8,
+    "ytick.minor.width": 0.8,
+})
+
+source_name = "4FGL J0319.8+4130"
+
 axion_data = np.load('./denys/Rikke/Data/scan12.npy')
 ma_all = axion_data[:,0] #eV
 g_all = axion_data[:,1] # GeV**-1
@@ -60,18 +99,6 @@ p0_masked = p0_all_full[row_start:row_stop+1, col_start:col_stop+1]
 m_masked = mass_unique[row_start:row_stop+1]
 g_masked    = g_unique[col_start:col_stop+1]
 
-plt.rcParams.update({
-    'font.family': 'serif',
-    'mathtext.fontset': 'cm',
-    'font.size': 18,
-    'axes.titlesize': 20,
-    'axes.labelsize': 20,
-    'xtick.labelsize': 16,
-    'ytick.labelsize': 16,
-    'legend.fontsize': 16
-})
-
-
 
 def find_best_worst_fits(fits):
     # Normalize into a flat list of result‑dicts
@@ -109,25 +136,13 @@ def simple_plot_fit(dataset_none, fit_results_none, source, png_naming=""):
     def logpar_base(x, Norm, alpha_, beta_):
         E_b = 1000  # Fixed E_b value
         ebl = EblAbsorptionModel(z).transmission(x * u.MeV)
-        return Norm * (x / E_b) ** (-(alpha_ + beta_ * np.log(x / E_b)))
+        return Norm * (x / E_b) ** (-(alpha_ + beta_ * np.log(x / E_b)))*ebl
     # ————— Load data & plot points —————
-    f = fits.open('./test/gll_psc_v35.fit')
-    data = f[1].data; ebounds = f[5].data
-    emin = np.unique(ebounds['LowerEnergy'])
-    emax = np.unique(ebounds['UpperEnergy'])
-    eav = np.sqrt(emin * emax)
-    ok = np.where(data["Source_Name"] == source)
-    fl = data['Flux_Band'][ok][0]
-    ratio0 = data['Unc_Flux_Band'][ok][0][:,0]/fl
-    ratio1 = data['Unc_Flux_Band'][ok][0][:,1]/fl
-    dfl0, dfl1 = fl*ratio0, fl*ratio1
-    ul = np.isnan(dfl0)
-    fl[ul] += 2*dfl1[ul]
-
+    
     # Pick first dataset for residuals
     first = next(iter(dataset_none.values()))
     x_data, y_data, y_err, emin_arr, emax_arr = map(np.array, first)
-    bin_size = emax_arr - emin_arr
+    #bin_size = emax_arr - emin_arr
     
     # ————— Find best & worst —————
     best, worst = None, None
@@ -144,10 +159,17 @@ def simple_plot_fit(dataset_none, fit_results_none, source, png_naming=""):
     p0_worst, ec_worst = worst["p0"], worst["E_c"]
 
     mask = (y_data != 0) & (np.abs(y_data) >= 1e-13)
-    binsize_masked = bin_size[mask]
+    #binsize_masked = bin_size[mask]
     x_masked   = x_data[mask]
-    y_masked   = y_data[mask]/binsize_masked
-    yerr_masked = y_err[mask]/binsize_masked
+    y_masked   = y_data[mask]
+    yerr_masked = y_err[mask]
+    if not mask[-1]:
+            y_err_eff = yerr_masked + 0.03 * y_masked
+    else:
+        y_err_eff0 = yerr_masked[:-1] + 0.03 * y_masked[:-1]
+        y_err_eff1 = yerr_masked[-1] + 0.10 * y_masked[-1]
+        y_err_eff = np.append(y_err_eff0, y_err_eff1)
+    y_err_eff = np.array(y_err_eff)
 
     print(source)
     print(y_masked)
@@ -158,7 +180,8 @@ def simple_plot_fit(dataset_none, fit_results_none, source, png_naming=""):
 
     # Model functions
     def axion_func(E, Norm, alpha, beta, w, p0, E_c, k=2.71):
-        return logpar_base(E, Norm, alpha, beta) * (1 - (p0/(1+(E_c/E)**k))*(1+0.2*np.tanh(w)))
+        p00 = p0*(1+0.2*np.tanh(w))
+        return logpar_base(E, Norm, alpha, beta) * (1 - (p00/(1+(E_c/E)**k)))
 
     fitspec = {}
     for tag, res, p0, ec in [("best", best, p0_best, ec_best), ("worst", worst, p0_worst, ec_worst)]:
@@ -187,12 +210,12 @@ def simple_plot_fit(dataset_none, fit_results_none, source, png_naming=""):
 
 
         # Upper: data + fits
-        ax_top.errorbar(eav[1:], fl[1:]/bin_size, yerr=[-dfl0[1:]/bin_size,dfl1[1:]/bin_size], fmt='o', uplims=ul[1:], label="gll_psc_v35")
+        #ax_top.errorbar(eav[1:], fl[1:], yerr=[-dfl0[1:],dfl1[1:]], fmt='o', uplims=ul[1:], label="gll_psc_v35")
         for label,(x,y,y_err,emin_arr,emax_arr) in dataset_none.items():
-            ax_top.errorbar(x,y/bin_size,xerr=[x-emin_arr,emax_arr-x], yerr=y_err/bin_size, fmt='o', color="black", capsize=3, label=label)
+            ax_top.errorbar(x,y,xerr=[x-emin_arr,emax_arr-x], yerr=y_err, fmt='o', color="black", capsize=3, label=label)
         ax_top.plot(x_grid, spec["base"], label=f"{tag.capitalize()} Base", color="orange",linewidth=2)
         ax_top.plot(x_grid, spec["axion"], linestyle="--", color="green",label=f"{tag.capitalize()} Axion", linewidth=2)
-        ax_top.set_ylabel('dN/dE')
+        ax_top.set_ylabel(r'E$^2$dN/dE [erg/cm$^2$/s]')
         ax_top.set_yscale('log'); ax_top.legend(loc='upper right')
         ax_top.grid(True, which='both', linestyle='--')
 
@@ -232,66 +255,59 @@ def simple_plot_fit(dataset_none, fit_results_none, source, png_naming=""):
 
         ax_top.set_title(f"{source} — {tag.capitalize()} Fit (Δχ²={spec['delta']:.2f})")
         fig.tight_layout()
+        plt.savefig("NGC1275_bestfits.png", dpi=300)
         return fig
 
     fig_best = make_figure("best")
-    fig_worst = make_figure("worst")
-    return fig_best, fig_worst
+    #fig_worst = make_figure("worst")
+    return fig_best
 
 
-with open("all_results_none_31_logpar_no_sys_error_newp0.pkl", "rb") as file:
+with open("none_32_logpar_sys_error.pkl", "rb") as file:
     all_results_none = pickle.load(file)
-output_pdf = "./fit_results/best_worst_fits.pdf"
 
-with PdfPages(output_pdf) as pdf:
-    for source in all_results_none.keys():
-        # Clean filename exactly as you already do
-        cleaned = (
-            source.replace(" ", "")
-                  .replace(".", "dot")
-                  .replace("+", "plus")
-                  .replace("-", "minus")
-                  .replace('"', "")
-        )
+# Clean filename exactly as you already do
+cleaned = (
+    source_name.replace(" ", "")
+            .replace(".", "dot")
+            .replace("+", "plus")
+            .replace("-", "minus")
+            .replace('"', "")
+)
 
-        # Load & sort that source’s spectral‑points FITS
-        f_bin = fits.open(f'./fit_results/{cleaned}_fit_data_NONE.fits')
-        bin_data = f_bin[1].data
-        sorted_idx = np.argsort(bin_data['emin'])
-        sd = bin_data[sorted_idx]
+# Load & sort that source’s spectral‑points FITS
+f_bin = fits.open(f'./fit_results/{cleaned}_fit_data_NONE.fits')
+bin_data = f_bin[1].data
+sorted_idx = np.argsort(bin_data['emin'])
+sd = bin_data[sorted_idx]
+
+# Build the single “No_Filtering” dataset dict
+datasets = {
+    "No_Filtering": (
+        sd['geometric_mean'], sd['flux_tot_value'], sd['flux_tot_error'],
+        sd['emin'], sd['emax']
+    )
+}
+'''
+if source == "4FGL J0617.7-1715":
+    # Stack the arrays as columns; ensure that they are numpy arrays (or convert them if needed)
+    data = np.column_stack((
+        sd['geometric_mean'], 
+        sd['flux_tot_value'], 
+        sd['flux_tot_error'],
+        sd['emin'], 
+        sd['emax']
+    ))
     
-        # Build the single “No_Filtering” dataset dict
-        datasets = {
-            "No_Filtering": (
-                sd['geometric_mean'], sd['flux_tot_value'], sd['flux_tot_error'],
-                sd['emin'], sd['emax']
-            )
-        }
+    # Define a header for clarity in the text file
+    header = "geometric_mean flux flux_error emin emax"
+    
+    # Save the data to a text file. Adjust the format (here '%f') if you need different precision.
+    np.savetxt("output_newmodel.txt", data, header=header, fmt='%s')
+'''
 
-        if source == "4FGL J0617.7-1715":
-            # Stack the arrays as columns; ensure that they are numpy arrays (or convert them if needed)
-            data = np.column_stack((
-                sd['geometric_mean'], 
-                sd['flux_tot_value'], 
-                sd['flux_tot_error'],
-                sd['emin'], 
-                sd['emax']
-            ))
-            
-            # Define a header for clarity in the text file
-            header = "geometric_mean flux_tot_value flux_tot_error emin emax"
-            
-            # Save the data to a text file. Adjust the format (here '%f') if you need different precision.
-            np.savetxt("output.txt", data, header=header, fmt='%s')
+# Generate the two figures
+fig_best, fig_worst = simple_plot_fit(datasets, all_results_none, source_name)
 
 
-        # Generate the two figures
-        fig_best, fig_worst = simple_plot_fit(datasets, all_results_none, source)
-
-        # Save each as a new page
-        pdf.savefig(fig_best)
-        plt.close(fig_best)
-        pdf.savefig(fig_worst)
-        plt.close(fig_worst)
-
-print(f"Saved all best/worst fits into {output_pdf}")
+#print(f"Saved all best/worst fits into {output_pdf}")
