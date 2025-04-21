@@ -139,7 +139,7 @@ def simple_plot_fit(dataset_dict, fit_results_dict, source):
         match_key = min(fitspec, key=lambda k: abs(fitspec[k]["delta"] - target_delta))
         match = fitspec[match_key]
         print(f"Using nearest Δχ²: Δχ² = {match['delta']}")
-
+    print(match)
     # compute model curves
     x_grid = np.logspace(np.log10(x_m.min()), np.log10(x_m.max()), 300)
     base_c = logpar_base(x_grid, *match.get("params_base"), z)
