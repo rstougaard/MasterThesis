@@ -235,12 +235,12 @@ def simple_plot_fit(dataset_none, fit_results_none, source, png_naming=""):
         axion_chi2, axion_dof = spec['chi2_axion'], spec['dof_axion']
         delta = spec['delta']
         textstr = (
-            f"Base χ²/dof = {base_chi2:.2f}/{base_dof}\n"
-            f"Axion χ²/dof = {axion_chi2:.2f}/{axion_dof}\n"
-            f"Δχ² = {delta:.2f}\n"
+            f"Base $\chi ^2$/dof = {base_chi2:.2f}/{base_dof}\n"
+            f"Axion $\chi ^2$/dof = {axion_chi2:.2f}/{axion_dof}\n"
+            f"$\Delta \chi ^2$ = {delta:.2f}\n"
             f"Base params: {', '.join(f'{v:.3g}' for v in spec['params_base'])}\n"
             f"Axion params: {', '.join(f'{v:.3g}' for v in spec['params_axion'])}\n\n"
-            f"p₀={spec['p0']:.3f}, E_c={spec['ec']:.1f}\n"
+            f"p$_0$={spec['p0']:.3f}, E$_c$={spec['ec']:.1f}\n"
             f"m={spec['m']/1e-9:.3f}, g={spec['g']:.3e}"
         )
 
@@ -253,7 +253,7 @@ def simple_plot_fit(dataset_none, fit_results_none, source, png_naming=""):
             bbox=dict(boxstyle="round", facecolor="white", alpha=0.7)
         )
 
-        ax_top.set_title(f"{source} — {tag.capitalize()} Fit (Δχ²={spec['delta']:.2f})")
+        ax_top.set_title(f"{source} : {tag.capitalize()} Fit ($\Delta \chi ^2$={spec['delta']:.2f})")
         fig.tight_layout()
         plt.savefig("./fit_results/NGC1275_bestfits.png", dpi=300)
         return fig
