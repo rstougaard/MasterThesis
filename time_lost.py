@@ -58,11 +58,11 @@ for method in methods:
     for item in get_loopitems(method):
         lc_file   = os.path.join(
             general_path_for_slurm, 'data', source_clean,
-            method, f'lc_{item}.fit'
+            method, f'lc_{item}.fits'
         )
         flare_txt = os.path.join(
             general_path_for_slurm, 'data', source_clean,
-            method, f'flare_interval_{item}.txt'
+            method, f'flare_intervals_{item}.txt'
         )
 
         print(f"\n--- {method} {item} ---")
