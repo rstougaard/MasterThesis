@@ -1,94 +1,78 @@
 import os
+import numpy as np
 from astropy.io import fits
-def compute_time_units(seconds):
-    """
-    Convert time in seconds to years, months (approx.), and days.
-    """
-    minutes = seconds / 60
-    hours = minutes / 60
-    days = hours / 24
-    years = days / 365.25
-    months = years * 12
-    return years, months, days
-# Configuration
+
+def secs_to_human(seconds):
+    mins = seconds / 60
+    hrs = mins / 60
+    days = hrs / 24
+    yrs = days / 365.25
+    return yrs, days, hrs
+
+# CONFIG
 general_path_for_slurm = "/groups/pheno/sqd515/MasterThesis"
-methods = ['NONE', 'LIN', 'SNR']
-snrratios = [10, 5, 3]
+methods = ['LIN', 'SNR']
+snrratios = ['snr10', 'snr5', 'snr3']
 time_intervals = ['week', 'month']
 source_name = '4FGL J0319.8+4130'
-source_name_cleaned = (
-    source_name.replace(' ', '')
-    .replace('.', 'dot')
-    .replace('+', 'plus')
-    .replace('-', 'minus')
-    .replace('"', '')  # Ensure no extra quotes remain
-)
+source_clean = (source_name.replace(' ', '')
+                        .replace('.', 'dot')
+                        .replace('+', 'plus')
+                        .replace('-', 'minus')
+                        .replace('"', ''))
 
-# Helper to inspect FITS content
-
-def inspect_fits(path):
-    if not os.path.isfile(path):
-        print(f"File not found: {path}")
-        return
-    try:
-        with fits.open(path) as hdulist:
-            print(f"\nContents of {path}:")
-            hdulist.info()
-    except Exception as e:
-        print(f"Error reading {path}: {e}")
-
-#─ BUILD LIST OF GTI FILES ───────────────────────────────────────────
-gti_info = []  # tuples of (label, path)
-for method in methods:
-    if method == 'NONE':
-        label = 'NONE'
-        path = os.path.join(general_path_for_slurm, 'data', source_name_cleaned, 'gti.fits')
-        gti_info.append((label, path))
-    elif method == 'SNR':
-        for snr in snrratios:
-            label = f'SNR_{snr}'
-            path = os.path.join(
-                general_path_for_slurm, 'data', source_name_cleaned,
-                method, f'gti_noflares_snr{snr}.fits'
-            )
-            gti_info.append((label, path))
+# Build loopitems per method
+def get_loopitems(method):
+    if method == 'SNR':
+        return [str(s) for s in snrratios]
     elif method == 'LIN':
-        for interval in time_intervals:
-            label = f'LIN_{interval}'
-            path = os.path.join(
-                general_path_for_slurm, 'data', source_name_cleaned,
-                method, f'gti_noflares_{interval}.fits'
-            )
-            gti_info.append((label, path))
+        return time_intervals
+    return []
 
-# Read GTI durations
-results = {}
-for label, path in gti_info:
-    if not os.path.isfile(path):
-        print(f"[MISSING] {label}: {path}")
-        continue
-    with fits.open(path) as hdul:
-        gti = hdul['GTI'].data
-        durations = gti['STOP'] - gti['START']
-        total = durations.sum()
-        results[label] = total
+# Process each method/loopitem pair
+for method in methods:
+    for item in get_loopitems(method):
+        # paths
+        lc_file = os.path.join(
+            general_path_for_slurm, 'data', source_clean,
+            method, f'lc_{item}.fit'
+        )
+        flare_txt = os.path.join(
+            general_path_for_slurm, 'data', source_clean,
+            method, f'flare_interval_{item}.txt'
+        )
 
-# Baseline NONE total
-total_none = results.get('NONE')
-if total_none is None:
-    raise RuntimeError("Baseline NONE GTI not found or could not be read.")
+        print(f"\n--- {method} {item} ---")
+        # Check existence
+        if not os.path.isfile(lc_file):
+            print(f"LC file missing: {lc_file}")
+            continue
+        if not os.path.isfile(flare_txt):
+            print(f"Flare-interval file missing: {flare_txt}")
+            continue
 
-# Compare and report
-print(f"Baseline (NONE) total duration: {total_none:.1f} s")
-years_none, months_none, days_none = compute_time_units(total_none)
-print(f"  → {years_none:.2f} years ({months_none:.1f} months; {days_none:.1f} days)")
+        # Sum total LC exposure
+        with fits.open(lc_file) as fb:
+            data = fb[1].data
+            total_lc = np.sum(data['TIMEDEL'])
 
-for label, total in results.items():
-    if label == 'NONE':
-        continue
-    lost = total_none - total
-    frac = lost / total_none * 100
-    yrs, mons, dys = compute_time_units(lost)
-    print(f"\n{label} total duration: {total:.1f} s")
-    print(f"  Lost time: {lost:.1f} s  ({frac:.2f}% of NONE)")
-    print(f"    → {yrs:.2f} years ({mons:.1f} months; {dys:.1f} days)")
+        # Sum total flare intervals
+        intervals = np.loadtxt(flare_txt)
+        # ensure 2D
+        if intervals.ndim == 1:
+            intervals = intervals.reshape(1, -1)
+        durations = intervals[:,1] - intervals[:,0]
+        total_flare = np.sum(durations)
+
+        # Compute net
+        net = total_lc - total_flare
+        frac_lost = total_flare / total_lc * 100 if total_lc>0 else np.nan
+
+        # Print summary
+        yrs_lc, days_lc, hrs_lc = secs_to_human(total_lc)
+        yrs_fl, days_fl, hrs_fl = secs_to_human(total_flare)
+        yrs_net, days_net, hrs_net = secs_to_human(net)
+
+        print(f"Total LC time      : {total_lc:.1f} s ({days_lc:.2f} d)")
+        print(f"Total flare time   : {total_flare:.1f} s ({days_fl:.2f} d) = {frac_lost:.2f}% lost")
+        print(f"Net good time      : {net:.1f} s ({days_net:.2f} d)\n")
