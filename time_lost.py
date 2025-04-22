@@ -35,7 +35,7 @@ for method in methods:
         # paths
         lc_file = os.path.join(
             general_path_for_slurm, 'data', source_clean,
-            method, f'lc_{item}.fit'
+            method, f'lc_{item}.fits'
         )
         flare_txt = os.path.join(
             general_path_for_slurm, 'data', source_clean,
