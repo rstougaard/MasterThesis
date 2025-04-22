@@ -39,7 +39,7 @@ for method in methods:
         )
         flare_txt = os.path.join(
             general_path_for_slurm, 'data', source_clean,
-            method, f'flare_interval_{item}.txt'
+            method, f'flare_intervals_{item}.txt'
         )
 
         print(f"\n--- {method} {item} ---")
