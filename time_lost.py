@@ -2,7 +2,7 @@ import os
 from astropy.io import fits
 
 # Configuration
-general_path_for_slurm = '/path/to/slurm'
+general_path_for_slurm = "/groups/pheno/sqd515/MasterThesis"
 methods = ['NONE', 'LIN', 'SNR']
 snrratios = [10, 5, 3]
 time_intervals = ['week', 'month']
@@ -36,6 +36,7 @@ for method in methods:
             general_path_for_slurm,
             'data',
             source_name_cleaned,
+            method,
             'gti.fits'
         )
         inspect_fits(gti)
@@ -48,8 +49,7 @@ for method in methods:
                 general_path_for_slurm,
                 'data',
                 source_name_cleaned,
-                method,
-                f'gti_noflares_{loop_item}.fits'
+                f'gti_noflares_snr{loop_item}.fits'
             )
             inspect_fits(gti_noflares)
 
