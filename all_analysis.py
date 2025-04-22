@@ -95,7 +95,7 @@ def filtering(vars, snrratios=None, time_intervals=None):
             gt.filter['emax'] = maximal_energy
             gt.filter['zmax'] = 90
             gt.filter['tmin'] = 239557417
-            gt.filter['tmax'] = 435456000
+            gt.filter['tmax'] = 754704006
             gt.filter['infile'] = tmp_evlist
             gt.filter['outfile'] = tmp_gti
             gt.filter.run()  # Run GTSELECT
@@ -137,7 +137,7 @@ def filtering(vars, snrratios=None, time_intervals=None):
             gt.evtbin['algorithm'] = 'LC'
             gt.evtbin['tbinalg'] = method
             gt.evtbin['tstart'] = 239557417
-            gt.evtbin['tstop'] = 435456000
+            gt.evtbin['tstop'] = 754704006
             gt.evtbin['emin'] = minimal_energy
             gt.evtbin['emax'] = maximal_energy
             gt.evtbin['ebinalg'] = "NONE"
@@ -312,7 +312,7 @@ def filtering(vars, snrratios=None, time_intervals=None):
             gt.filter['emax'] = maximal_energy
             gt.filter['zmax'] = 90
             gt.filter['tmin'] = 239557417
-            gt.filter['tmax'] = 435456000
+            gt.filter['tmax'] = 754704006
             gt.filter['infile'] = tmp_evlist
             gt.filter['outfile'] = tmp_gti_noflares
             gt.filter.run() #run GTSELECT
@@ -411,7 +411,7 @@ def get_gti_bin(vars, snrratios=None, time_intervals=None):
                         gt.filter['emax'] = emax
                         gt.filter['zmax'] = 90
                         gt.filter['tmin'] = 239557417
-                        gt.filter['tmax'] = 435456000
+                        gt.filter['tmax'] = 754704006
                         gt.filter['infile'] = evlist
                         gt.filter['outfile'] = temp_gti_noflares_bin
                         gt.filter.run() #run GTSELECT
@@ -470,7 +470,7 @@ def get_gti_bin(vars, snrratios=None, time_intervals=None):
                         gt.filter['emax'] = emax
                         gt.filter['zmax'] = 90
                         gt.filter['tmin'] = 239557417
-                        gt.filter['tmax'] = 435456000
+                        gt.filter['tmax'] = 754704006
                         gt.filter['infile'] = evlist
                         gt.filter['outfile'] = temp_gti_noflares_bin
                         gt.filter.run() #run GTSELECT
@@ -1377,9 +1377,7 @@ def delete_fits_and_xml_files(source_name_cleaned, method):
 ##################################################################################
 ##################################################################################
 
-#snrratios = [3, 5, 10]
-#time_intervals = ["week", "month"]
-filename = f'{general_path_for_slurm}/rerun.txt'
+filename = f'{general_path_for_slurm}/Source_ra_dec_specin.txt'
 snrratios = [10, 5, 3]
 time_intervals = ["week","month"]
 
@@ -1438,18 +1436,18 @@ def process_line(line):
     else:
         print(f'Likelihood for linear binned data done for {source_name}!')
     
-    #if not os.path.exists(f"{general_path_for_slurm}/fit_results/{source_name_cleaned}_fit_data_SNR.fits"):
-    filtering(vars_snr, snrratios=snrratios)
-    get_gti_bin(vars_snr, snrratios=snrratios)
-    generate_files(vars_snr, snrratios=snrratios, number_of_bins=7)
-    source_maps(vars_snr, snrratios=snrratios)
-    print(source_name)
-    run_binned_likelihood(vars_snr, snrratios=snrratios, free_params="None")
-    print(f'Likelihood for SNR binned data done for {source_name}!')
-    delete_fits_and_xml_files(source_name_cleaned, method = "SNR")
-        
-    #else:
-    print(f'Likelihood for SNR binneddata done for {source_name}!')
+    if not os.path.exists(f"{general_path_for_slurm}/fit_results/{source_name_cleaned}_fit_data_SNR.fits"):
+        filtering(vars_snr, snrratios=snrratios)
+        get_gti_bin(vars_snr, snrratios=snrratios)
+        generate_files(vars_snr, snrratios=snrratios, number_of_bins=7)
+        source_maps(vars_snr, snrratios=snrratios)
+        print(source_name)
+        run_binned_likelihood(vars_snr, snrratios=snrratios, free_params="None")
+        print(f'Likelihood for SNR binned data done for {source_name}!')
+        delete_fits_and_xml_files(source_name_cleaned, method = "SNR")
+            
+    else:
+        print(f'Likelihood for SNR binneddata done for {source_name}!')
    
     
 
