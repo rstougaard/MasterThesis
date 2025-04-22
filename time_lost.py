@@ -2,7 +2,7 @@ import os
 from astropy.io import fits
 
 # Configuration
-general_path_for_slurm = "/groups/pheno/sqd515/MasterThesis"
+general_path_for_slurm = '/path/to/slurm'
 methods = ['NONE', 'LIN', 'SNR']
 snrratios = [10, 5, 3]
 time_intervals = ['week', 'month']
@@ -39,16 +39,29 @@ for method in methods:
             'gti.fits'
         )
         inspect_fits(gti)
-    else:
+
+    elif method == 'SNR':
+        # Loop over SNR ratios for SNR method
         for snrratio in snrratios:
-            for interval in time_intervals:
-                # Construct identifier for loop_item
-                loop_item = f"{snrratio}_{interval}"
-                gti_noflares = os.path.join(
-                    general_path_for_slurm,
-                    'data',
-                    source_name_cleaned,
-                    method,
-                    f'gti_noflares_{loop_item}.fits'
-                )
-                inspect_fits(gti_noflares)
+            loop_item = str(snrratio)
+            gti_noflares = os.path.join(
+                general_path_for_slurm,
+                'data',
+                source_name_cleaned,
+                method,
+                f'gti_noflares_{loop_item}.fits'
+            )
+            inspect_fits(gti_noflares)
+
+    elif method == 'LIN':
+        # Loop over time intervals for LIN method
+        for interval in time_intervals:
+            loop_item = interval
+            gti_noflares = os.path.join(
+                general_path_for_slurm,
+                'data',
+                source_name_cleaned,
+                method,
+                f'gti_noflares_{loop_item}.fits'
+            )
+            inspect_fits(gti_noflares)
