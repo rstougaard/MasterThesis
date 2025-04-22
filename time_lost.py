@@ -36,7 +36,6 @@ for method in methods:
             general_path_for_slurm,
             'data',
             source_name_cleaned,
-            method,
             'gti.fits'
         )
         inspect_fits(gti)
@@ -49,6 +48,7 @@ for method in methods:
                 general_path_for_slurm,
                 'data',
                 source_name_cleaned,
+                method,
                 f'gti_noflares_snr{loop_item}.fits'
             )
             inspect_fits(gti_noflares)
