@@ -213,11 +213,14 @@ def filtering(vars, snrratios=None, time_intervals=None):
             bin_data = f_bin[1].data
 
             # Extract data
-            X_bin = bin_data['TIME']
-            Y_bin = bin_data['COUNTS'] / bin_data['EXPOSURE']  # Flux in photons/cm²/s
-            time_intervals = bin_data['TIMEDEL']  # Duration of each time interval
+            X_bin  = bin_data['TIME']
+            exposure = bin_data['EXPOSURE']
+            ε = 1e-10
+            safe_exposure = np.where(exposure > 0, exposure, ε)
+
+            Y_bin       = bin_data['COUNTS']  / safe_exposure  # Flux
             x_error_bin = bin_data['TIMEDEL'] / 2
-            y_error_bin = bin_data['ERROR'] / bin_data['EXPOSURE']
+            y_error_bin = bin_data['ERROR']   / safe_exposure
 
             # Initialize filtering
             filtered_Y = Y_bin.copy()
@@ -1413,7 +1416,7 @@ def process_line(line):
 
     
     if not os.path.exists(f"{general_path_for_slurm}/fit_results/{source_name_cleaned}_fit_data_NONE.fits"):
-        #delete_fits_and_xml_files(source_name_cleaned, method = "NONE")
+        delete_fits_and_xml_files(source_name_cleaned, method = "NONE")
         get_gti_bin(vars_none)
         generate_files(vars_none, number_of_bins=7)
         source_maps(vars_none)
