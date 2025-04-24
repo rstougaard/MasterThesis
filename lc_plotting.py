@@ -23,23 +23,32 @@ def lc_plotting(vars, snrratios=None, time_intervals=None):
 
     for loop_item, color in zip(loop_items, colors):
         if method == 'SNR':
-            lc = f'./data/{source_name_cleaned}/{method}/lc_snr{loop_item}.fits'
-            plot_file = f'./data/{source_name_cleaned}/{method}/lc_snr{loop_item}.png'
+            lc = f'./data/{source_name_cleaned}/SNR/lc_snr{loop_item}.fits'
+            plot_file = f'./test/lc_snr{loop_item}.png'
             
         elif method == 'LIN':
-            lc = f'./data/{source_name_cleaned}/{method}/lc_{loop_item}.fits'
-            plot_file = f'./data/{source_name_cleaned}/{method}/lc_{loop_item}.png'
+            lc = f'./data/{source_name_cleaned}/LIN/lc_{loop_item}.fits'
+            plot_file = f'./test/NGC1275/lc_{loop_item}.png'
                 
         f_bin = fits.open(lc)
         bin_data = f_bin[1].data
 
         # Extract data
+        X_bin  = bin_data['TIME']
+        exposure = bin_data['EXPOSURE']
+        ε = 1e-10
+        safe_exposure = np.where(exposure > 0, exposure, ε)
+
+        Y_bin       = bin_data['COUNTS']  / safe_exposure  # Flux
+        x_error_bin = bin_data['TIMEDEL'] / 2
+        y_error_bin = bin_data['ERROR']   / safe_exposure
+        '''
         X_bin = bin_data['TIME']
         Y_bin = bin_data['COUNTS'] / bin_data['EXPOSURE']  # Flux in photons/cm²/s
         time_intervals = bin_data['TIMEDEL']  # Duration of each time interval
         x_error_bin = bin_data['TIMEDEL'] / 2
         y_error_bin = bin_data['ERROR'] / bin_data['EXPOSURE']
-
+        '''
         # Initialize filtering
         filtered_Y = Y_bin.copy()
         filtered_mask = np.full(Y_bin.shape, True)
@@ -103,9 +112,9 @@ def lc_plotting(vars, snrratios=None, time_intervals=None):
         plt.yscale('log')
         plt.grid(True, which="both", linestyle="--", linewidth=0.5)
         if method == 'SNR':
-            plt.ylim(7e-8, 5e-6)
+            plt.ylim(5e-6, 5e-5)
         elif method == 'LIN':
-            plt.ylim(1e-7, 2e-6)
+            plt.ylim(5e-6, 5e-5)
 
         # Explicitly set tick params
         plt.tick_params(axis='both', which='major', labelsize=18, width=2, length=8, color='black', direction='inout')
@@ -118,6 +127,7 @@ def lc_plotting(vars, snrratios=None, time_intervals=None):
         plt.tight_layout()
         plt.savefig(plot_file, bbox_inches='tight', dpi=300)
         print(f"Plot saved as: {plot_file}")
+        #plt.show()
 
     return
 vars_snr = ("4FGL J0319.8+4130", None, None, "SNR", None, None, None, 100, 1000000)
