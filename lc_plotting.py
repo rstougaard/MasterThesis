@@ -127,7 +127,7 @@ def lc_plotting(vars, snrratios=None, time_intervals=None):
         # Customize plot
         plt.ylabel('Flux [photons/cm²/s]')
         plt.xlabel('Time [s]')
-        if method == "LIN"
+        if method == "LIN":
             plt.title(f'Lightcurve for {loop_item}')
         if method == "SNR":
             if loop_item == "snr3":
