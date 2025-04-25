@@ -53,7 +53,7 @@ def lc_plotting(vars, snrratios=None, time_intervals=None):
             
         elif method == 'LIN':
             lc = f'./data/{source_name_cleaned}/LIN/lc_{loop_item}.fits'
-            plot_file = f'./test/NGC1275/lc_{loop_item}.png'
+            plot_file = f'./test/lc_{loop_item}.png'
                 
         f_bin = fits.open(lc)
         bin_data = f_bin[1].data
