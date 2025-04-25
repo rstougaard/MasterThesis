@@ -109,6 +109,8 @@ def simple_plot_fit(dataset_dict, fit_results_dict, source):
     fitspec = {}
     for i_row, row in enumerate(fit_results_dict[source]["No_Filtering"]):
         for j_col, r in enumerate(row):
+            mv       = r["m"]
+            gv       = r["g"]
             p0v       = r["p0"]
             ecv       = r["E_c"]
             dchi      = r["fit_result"]["DeltaChi2"]
@@ -118,20 +120,16 @@ def simple_plot_fit(dataset_dict, fit_results_dict, source):
             adof      = r["fit_result"]["Axion"]["dof"]
             params_b  = r["fit_result"]["Base"]["params"]
             params_a  = r["fit_result"]["Axion"]["params"]
-            # grid lookup for m,g
-            mask_g = np.isclose(_p0, p0v) & np.isclose(_ec, ecv)
-            ii, jj = np.where(mask_g)
-            mval = float(_m[ii[0], jj[0]]) if ii.size else np.nan
-            gval = float(_g[ii[0], jj[0]]) if ii.size else np.nan
+            
             key = f"fit_{i_row}_{j_col}"
             fitspec[key] = {
                 "p0": p0v, "ec": ecv, "delta": dchi,
                 "chi2_base": bchi, "dof_base": bdof,
                 "chi2_axion": achi, "dof_axion": adof,
                 "params_base": params_b, "params_axion": params_a,
-                "m": mval, "g": gval
+                "m": mv, "g": gv
             }
-    target_delta = -2.729
+    target_delta = -6.578
     # find exact or nearest by Δχ²
     match = None
     for spec in fitspec.values():
@@ -162,7 +160,7 @@ def simple_plot_fit(dataset_dict, fit_results_dict, source):
     )
     
     ax_top.plot(x_grid, base_c,  color='darkorange', lw=2, label='Base fit')
-    ax_top.plot(x_grid, axion_c, color='blue',  ls='--', lw=2, label='Axion fit')
+    ax_top.plot(x_grid, axion_c, color='blue',  ls='--', lw=2, label='ALP fit')
     ax_top.set_yscale('log')
     ax_top.set_ylabel(r'E$^2$dN/dE [erg/cm$^2$/s]')
     
@@ -179,7 +177,7 @@ def simple_plot_fit(dataset_dict, fit_results_dict, source):
     resid_b = (y_m - logpar_base(x_m, *params_b, z)) / err_m
     resid_a = (y_m - axion_mod(x_m, *params_a, match["p0"], match["ec"], z)) / err_m
     ax_bot.errorbar(x_m, resid_b, fmt='s', color='darkorange', label='Base resid')
-    ax_bot.errorbar(x_m, resid_a, fmt='o', color='blue',  label='Axion resid')
+    ax_bot.errorbar(x_m, resid_a, fmt='o', color='blue',  label='ALP resid')
     for lvl, style in zip([0,1,-1,2,-2], ['-','--','--',':',':']):
         ax_bot.axhline(lvl, ls=style)
     ax_bot.set_xscale('log')
@@ -195,8 +193,8 @@ def simple_plot_fit(dataset_dict, fit_results_dict, source):
         f"$\\Delta\\chi^2 = {match['delta']:.2f}$\n\n"
         f"Base params: {', '.join(f'{v:.3g}' for v in params_b)}\n"
         f"Axion params: {', '.join(f'{v:.3g}' for v in params_a)}\n\n"
-        f"$p_0 = {match['p0']:.3f},\\;E_c = {match['ec']:.1f}\\,$MeV\n"
-        f"$m = {match['m']/1e-9:.3f}\\,\\mathrm{{neV}},\\;g =$ {match['g']:.3g}"
+        f"$p_0 = {match['p0']:.2f},\\;E_c = {match['ec']:.1f}\\,$MeV\n"
+        f"$m_a = {match['m']/1e-9:.2f}\\,\\mathrm{{neV}},\\;g{{a \gamma}} =$ {match['g']:.2g} GeV$^{-1}$"
     )
     ax_top.text(
         0.05, 0.05, textstr,
