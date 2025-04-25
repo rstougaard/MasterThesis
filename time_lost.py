@@ -96,7 +96,7 @@ for method in methods:
         print(f"Non‑flare duration: {yrs_noflare:.2f} years")
         print(f"Flare duration    : {yrs_flare:.2f} years")
         print(f"Flare fraction    : {frac_lost:.2f}%")
-'''
+
 import os
 import numpy as np
 import pandas as pd
@@ -107,11 +107,14 @@ from astropy.io import fits
 general_path_for_slurm = "/groups/pheno/sqd515/MasterThesis/data"
 methods = {
     'week':  ('LIN', 'week'),
-    'month': ('LIN', 'month'),
-    'snr3':  ('SNR', 'snr3'),
-    'snr5':  ('SNR', 'snr5'),
-    'snr10': ('SNR', 'snr10'),
+    'month': ('LIN', 'month')
+    
 }
+'''
+'snr3':  ('SNR', 'snr3'),
+'snr5':  ('SNR', 'snr5'),
+'snr10': ('SNR', 'snr10'),
+'''
 
 # Read sources
 results = []
@@ -162,4 +165,3 @@ with open(outpath, 'w') as f:
 
 print(f"Saved LaTeX table to {outpath}")
 
-'''
