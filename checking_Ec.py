@@ -35,7 +35,7 @@ for row in results_list:
         })
 
 # Sort by Ec
-flat_results_sorted = sorted(flat_results, key=lambda x: x["delta_chi2"])
+flat_results_sorted = sorted(flat_results, key=lambda x: x["m"])
 
 # Print results
 print("m      g         E_c [MeV]      p₀         χ²_base      χ²_axion      Δχ²")
