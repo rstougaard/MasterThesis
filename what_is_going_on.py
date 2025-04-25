@@ -221,7 +221,7 @@ def plot_individual_delta_chi2_heatmap_with_pdf(all_results, dataset_labels, sys
                         'grid': mean_delta_chi2_grid,
                         'label': 'Without systematics',
                         'color_pos': 'cyan',   'linestyle_pos': 'solid',
-                        'color_neg': 'green',  'linestyle_neg': 'solid'
+                        'color_neg': 'lime',  'linestyle_neg': 'solid'
                     })
 
                 # — Systematics (filtered) —
