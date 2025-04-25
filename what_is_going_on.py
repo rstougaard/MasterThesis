@@ -403,8 +403,8 @@ def plot_mean_delta_chi2_heatmap_nosys_base(all_results,
             plot_specs.append({
                 'grid': mean_delta_chi2_grid,
                 'label': 'Without systematics',
-                'color_pos': 'red',   'linestyle_pos': 'solid',
-                'color_neg': 'lime',  'linestyle_neg': 'solid'
+                'color_pos': 'lime',   'linestyle_pos': 'solid',
+                'color_neg': 'tomato',  'linestyle_neg': 'solid'
             })
 
         # — Mean (no filtering) —
@@ -421,7 +421,7 @@ def plot_mean_delta_chi2_heatmap_nosys_base(all_results,
             plot_specs.append({
                 'grid': systematic_grid,
                 'label': 'With systematics',
-                'color_pos': 'red',   'linestyle_pos': 'dashed',
+                'color_pos': 'tomato',   'linestyle_pos': 'dashed',
                 'color_neg': 'darkorange',  'linestyle_neg': 'dashed'
             })
 
@@ -672,7 +672,7 @@ def plot_mean_delta_chi2_heatmap_sys_base(
         ]
 
         # Create the two legends. Add the first legend to the axes so that the second does not overwrite it.
-        legend1 = plt.legend(handles=color_handles, loc='upper left', title="Threshold")
+        #legend1 = plt.legend(handles=color_handles, loc='upper left', title="Threshold")
         #plt.gca().add_artist(legend1)
         #plt.legend(handles=linestyle_handles, loc='lower left', title="Systematics")
 
