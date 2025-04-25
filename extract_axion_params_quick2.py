@@ -23,7 +23,7 @@ g_all = axion_data[:, 1]    # GeV**-1
 ec_all = axion_data[:, 2] / 1e6  # MeV
 p0_all = axion_data[:, 3]
 k_all = axion_data[:, 4]
-#k = np.mean(k_all)
+k = np.mean(k_all)
 
 n_g = 40
 n_total = axion_data.shape[0]
@@ -32,7 +32,7 @@ n_mass = n_total // n_g
 # Reshape for the (E_c, p₀) grid.
 ec_all_full = (axion_data[:, 2] / 1e6).reshape(n_mass, n_g)
 p0_all_full = p0_all.reshape(n_mass, n_g)
-k_all_full = k_all.reshape(n_mass, n_g)
+#k_all_full = k_all.reshape(n_mass, n_g)
 
 
 # Extract unique values for (mₐ, g) plot.
@@ -59,7 +59,7 @@ print("Selected g stop:", g_unique[col_stop])
 # Filter the full grid arrays.
 ec_masked = ec_all_full[row_start:row_stop+1, col_start:col_stop+1]
 p0_masked = p0_all_full[row_start:row_stop+1, col_start:col_stop+1]
-k_masked = k_all_full[row_start:row_stop+1, col_start:col_stop+1]
+#k_masked = k_all_full[row_start:row_stop+1, col_start:col_stop+1]
 
 # Also filter the unique arrays.
 m_masked = mass_unique[row_start:row_stop+1]
@@ -91,7 +91,7 @@ def reduced_chi_square(y_obs, y_fit, y_err, num_params):
 # The fitting function.
 # -------------------------
 
-def fit_data(x, y, y_err, p0, E_c, k, source_name, dataset_label, useEBL=True, fitting_method="no_sys_error", basefunc="cutoff"):
+def fit_data(x, y, y_err, p0, E_c, source_name, dataset_label, useEBL=True, fitting_method="no_sys_error", basefunc="cutoff"):
     # Filter out points with y == 0 (or nearly zero).
     mask = (y != 0) & (np.abs(y) >= 1e-13)
     x_filtered = x[mask]
@@ -186,29 +186,35 @@ def fit_data(x, y, y_err, p0, E_c, k, source_name, dataset_label, useEBL=True, f
 
 def process_chunk(i, j_start, j_end, x, y, y_err, source_name, dataset_label, useEBL, fitting_method, basefunc):
     results_chunk = []
+    # slice out the p0 and Ec for this chunk
     p0_chunk = p0_masked[i, j_start:j_end]
     ec_chunk = ec_masked[i, j_start:j_end]
-    k_chunk = k_masked[i, j_start:j_end]
-    for p0_val, ec_val, k_val in zip(p0_chunk, ec_chunk, k_chunk):
+    # slice the g values for these columns
+    g_chunk  = g_masked[j_start:j_end]
+    # m is constant along this row
+    m_val    = m_masked[i]
+
+    for p0_val, ec_val, g_val in zip(p0_chunk, ec_chunk, g_chunk):
         fit_result = fit_data(
             x=np.array(x),
             y=np.array(y),
             y_err=np.array(y_err),
             p0=p0_val,
             E_c=ec_val,
-            k=k_val,  # k is defined globally.
             source_name=source_name,
             dataset_label=dataset_label,
             useEBL=useEBL,
             fitting_method=fitting_method,
             basefunc=basefunc
         )
+
         results_chunk.append({
-            "p0": p0_val,
-            "E_c": ec_val,
+            "m":         m_val,
+            "g":         g_val,
+            "p0":        p0_val,
+            "E_c":       ec_val,
             "fit_result": fit_result
         })
-    return results_chunk
 
 
 # -------------------------
@@ -283,9 +289,15 @@ def GetCatalogueSpectrum(nn, min_frac=0.03, abs_floor=None):
     # pick out your source
     ok = np.where(data['Source_Name'] == nn)
     fl     = data['nuFnu_Band'][ok][0]
+    fluxband = bin_data['Flux_Band'][ok][0]
+    ε = 1e-10
+    safe_fluxband = np.where(fluxband > 0, fluxband, ε)
+    ratio0 = data['Unc_Flux_Band'][ok][0][:,0] / safe_fluxband
+    ratio1 = data['Unc_Flux_Band'][ok][0][:,1] / safe_fluxband
+    '''
     ratio0 = data['Unc_Flux_Band'][ok][0][:,0] / data['Flux_Band'][ok][0]
     ratio1 = data['Unc_Flux_Band'][ok][0][:,1] / data['Flux_Band'][ok][0]
-
+    '''
     dfl1 = -fl * ratio0
     dfl2 = +fl * ratio1
 
@@ -309,7 +321,66 @@ def GetCatalogueSpectrum(nn, min_frac=0.03, abs_floor=None):
     return (eav[good][1:], fl[good][1:], dfl[good][1:], 
             [eav[good][1:] - emin[good][1:], emax[good][1:] - eav[good][1:]])
 
+with open('Source_ra_dec_specin.txt', 'r') as file:
+    for line in file:
+        parts = shlex.split(line.strip())
+        source_name = parts[0]
+        ra = float(parts[1])
+        dec = float(parts[2])
+        specin = float(parts[3])
+        
+        source_name_cleaned = (source_name.replace(" ", "")
+                                             .replace(".", "dot")
+                                             .replace("+", "plus")
+                                             .replace("-", "minus")
+                                             .replace('"', ''))
+        
+        f_bin = fits.open(f'./fit_results/{source_name_cleaned}_fit_data_NONE.fits')
+        bin_data = f_bin[1].data
 
+        sorted_indices = np.argsort(bin_data['emin'])
+        sorted_data_none = bin_data[sorted_indices]       
+        bin_size = np.array(sorted_data_none['emax']) - np.array(sorted_data_none['emin'])
+        e_lowers = sorted_data_none['geometric_mean'] - sorted_data_none['emin']
+        e_uppers = np.array(sorted_data_none['emax']) - np.array(sorted_data_none['geometric_mean'])
+        datasets = {
+            "No_Filtering": (
+                sorted_data_none['geometric_mean'],
+                sorted_data_none['flux_tot_value'],
+                sorted_data_none['flux_tot_error'],
+                sorted_data_none['emin'],
+                sorted_data_none['emax']
+            )
+        }
+
+       
+        
+        #colors_snr = ['blue', 'orange', 'green']
+        #colors_lin = ['purple', 'brown']
+        print(source_name)
+        # Run fits without systematic errors.
+        results = nested_fits_combined_mp(
+            datasets, source_name, useEBL=True, fitting_method="no_sys_error",
+            basefunc="logpar", chunk_size=30
+        )
+        
+       
+        all_results_none[source_name] = results
+        with open("none_new0_no_sys_error.pkl", "wb") as file_out:
+            pickle.dump(all_results_none, file_out)
+        
+        
+        # Run fits with systematic errors.
+        results_sys = nested_fits_combined_mp(
+            datasets, source_name, useEBL=True, fitting_method="sys_error",
+            basefunc="logpar", chunk_size=30
+        )
+               
+        all_results_none_sys[source_name] = results_sys
+        with open("none_new0_sys_error.pkl", "wb") as file_out:
+            pickle.dump(all_results_none_sys, file_out)
+
+'''
 with open('sources_for_heatmaps.txt', 'r') as file:
     for line in file:
         parts = shlex.split(line.strip())
@@ -323,7 +394,7 @@ with open('sources_for_heatmaps.txt', 'r') as file:
                                              .replace("+", "plus")
                                              .replace("-", "minus")
                                              .replace('"', ''))
-        '''
+        
         f_bin = fits.open(f'./fit_results/{source_name_cleaned}_fit_data_NONE.fits')
         f_bin_snr = fits.open(f'./fit_results/{source_name_cleaned}_fit_data_SNR.fits')
         f_bin_lin = fits.open(f'./fit_results/{source_name_cleaned}_fit_data_LIN.fits')
@@ -405,15 +476,8 @@ with open('sources_for_heatmaps.txt', 'r') as file:
                 sorted_data_lin_month['emax']
             )
         }
-        '''
-        eav0, f0, df0, de0 = GetCatalogueSpectrum(source_name)
-        datasets = {
-            "Catalogue": (
-                eav0,
-                f0,
-                df0
-            )
-        }
+        
+       
         
         #colors_snr = ['blue', 'orange', 'green']
         #colors_lin = ['purple', 'brown']
@@ -423,7 +487,7 @@ with open('sources_for_heatmaps.txt', 'r') as file:
             datasets, source_name, useEBL=True, fitting_method="no_sys_error",
             basefunc="logpar", chunk_size=30
         )
-        '''
+        
         results_snr = nested_fits_combined_mp(
             datasets_snr, source_name, useEBL=True, fitting_method="no_sys_error",
             basefunc="logpar", chunk_size=30
@@ -432,26 +496,25 @@ with open('sources_for_heatmaps.txt', 'r') as file:
             datasets_lin, source_name, useEBL=True, fitting_method="no_sys_error",
             basefunc="logpar", chunk_size=30
         )
-        '''
+        
         all_results_none[source_name] = results
-        with open("catalogue_no_sys_error.pkl", "wb") as file_out:
+        with open("none_new0_no_sys_error.pkl", "wb") as file_out:
             pickle.dump(all_results_none, file_out)
-        '''
+        
         all_results_snr[source_name] = results_snr
-        with open("k_snr_new0_no_sys_error.pkl", "wb") as file:
+        with open("snr_new0_no_sys_error.pkl", "wb") as file:
             pickle.dump(all_results_snr, file)
 
         all_results_lin[source_name] = results_lin
-        with open("k_lin_new0_no_sys_error.pkl", "wb") as file:
+        with open("lin_new0_no_sys_error.pkl", "wb") as file:
             pickle.dump(all_results_lin, file)
-        '''
-
+        
         # Run fits with systematic errors.
         results_sys = nested_fits_combined_mp(
             datasets, source_name, useEBL=True, fitting_method="sys_error",
             basefunc="logpar", chunk_size=30
         )
-        '''
+        
         results_sys_snr = nested_fits_combined_mp(
             datasets_snr, source_name, useEBL=True, fitting_method="sys_error",
             basefunc="logpar", chunk_size=30
@@ -460,23 +523,17 @@ with open('sources_for_heatmaps.txt', 'r') as file:
             datasets_lin, source_name, useEBL=True, fitting_method="sys_error",
             basefunc="logpar", chunk_size=30
         )
-        '''
+        
         all_results_none_sys[source_name] = results_sys
-        with open("catalogue_sys_error.pkl", "wb") as file_out:
+        with open("none_new0_sys_error.pkl", "wb") as file_out:
             pickle.dump(all_results_none_sys, file_out)
-        '''
+        
         all_results_snr_sys[source_name] = results_sys_snr
-        with open("k_snr_new0_sys_error.pkl", "wb") as file_out:
+        with open("snr_new0_sys_error.pkl", "wb") as file_out:
             pickle.dump(all_results_snr_sys, file_out)
 
         all_results_lin_sys[source_name] = results_sys_lin
-        with open("k_lin_new0_sys_error.pkl", "wb") as file_out:
+        with open("lin_new0_sys_error.pkl", "wb") as file_out:
             pickle.dump(all_results_lin_sys, file_out)
-        '''
-        # (The blocks for snr and lin datasets are currently commented out.)
-        
-# Optionally, call additional plotting functions below.
-# For example:
-# plot_delta_chi2_heatmap_m_g(results, dataset_label="No_Filtering")
-# plot_delta_chi2_heatmap_m_g(results_snr, dataset_label="snr_3")
-# ... etc.
+       
+'''
