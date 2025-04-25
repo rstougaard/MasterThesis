@@ -131,12 +131,16 @@ def lc_plotting(vars, snrratios=None, time_intervals=None):
         plt.xscale('log')
         plt.yscale('log')
         plt.grid(True, which="both", linestyle="--", linewidth=0.5)
-        '''
+        
         if method == 'SNR':
             plt.ylim(5e-6, 5e-5)
         elif method == 'LIN':
-            plt.ylim(5e-6, 5e-5)
-        '''
+            if loop_item == "week":
+                plt.ylim(1e-5, 1e12)
+            elif loop_item == "month":
+                plt.ylim(1.3e-5, 7.5e-5)
+
+        
         # Explicitly set tick params
         plt.tick_params(axis='both', which='major', width=2, length=8, color='black', direction='inout')
         plt.tick_params(axis='both', which='minor', width=1.5, length=5, color='black', direction='in')
