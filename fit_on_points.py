@@ -129,7 +129,7 @@ def simple_plot_fit(dataset_dict, fit_results_dict, source):
                 "params_base": params_b, "params_axion": params_a,
                 "m": mv, "g": gv
             }
-    target_delta = -6.578
+    target_delta = -1.694
     # find exact or nearest by Δχ²
     match = None
     for spec in fitspec.values():
@@ -194,7 +194,7 @@ def simple_plot_fit(dataset_dict, fit_results_dict, source):
         f"Base params: {', '.join(f'{v:.3g}' for v in params_b)}\n"
         f"Axion params: {', '.join(f'{v:.3g}' for v in params_a)}\n\n"
         f"$p_0 = {match['p0']:.2f},\\;E_c = {match['ec']:.1f}\\,$MeV\n"
-        f"$m_a = {match['m']/1e-9:.2f}\\,\\mathrm{{neV}},\\;g{{a \gamma}} =$ {match['g']:.2g} GeV$^{-1}$"
+        f"$m_a = {match['m']/1e-9:.2f}\\,\\mathrm{{neV}},\\;g_{{a \\gamma}} =$ {match['g']:.2g} GeV$^{{-1}}$"
     )
     ax_top.text(
         0.05, 0.05, textstr,
