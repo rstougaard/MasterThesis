@@ -422,7 +422,7 @@ def plot_mean_delta_chi2_heatmap_nosys_base(all_results,
                 'grid': systematic_grid,
                 'label': 'With systematics',
                 'color_pos': 'green',   'linestyle_pos': 'dashed',
-                'color_neg': 'aqua',  'linestyle_neg': 'dashed'
+                'color_neg': 'gold',  'linestyle_neg': 'dashed'
             })
 
         # — Systematics (no filtering) —
