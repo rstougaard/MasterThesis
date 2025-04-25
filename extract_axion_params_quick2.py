@@ -324,6 +324,7 @@ def GetCatalogueSpectrum(nn, min_frac=0.03, abs_floor=None):
     return (eav[good][1:], fl[good][1:], dfl[good][1:], 
             [eav[good][1:] - emin[good][1:], emax[good][1:] - eav[good][1:]])
 
+
 with open('sources_for_heatmaps.txt', 'r') as file:
     for line in file:
         parts = shlex.split(line.strip())
@@ -339,75 +340,15 @@ with open('sources_for_heatmaps.txt', 'r') as file:
                                              .replace('"', ''))
         
         f_bin = fits.open(f'./fit_results/{source_name_cleaned}_fit_data_NONE.fits')
-        bin_data = f_bin[1].data
-
-        sorted_indices = np.argsort(bin_data['emin'])
-        sorted_data_none = bin_data[sorted_indices]       
-        bin_size = np.array(sorted_data_none['emax']) - np.array(sorted_data_none['emin'])
-        e_lowers = sorted_data_none['geometric_mean'] - sorted_data_none['emin']
-        e_uppers = np.array(sorted_data_none['emax']) - np.array(sorted_data_none['geometric_mean'])
-        datasets = {
-            "No_Filtering": (
-                sorted_data_none['geometric_mean'],
-                sorted_data_none['flux_tot_value'],
-                sorted_data_none['flux_tot_error'],
-                sorted_data_none['emin'],
-                sorted_data_none['emax']
-            )
-        }
-
-       
-        
-        #colors_snr = ['blue', 'orange', 'green']
-        #colors_lin = ['purple', 'brown']
-        print(source_name)
-        # Run fits without systematic errors.
-        results = nested_fits_combined_mp(
-            datasets, source_name, useEBL=True, fitting_method="no_sys_error",
-            basefunc="logpar", chunk_size=30
-        )
-        
-       
-        all_results_none[source_name] = results
-        with open("none_new0_no_sys_error.pkl", "wb") as file_out:
-            pickle.dump(all_results_none, file_out)
-        
-        
-        # Run fits with systematic errors.
-        results_sys = nested_fits_combined_mp(
-            datasets, source_name, useEBL=True, fitting_method="sys_error",
-            basefunc="logpar", chunk_size=30
-        )
-               
-        all_results_none_sys[source_name] = results_sys
-        with open("none_new0_sys_error.pkl", "wb") as file_out:
-            pickle.dump(all_results_none_sys, file_out)
-
-'''
-with open('sources_for_heatmaps.txt', 'r') as file:
-    for line in file:
-        parts = shlex.split(line.strip())
-        source_name = parts[0]
-        ra = float(parts[1])
-        dec = float(parts[2])
-        specin = float(parts[3])
-        
-        source_name_cleaned = (source_name.replace(" ", "")
-                                             .replace(".", "dot")
-                                             .replace("+", "plus")
-                                             .replace("-", "minus")
-                                             .replace('"', ''))
-        
-        f_bin = fits.open(f'./fit_results/{source_name_cleaned}_fit_data_NONE.fits')
-        f_bin_snr = fits.open(f'./fit_results/{source_name_cleaned}_fit_data_SNR.fits')
+        #f_bin_snr = fits.open(f'./fit_results/{source_name_cleaned}_fit_data_SNR.fits')
         f_bin_lin = fits.open(f'./fit_results/{source_name_cleaned}_fit_data_LIN.fits')
         bin_data = f_bin[1].data
-        bin_data_snr = f_bin_snr[1].data
+        #bin_data_snr = f_bin_snr[1].data
         bin_data_lin = f_bin_lin[1].data
 
         sorted_indices = np.argsort(bin_data['emin'])
         sorted_data_none = bin_data[sorted_indices]
-
+        '''
         snr3 = bin_data_snr[bin_data_snr['loop_item'] == '3']
         sorted_indices_snr3 = np.argsort(snr3['emin'])
         sorted_data_snr3 = snr3[sorted_indices_snr3]
@@ -419,7 +360,7 @@ with open('sources_for_heatmaps.txt', 'r') as file:
         snr10 = bin_data_snr[bin_data_snr['loop_item'] == '10']
         sorted_indices_snr10 = np.argsort(snr10['emin'])
         sorted_data_snr10 = snr10[sorted_indices_snr10]
-
+        '''
         week = bin_data_lin[bin_data_lin['loop_item'] == 'week']
         sorted_indices_lin_week = np.argsort(week['emin'])
         sorted_data_lin_week = week[sorted_indices_lin_week]
@@ -440,6 +381,7 @@ with open('sources_for_heatmaps.txt', 'r') as file:
                 sorted_data_none['emax']
             )
         }
+        '''
         datasets_snr = {
             "snr_3": (
                 sorted_data_snr3['geometric_mean'],
@@ -463,6 +405,7 @@ with open('sources_for_heatmaps.txt', 'r') as file:
                 sorted_data_snr10['emax']
             )
         }
+        '''
         datasets_lin = {
             "week": (
                 sorted_data_lin_week['geometric_mean'],
@@ -490,11 +433,12 @@ with open('sources_for_heatmaps.txt', 'r') as file:
             datasets, source_name, useEBL=True, fitting_method="no_sys_error",
             basefunc="logpar", chunk_size=30
         )
-        
+        '''
         results_snr = nested_fits_combined_mp(
             datasets_snr, source_name, useEBL=True, fitting_method="no_sys_error",
             basefunc="logpar", chunk_size=30
         )
+        '''
         results_lin = nested_fits_combined_mp(
             datasets_lin, source_name, useEBL=True, fitting_method="no_sys_error",
             basefunc="logpar", chunk_size=30
@@ -503,10 +447,11 @@ with open('sources_for_heatmaps.txt', 'r') as file:
         all_results_none[source_name] = results
         with open("none_new0_no_sys_error.pkl", "wb") as file_out:
             pickle.dump(all_results_none, file_out)
-        
+        '''
         all_results_snr[source_name] = results_snr
         with open("snr_new0_no_sys_error.pkl", "wb") as file:
             pickle.dump(all_results_snr, file)
+        '''
 
         all_results_lin[source_name] = results_lin
         with open("lin_new0_no_sys_error.pkl", "wb") as file:
@@ -517,11 +462,12 @@ with open('sources_for_heatmaps.txt', 'r') as file:
             datasets, source_name, useEBL=True, fitting_method="sys_error",
             basefunc="logpar", chunk_size=30
         )
-        
+        '''
         results_sys_snr = nested_fits_combined_mp(
             datasets_snr, source_name, useEBL=True, fitting_method="sys_error",
             basefunc="logpar", chunk_size=30
         )
+        '''
         results_sys_lin = nested_fits_combined_mp(
             datasets_lin, source_name, useEBL=True, fitting_method="sys_error",
             basefunc="logpar", chunk_size=30
@@ -530,13 +476,12 @@ with open('sources_for_heatmaps.txt', 'r') as file:
         all_results_none_sys[source_name] = results_sys
         with open("none_new0_sys_error.pkl", "wb") as file_out:
             pickle.dump(all_results_none_sys, file_out)
-        
+        '''
         all_results_snr_sys[source_name] = results_sys_snr
         with open("snr_new0_sys_error.pkl", "wb") as file_out:
             pickle.dump(all_results_snr_sys, file_out)
-
+        '''
         all_results_lin_sys[source_name] = results_sys_lin
         with open("lin_new0_sys_error.pkl", "wb") as file_out:
             pickle.dump(all_results_lin_sys, file_out)
        
-'''
