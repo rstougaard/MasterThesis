@@ -516,6 +516,7 @@ def plot_mean_delta_chi2_heatmap_nosys_base(all_results,
         #plt.xticks(fontsize=15)
         #plt.yticks(fontsize=15)
         #plt.gca().xaxis.set_major_formatter(ticker.FormatStrFormatter("%g"))
+        ax = plt.gca()
         plt.tick_params(
         axis='both',
         which='both',
@@ -525,8 +526,8 @@ def plot_mean_delta_chi2_heatmap_nosys_base(all_results,
         top=True, right=True
         )
         plt.xlim(0.3, 6)
-        plt.set_xticks([1, 10])                  # put ticks at 10^0, 10^1
-        plt.set_xticklabels(['1', '10'])  
+        ax.set_xticks([1, 10])                  # put ticks at 10^0, 10^1
+        ax.set_xticklabels(['1', '10'])  
         plt.tight_layout()
         plt.savefig(f'{path_to_save_heatmap_m_g}{png_naming}_{filter_label}_ma_ga.png', dpi=300)
         plt.close()
@@ -688,6 +689,7 @@ def plot_mean_delta_chi2_heatmap_sys_base(
         print(10**data['x1']/ 1e-9, 10**data['y1'])
         plt.errorbar(10**data['x1']/ 1e-9, 10**data['y1'], fmt='w-')#, zorder=-10)
         '''
+
         cbar = plt.colorbar(heatmap, ticks=np.linspace(vmin, vmax, 11))
         cbar.set_label(r'$\sum \Delta \chi^2$', fontsize=15)
         plt.xlabel(r'$m_a$ [neV]', fontsize=15)
@@ -697,10 +699,11 @@ def plot_mean_delta_chi2_heatmap_sys_base(
         plt.yscale('log')
         plt.xticks(fontsize=15)
         plt.yticks(fontsize=15)
-        plt.gca().xaxis.set_major_formatter(ticker.FormatStrFormatter("%g"))
+        #plt.gca().xaxis.set_major_formatter(ticker.FormatStrFormatter("%g"))
+        ax = plt.gca()
         plt.xlim(0.3, 6)
-        plt.set_xticks([1, 10])                  # put ticks at 10^0, 10^1
-        plt.set_xticklabels(['1', '10']) 
+        ax.set_xticks([1, 10])                  # put ticks at 10^0, 10^1
+        ax.set_xticklabels(['1', '10']) 
         plt.tight_layout()
         plt.savefig(f'{path_to_save_heatmap_m_g}{png_naming}_{filter_label}_ma_ga.png', dpi=300)
         plt.close()
