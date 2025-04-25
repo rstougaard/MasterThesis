@@ -129,7 +129,7 @@ def simple_plot_fit(dataset_dict, fit_results_dict, source):
                 "params_base": params_b, "params_axion": params_a,
                 "m": mv, "g": gv
             }
-    target_delta = -1.694
+    target_delta = -8.745
     # find exact or nearest by Δχ²
     match = None
     for spec in fitspec.values():
