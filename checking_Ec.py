@@ -42,3 +42,17 @@ print("m      g         E_c [MeV]      p₀         χ²_base      χ²_axion   
 print("------------------------------------------------------------")
 for r in flat_results_sorted:
     print(f"{r['m']:.3e}   {r['g']:.3e}  {r['Ec']:.3e}   {r['p0']:.3e}   {r['chi2_base']:.3f}      {r['chi2_axion']:.3f}      {r['delta_chi2']:.3f}")
+
+target_m = 1.1      # in neV
+target_g = 2e-12    # in GeV⁻¹
+best = min(flat_results,
+           key=lambda r: math.hypot(r['m'] - target_m,
+                                    (r['g'] - target_g)/1e-12)
+          )
+
+print("Closest match:")
+print(f"  mₐ     = {best['m']:.3f} neV")
+print(f"  gₐγ    = {best['g']:.2e} GeV⁻¹")
+print(f"  E_c    = {best['Ec']:.3e} MeV")
+print(f"  p₀     = {best['p0']:.3f}")
+print(f"  Δχ²    = {best['delta_chi2']:.3f}")
