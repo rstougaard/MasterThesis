@@ -136,9 +136,9 @@ def lc_plotting(vars, snrratios=None, time_intervals=None):
             plt.ylim(5e-6, 5e-5)
         elif method == 'LIN':
             if loop_item == "week":
-                plt.ylim(1e-7, 1e13)
+                plt.ylim(1e-9, 1e15)
             elif loop_item == "month":
-                plt.ylim(1.3e-5, 1.5e-5)
+                plt.ylim(1.325e-5, 2.5e-5)
 
         
         # Explicitly set tick params
