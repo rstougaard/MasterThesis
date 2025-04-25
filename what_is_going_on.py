@@ -412,7 +412,7 @@ def plot_mean_delta_chi2_heatmap_nosys_base(all_results,
             plot_specs.append({
                 'grid': no_filtering_grid,
                 'label': 'No filtering',
-                'color_neg': 'darkorange', 'linestyle_neg': 'solid',
+                'color_neg': 'brown', 'linestyle_neg': 'solid',
                 'color_pos': 'cyan', 'linestyle_pos': 'solid'
             })
 
@@ -422,7 +422,7 @@ def plot_mean_delta_chi2_heatmap_nosys_base(all_results,
                 'grid': systematic_grid,
                 'label': 'With systematics',
                 'color_pos': 'red',   'linestyle_pos': 'dashed',
-                'color_neg': 'lime',  'linestyle_neg': 'dashed'
+                'color_neg': 'darkorange',  'linestyle_neg': 'dashed'
             })
 
         # — Systematics (no filtering) —
@@ -673,8 +673,8 @@ def plot_mean_delta_chi2_heatmap_sys_base(
 
         # Create the two legends. Add the first legend to the axes so that the second does not overwrite it.
         legend1 = plt.legend(handles=color_handles, loc='upper left', title="Threshold")
-        plt.gca().add_artist(legend1)
-        plt.legend(handles=linestyle_handles, loc='lower left', title="Systematics")
+        #plt.gca().add_artist(legend1)
+        #plt.legend(handles=linestyle_handles, loc='lower left', title="Systematics")
 
         #data = np.load('fermi3_10_contours_b5.2_eta0.67_rescale.npz')
         #plt.errorbar(10**data['x1'][data['y1'] < 1e-11]/ 1e-9, 10**data['y1'][data['y1'] < 1e-11], color='b', ls=(0,(4,2,1,1,1,2)), alpha=1)
@@ -733,7 +733,7 @@ with open("snr_new0_no_sys_error.pkl", "rb") as file:
 '''
 no_filtering_sources = list(all_results_none.keys())
 
-plot_individual_delta_chi2_heatmap_with_pdf(all_results_none_sys, no_filtering_sources_sys, all_results_none, "sys", filtering_methods="No_Filtering", pdf_filename="NEW_indv_heatmaps_no_filter_logpar_sys_error.pdf")
+#plot_individual_delta_chi2_heatmap_with_pdf(all_results_none_sys, no_filtering_sources_sys, all_results_none, "sys", filtering_methods="No_Filtering", pdf_filename="NEW_indv_heatmaps_no_filter_logpar_sys_error.pdf")
 #plot_individual_delta_chi2_heatmap_with_pdf(all_results_lin_sys, no_filtering_sources_sys, None, "sys", filtering_methods="week", pdf_filename="NEW_indv_heatmaps_week_logpar_sys_error.pdf")
 #plot_individual_delta_chi2_heatmap_with_pdf(all_results_lin_sys, no_filtering_sources_sys, None, "sys", filtering_methods="month", pdf_filename="NEW_indv_heatmaps_month_logpar_sys_error.pdf")
 
