@@ -85,6 +85,7 @@ for method in methods:
         net_lc    = total_lc - total_flare
 
         # Convert to years only
+        yrs_noflare, _, _ = secs_to_human(total_lc)
         yrs_flare, _, _ = secs_to_human(total_flare)
         yrs_net,   _, _ = secs_to_human(net_lc)
 
@@ -92,7 +93,7 @@ for method in methods:
         frac_lost = (total_flare / total_lc * 100) if total_lc > 0 else np.nan
 
         # Simplified output
-        print(f"Non‑flare duration: {yrs_net:.2f} years")
+        print(f"Non‑flare duration: {yrs_noflare:.2f} years")
         print(f"Flare duration    : {yrs_flare:.2f} years")
         print(f"Flare fraction    : {frac_lost:.2f}%")
 '''
