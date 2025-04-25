@@ -1,7 +1,7 @@
 import pickle
 
 # Load the data
-with open("none_new0_nosys_error.pkl", "rb") as file:
+with open("none_new0_no_sys_error.pkl", "rb") as file:
     all_results_none_sys = pickle.load(file)
 
 # Choose the source you're interested in
