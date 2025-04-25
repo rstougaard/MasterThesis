@@ -17,20 +17,17 @@ def secs_to_human(seconds):
     yrs  = days / 365.25
     return yrs, days, hrs
 
-# MET conversion: Fermi MET epoch is 2001-01-01T00:00:00 UTC
+# MET conversion (if you still need it elsewhere)
 MET_EPOCH = datetime(2001, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
-
 def met_to_datetime(met_seconds):
-    """
-    Convert Mission Elapsed Time (MET, seconds since 2001-01-01) to UTC datetime.
-    """
     return MET_EPOCH + timedelta(seconds=met_seconds)
 
 # ──────────────────────────────────────────────────────────────────────────
 # CONFIGURATION
 # ──────────────────────────────────────────────────────────────────────────
+
 general_path_for_slurm = "/groups/pheno/sqd515/MasterThesis"
-methods        = ['LIN', 'SNR']
+methods        = ['LIN'] #, 'SNR']
 snrratios      = ['snr10', 'snr5', 'snr3']
 time_intervals = ['week', 'month']
 source_name    = '4FGL J0319.8+4130'
@@ -42,8 +39,6 @@ source_clean   = (
                .replace('"', '')
 )
 
-# Determine loop items per method
-
 def get_loopitems(method):
     if method == 'SNR':
         return [str(s) for s in snrratios]
@@ -54,9 +49,10 @@ def get_loopitems(method):
 # ──────────────────────────────────────────────────────────────────────────
 # PROCESS EACH LC AND FLARE INTERVAL
 # ──────────────────────────────────────────────────────────────────────────
+
 for method in methods:
     for item in get_loopitems(method):
-        lc_file   = os.path.join(
+        lc_file = os.path.join(
             general_path_for_slurm, 'data', source_clean,
             method, f'lc_{item}.fits'
         )
@@ -77,9 +73,6 @@ for method in methods:
         with fits.open(lc_file) as fb:
             data     = fb[1].data
             total_lc = np.sum(data['TIMEDEL'])
-            # Example: convert first and last TIME to UTC dates
-            start_met = data['TIME'][0]
-            end_met   = data['TIME'][-1]
 
         # Total flare time (difference of start/stop in txt)
         intervals = np.loadtxt(flare_txt)
@@ -90,25 +83,82 @@ for method in methods:
 
         # Net good time
         net_lc    = total_lc - total_flare
+
+        # Convert to years only
+        yrs_flare, _, _ = secs_to_human(total_flare)
+        yrs_net,   _, _ = secs_to_human(net_lc)
+
+        # Percentage of time lost to flares
         frac_lost = (total_flare / total_lc * 100) if total_lc > 0 else np.nan
 
-        # Human-readable
-        yrs_lc, days_lc, hrs_lc    = secs_to_human(total_lc)
-        yrs_fl, days_fl, hrs_fl    = secs_to_human(total_flare)
-        yrs_net, days_net, hrs_net = secs_to_human(net_lc)
+        # Simplified output
+        print(f"Non‑flare duration: {yrs_net:.2f} years")
+        print(f"Flare duration    : {yrs_flare:.2f} years")
+        print(f"Flare fraction    : {frac_lost:.2f}%")
+'''
+import os
+import numpy as np
+import pandas as pd
+import shlex
+from astropy.io import fits
 
-        # Output
-        print(f"Total LC time    : {total_lc:.1f} s ({days_lc:.2f} d -> {yrs_lc:.2f} y)")
-        print(f"Flare time lost  : {total_flare:.1f} s ({days_fl:.2f} d -> {yrs_fl:.2f} y) = {frac_lost:.2f}%")
-        print(f"Net good time    : {net_lc:.1f} s ({days_net:.2f} d -> {yrs_net:.2f} y)")
+# CONFIG
+general_path_for_slurm = "/groups/pheno/sqd515/MasterThesis/data"
+methods = {
+    'week':  ('LIN', 'week'),
+    'month': ('LIN', 'month'),
+    'snr3':  ('SNR', 'snr3'),
+    'snr5':  ('SNR', 'snr5'),
+    'snr10': ('SNR', 'snr10'),
+}
 
-        # MET -> UTC examples
-        print(f"First LC bin MET: {start_met:.1f} -> UTC {met_to_datetime(start_met)}")
-        print(f"Last  LC bin MET: {end_met:.1f} -> UTC {met_to_datetime(end_met)}")
+# Read sources
+results = []
+with open('Source_ra_dec_specin.txt', 'r') as file:
+    for line in file:
+        parts = shlex.split(line.strip())
+        source_name = parts[0]
+        source_clean = (
+            source_name.replace(' ', '')
+                       .replace('.', 'dot')
+                       .replace('+', 'plus')
+                       .replace('-', 'minus')
+                       .replace('"', '')
+        )
+        row = {'source': source_name}
+        
+        # Calculate fraction lost for each interval
+        for col, (method, item) in methods.items():
+            lc_file = os.path.join(general_path_for_slurm, source_clean, method, f'lc_{item}.fits')
+            flare_txt = os.path.join(general_path_for_slurm, source_clean, method, f'flare_intervals_{item}.txt')
+            
+            if os.path.isfile(lc_file) and os.path.isfile(flare_txt):
+                with fits.open(lc_file) as fb:
+                    total_lc = np.sum(fb[1].data['TIMEDEL'])
+                intervals = np.loadtxt(flare_txt)
+                if intervals.ndim == 1:
+                    intervals = intervals.reshape(1, -1)
+                total_flare = np.sum(intervals[:,1] - intervals[:,0])
+                frac_lost = total_flare / total_lc * 100 if total_lc > 0 else np.nan
+            else:
+                frac_lost = np.nan
+            
+            row[col] = frac_lost
+        
+        results.append(row)
 
-# ──────────────────────────────────────────────────────────────────────────
-# INDIVIDUAL MET CONVERSION EXAMPLE
-# ──────────────────────────────────────────────────────────────────────────
-# Convert a standalone MET value to UTC:
-#   met_time = 239557417  # seconds
-#   print(met_to_datetime(met_time))
+# Create DataFrame
+df = pd.DataFrame(results)
+df = df[['source', 'week', 'month', 'snr3', 'snr5', 'snr10']]
+
+# Generate LaTeX table
+latex_table = df.to_latex(index=False, float_format="%.2f", caption="Flare Time Lost Percentage", label="tab:flare_loss")
+
+print(latex_table)
+outpath = 'flare_loss_table.tex'
+with open(outpath, 'w') as f:
+    f.write(latex_table)
+
+print(f"Saved LaTeX table to {outpath}")
+
+'''
