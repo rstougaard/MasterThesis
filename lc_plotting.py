@@ -2,6 +2,31 @@ import matplotlib.pyplot as plt
 from astropy.io import fits
 import numpy as np
 
+plt.rcParams["text.usetex"]      = True
+plt.rcParams["font.family"]      = "serif"
+plt.rcParams["font.serif"]       = ["Computer Modern Roman"]
+plt.rcParams["mathtext.fontset"] = "cm"
+plt.rcParams.update({
+    "font.size":        16,
+    "legend.fontsize":  16,
+    "axes.titlesize":   24,
+    "axes.labelsize":   24,
+    "xtick.labelsize":  22,
+    "ytick.labelsize":  22,
+    "xtick.direction":  "in",
+    "ytick.direction":  "in",
+    "xtick.top":        True,
+    "ytick.right":      True,
+    "xtick.major.size": 8,
+    "ytick.major.size": 8,
+    "xtick.minor.size": 5,
+    "ytick.minor.size": 5,
+    "xtick.major.width": 1.2,
+    "ytick.major.width": 1.2,
+    "xtick.minor.width": 0.8,
+    "ytick.minor.width": 0.8,
+})
+
 def lc_plotting(vars, snrratios=None, time_intervals=None):
     # Extract variables
     source_name, ra, dec, method, specin, _, _, minimal_energy, maximal_energy = vars
@@ -84,11 +109,6 @@ def lc_plotting(vars, snrratios=None, time_intervals=None):
         flare_intervals = np.column_stack((flare_intervals_start, flare_intervals_stop))
 
 
-        plt.rcParams["font.family"] = "serif"
-        plt.rcParams["mathtext.fontset"] = "cm"
-        plt.rcParams['xtick.labelsize'] = 18
-        plt.rcParams['ytick.labelsize'] = 18
-
         plt.figure(figsize=(10, 6))
 
         # Plot data
@@ -105,23 +125,24 @@ def lc_plotting(vars, snrratios=None, time_intervals=None):
         plt.axhline(thresholds[-1], color='black', linestyle='-', linewidth=3, alpha=1, label=f'Threshold round {len(round_means)}')
 
         # Customize plot
-        plt.ylabel('Flux [photons/cm²/s]', fontsize=20)
-        plt.xlabel('Time [s]', fontsize=20)
-        plt.title(f'Lightcurve for {method}: {loop_item}', fontsize=20)
+        plt.ylabel('Flux [photons/cm²/s]')
+        plt.xlabel('Time [s]')
+        plt.title(f'Lightcurve for {method}: {loop_item}')
         plt.xscale('log')
         plt.yscale('log')
         plt.grid(True, which="both", linestyle="--", linewidth=0.5)
+        '''
         if method == 'SNR':
             plt.ylim(5e-6, 5e-5)
         elif method == 'LIN':
             plt.ylim(5e-6, 5e-5)
-
+        '''
         # Explicitly set tick params
-        plt.tick_params(axis='both', which='major', labelsize=18, width=2, length=8, color='black', direction='inout')
-        plt.tick_params(axis='both', which='minor', labelsize=18, width=1.5, length=5, color='black', direction='in')
+        plt.tick_params(axis='both', which='major', width=2, length=8, color='black', direction='inout')
+        plt.tick_params(axis='both', which='minor', width=1.5, length=5, color='black', direction='in')
 
         # Move the legend outside the plot
-        plt.legend(fontsize=18, ncol=2, loc='upper left', frameon=True)
+        plt.legend( ncol=2, loc='upper left', frameon=True)
 
         # Save or display the plot
         plt.tight_layout()
@@ -134,5 +155,5 @@ vars_snr = ("4FGL J0319.8+4130", None, None, "SNR", None, None, None, 100, 10000
 vars_lin = ("4FGL J0319.8+4130", None, None, "LIN", None, None, None, 100, 1000000)
 snrratios = [10, 5, 3]
 time_intervals = ["week","month"]
-lc_plotting(vars_snr, snrratios=snrratios)
+#lc_plotting(vars_snr, snrratios=snrratios)
 lc_plotting(vars_lin, time_intervals=time_intervals)
