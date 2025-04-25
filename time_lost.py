@@ -153,7 +153,7 @@ with open('Source_ra_dec_specin.txt', 'r') as file:
 
 # Create DataFrame
 df = pd.DataFrame(results)
-df = df[['source', 'week', 'month', 'snr3', 'snr5', 'snr10']]
+df = df[['source', 'week', 'month']] #, 'snr3', 'snr5', 'snr10'
 
 # Generate LaTeX table
 latex_table = df.to_latex(index=False, float_format="%.2f", caption="Flare Time Lost Percentage", label="tab:flare_loss")
