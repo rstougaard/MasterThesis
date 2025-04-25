@@ -127,7 +127,15 @@ def lc_plotting(vars, snrratios=None, time_intervals=None):
         # Customize plot
         plt.ylabel('Flux [photons/cm²/s]')
         plt.xlabel('Time [s]')
-        plt.title(f'Lightcurve for {method}: {loop_item}')
+        if method == "LIN"
+            plt.title(f'Lightcurve for {loop_item}')
+        if method == "SNR":
+            if loop_item == "snr3":
+                plt.title(f'Lightcurve for SNR=3')
+            elif loop_item == "snr5":
+                plt.title(f'Lightcurve for SNR=5')
+            elif loop_item == "snr10":
+                plt.title(f'Lightcurve for SNR=10')
         plt.xscale('log')
         plt.yscale('log')
         plt.grid(True, which="both", linestyle="--", linewidth=0.5)
@@ -138,7 +146,7 @@ def lc_plotting(vars, snrratios=None, time_intervals=None):
             if loop_item == "week":
                 plt.ylim(1e-9, 1e15)
             elif loop_item == "month":
-                plt.ylim(1.325e-5, 2.5e-5)
+                None #plt.ylim(1.325e-5, 2e-5)
 
         
         # Explicitly set tick params
