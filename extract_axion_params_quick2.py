@@ -216,6 +216,8 @@ def process_chunk(i, j_start, j_end, x, y, y_err, source_name, dataset_label, us
             "fit_result": fit_result
         })
 
+    return results_chunk
+
 
 # -------------------------
 # Process one row (mass) using chunks.
