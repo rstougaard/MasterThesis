@@ -322,7 +322,7 @@ def GetCatalogueSpectrum(nn, min_frac=0.03, abs_floor=None):
     return (eav[good][1:], fl[good][1:], dfl[good][1:], 
             [eav[good][1:] - emin[good][1:], emax[good][1:] - eav[good][1:]])
 
-with open('Source_ra_dec_specin.txt', 'r') as file:
+with open('sources_for_heatmaps.txt', 'r') as file:
     for line in file:
         parts = shlex.split(line.strip())
         source_name = parts[0]
