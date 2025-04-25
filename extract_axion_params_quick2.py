@@ -244,6 +244,7 @@ def nested_fits_combined_mp(datasets, source_name, useEBL=True, fitting_method="
     """
     results = {}
     num_rows = p0_masked.shape[0]
+    print(datasets.items())
     for dataset_label, (x, y, y_err) in datasets.items():
         # Check if y data exists (or is non-empty)
         if y is None or len(y) == 0:
