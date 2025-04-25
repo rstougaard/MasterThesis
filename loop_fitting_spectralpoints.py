@@ -47,7 +47,7 @@ def GetCatalogueSpectrum(nn):
     return eav[ok], fl[ok], dfl[ok], [de1[ok],de2[ok]] # flux to erg/cm2/s
 
 
-def simple_plot(dataset_none, dataset_snr, colors_snr, dataset_lin, colors_lin, source, png_naming=""):
+def simple_plot(dataset_none, dataset_snr, colors_snr, dataset_lin, colors_lin, source, with_cat=False):
     # Create a new figure
     fig = plt.figure(figsize=(10, 12))
     plt.rcParams["font.family"] = "serif"
@@ -77,8 +77,8 @@ def simple_plot(dataset_none, dataset_snr, colors_snr, dataset_lin, colors_lin, 
         color = colors_snr[i] if i < len(colors_snr) else 'black'
         ax1.errorbar(x, y, xerr=[e_lowers, e_uppers], yerr=y_err,
                      fmt='o', capsize=5, color=color, label=f'{dataset_label}')
-        
-    #ax1.errorbar(eav0, f0, yerr=df0, xerr=de0, fmt='o', color="pink", label='Catalogue Spectrum')
+    if with_cat == True:    
+        ax1.errorbar(eav0, f0, yerr=df0, xerr=de0, fmt='o', color="pink", label='Catalogue Spectrum')
         
     ax1.legend(ncol=1, loc='lower left')
     ax1.set_ylabel(r'E$^2$dN/dE [ erg/cm²/s ]')
@@ -99,7 +99,8 @@ def simple_plot(dataset_none, dataset_snr, colors_snr, dataset_lin, colors_lin, 
         #bin_size = emax - emin
         ax2.errorbar(x, y, xerr=[e_lowers, e_uppers], yerr=y_err,
                      fmt='s', capsize=5, color='black', label=f'{dataset_label}')
-    #ax2.errorbar(eav0, f0, yerr=df0, xerr=de0, fmt='o', color="pink", label='Catalogue Spectrum')
+    if with_cat == True:     
+        ax2.errorbar(eav0, f0, yerr=df0, xerr=de0, fmt='o', color="pink", label='Catalogue Spectrum')
 
     # Plot the lin datasets with their corresponding colors
     for i, (dataset_label, (x, y, y_err, emin, emax)) in enumerate(dataset_lin.items()):
@@ -123,91 +124,95 @@ def simple_plot(dataset_none, dataset_snr, colors_snr, dataset_lin, colors_lin, 
 
     # Adjust layout to prevent overlap
     fig.tight_layout()
-    '''
+    
     # Optionally save the figure as a PNG
-    if source == "4FGL J0319.8+4130":
-        plt.savefig("./fit_results/NGC1275_spectral_points.png", dpi=600)
-    '''
+    if source == "4FGL J0319.8+4130" and with_cat == False :
+        plt.savefig(f"./fit_results/NGC1275_spectral_points.png", dpi=600)
+    
 
     return fig
 
-'''
-source_name = "4FGL J0319.8+4130"
-
-source_name_cleaned = (
-    source_name.replace(" ", "")
-    .replace(".", "dot")
-    .replace("+", "plus")
-    .replace("-", "minus")
-    .replace('"', '')  # Ensure no extra quotes remain
-)
-
-f_bin = fits.open(f'./hpc_results/{source_name_cleaned}_fit_data_NONE.fits')
-f_bin_snr = fits.open(f'./hpc_results/{source_name_cleaned}_fit_data_SNR.fits')
-f_bin_lin = fits.open(f'./hpc_results/{source_name_cleaned}_fit_data_LIN.fits')
-bin_data = f_bin[1].data
-bin_data_snr = f_bin_snr[1].data
-bin_data_lin = f_bin_lin[1].data
-
-# Sort the data by the 'emin' column
-sorted_indices = np.argsort(bin_data['emin'])  # Get sorted indices
-sorted_data_none = bin_data[sorted_indices]  # Reorder the data using sorted indices
-print("No filtering")
-print(sorted_data_none)
-print()
-
-snr3 = bin_data_snr[bin_data_snr['loop_item'] == '3']
-sorted_indices_snr3 = np.argsort(snr3['emin'])  # Get sorted indices
-sorted_data_snr3 = snr3[sorted_indices_snr3]
-print("SNR 3")
-print(sorted_data_snr3)
-print()
-
-snr5 = bin_data_snr[bin_data_snr['loop_item'] == '5']
-sorted_indices_snr5 = np.argsort(snr5['emin'])  # Get sorted indices
-sorted_data_snr5 = snr5[sorted_indices_snr5]
-print("SNR 5")
-print(sorted_data_snr5)
-print()
-
-snr10 = bin_data_snr[bin_data_snr['loop_item'] == '10']
-sorted_indices_snr10 = np.argsort(snr10['emin'])  # Get sorted indices
-sorted_data_snr10 = snr10[sorted_indices_snr10]
-print("SNR 10")
-print(sorted_data_snr10)
-print()
-
-week = bin_data_lin[bin_data_lin['loop_item'] == 'week']
-sorted_indices_lin_week = np.argsort(week['emin'])  # Get sorted indices
-sorted_data_lin_week = week[sorted_indices_lin_week]
-print("week")
-print(sorted_data_lin_week)
-print()
-month = bin_data_lin[bin_data_lin['loop_item'] == 'month']
-sorted_indices_lin_month = np.argsort(month['emin'])  # Get sorted indices
-sorted_data_lin_month = month[sorted_indices_lin_month]
-print("month")
-print(sorted_data_lin_month)
-print()
-
-colors_snr = ['blue', 'orange', 'green']
-colors_lin = ['purple', 'brown']
-
-#print(sorted_data_snr5['geometric_mean'])
-#print( sorted_data_snr5['flux_tot_value'])
-
-datasets = {f"No_Filtering": (sorted_data_none['geometric_mean'], sorted_data_none['flux_tot_value'], sorted_data_none['flux_tot_error'], sorted_data_none['emin'], sorted_data_none['emax'] )}
-datasets_snr = {f"snr_3": (sorted_data_snr3['geometric_mean'], sorted_data_snr3['flux_tot_value'], sorted_data_snr3['flux_tot_error'], sorted_data_snr3['emin'], sorted_data_snr3['emax']),
-                f"snr_5": (sorted_data_snr5['geometric_mean'], sorted_data_snr5['flux_tot_value'], sorted_data_snr5['flux_tot_error'], sorted_data_snr5['emin'], sorted_data_snr5['emax']),
-                f"snr_10": (sorted_data_snr10['geometric_mean'], sorted_data_snr10['flux_tot_value'], sorted_data_snr10['flux_tot_error'], sorted_data_snr10['emin'], sorted_data_snr10['emax'])}
-datasets_lin = {f"week": (sorted_data_lin_week['geometric_mean'], sorted_data_lin_week['flux_tot_value'], sorted_data_lin_week['flux_tot_error'], sorted_data_lin_week['emin'], sorted_data_lin_week['emax']),
-                f"month": (sorted_data_lin_month['geometric_mean'], sorted_data_lin_month['flux_tot_value'], sorted_data_lin_month['flux_tot_error'], sorted_data_lin_month['emin'], sorted_data_lin_month['emax'])}
-print(source_name)
-
-
-fig = simple_plot(datasets, datasets_snr, colors_snr, datasets_lin, colors_lin, source_name, png_naming="")
-'''
 with PdfPages('./fit_results/NEW_spectral_points.pdf') as pdf:
+    with open(f'Source_ra_dec_specin.txt', 'r') as file:
+                    for line in file:
+                        parts = line.strip().split()
+        
+                        # Properly split handling quotes
+                        parts = shlex.split(line)
+
+                        # Extract the source name (already properly split)
+                        source_name = parts[0]  # No need to strip quotes, shlex handles it
+
+                        ra = float(parts[1])    # Second part: RA
+                        dec = float(parts[2])   # Third part: Dec
+                        specin = float(parts[3])  # Fourth part: spectral index
+                        #beta = float(parts[4])
+                        
+                        source_name_cleaned = (
+                            source_name.replace(" ", "")
+                            .replace(".", "dot")
+                            .replace("+", "plus")
+                            .replace("-", "minus")
+                            .replace('"', '')  # Ensure no extra quotes remain
+                        )
+
+                        f_bin = fits.open(f'./fit_results/{source_name_cleaned}_fit_data_NONE.fits')
+                        '''
+                        f_bin_snr = fits.open(f'./fit_results/{source_name_cleaned}_fit_data_SNR.fits')
+                        f_bin_lin = fits.open(f'./fit_results/{source_name_cleaned}_fit_data_LIN.fits')
+                        '''
+                        bin_data = f_bin[1].data
+                        '''
+                        
+                        bin_data_snr = f_bin_snr[1].data
+                        bin_data_lin = f_bin_lin[1].data
+                        '''
+                        # Sort the data by the 'emin' column
+                        sorted_indices = np.argsort(bin_data['emin'])  # Get sorted indices
+                        sorted_data_none = bin_data[sorted_indices]  # Reorder the data using sorted indices
+                        #print(sorted_data_none)
+                        '''
+                        snr3 = bin_data_snr[bin_data_snr['loop_item'] == '3']
+                        sorted_indices_snr3 = np.argsort(snr3['emin'])  # Get sorted indices
+                        sorted_data_snr3 = snr3[sorted_indices_snr3]
+                        #print(sorted_data_snr3)
+
+                        snr5 = bin_data_snr[bin_data_snr['loop_item'] == '5']
+                        sorted_indices_snr5 = np.argsort(snr5['emin'])  # Get sorted indices
+                        sorted_data_snr5 = snr5[sorted_indices_snr5]
+                        #print(sorted_data_snr5)
+
+                        snr10 = bin_data_snr[bin_data_snr['loop_item'] == '10']
+                        sorted_indices_snr10 = np.argsort(snr10['emin'])  # Get sorted indices
+                        sorted_data_snr10 = snr10[sorted_indices_snr10]
+                        #print(sorted_data_snr10)
+
+                        week = bin_data_lin[bin_data_lin['loop_item'] == 'week']
+                        sorted_indices_lin_week = np.argsort(week['emin'])  # Get sorted indices
+                        sorted_data_lin_week = week[sorted_indices_lin_week]
+                        month = bin_data_lin[bin_data_lin['loop_item'] == 'month']
+                        sorted_indices_lin_month = np.argsort(month['emin'])  # Get sorted indices
+                        sorted_data_lin_month = month[sorted_indices_lin_month]
+
+                        colors_snr = ['blue', 'orange', 'green']
+                        colors_lin = ['purple', 'brown']
+                        
+                        '''                        
+                        datasets = {f"No_Filtering": (sorted_data_none['geometric_mean'], sorted_data_none['flux_tot_value'], sorted_data_none['flux_tot_error'], sorted_data_none['emin'], sorted_data_none['emax'] )}
+                        '''
+                        datasets_snr = {f"snr_3": (sorted_data_snr3['geometric_mean'], sorted_data_snr3['flux_tot_value'], sorted_data_snr3['flux_tot_error'], sorted_data_snr3['emin'], sorted_data_snr3['emax']),
+                                        f"snr_5": (sorted_data_snr5['geometric_mean'], sorted_data_snr5['flux_tot_value'], sorted_data_snr5['flux_tot_error'], sorted_data_snr5['emin'], sorted_data_snr5['emax']),
+                                        f"snr_10": (sorted_data_snr10['geometric_mean'], sorted_data_snr10['flux_tot_value'], sorted_data_snr10['flux_tot_error'], sorted_data_snr10['emin'], sorted_data_snr10['emax'])}
+                        datasets_lin = {f"week": (sorted_data_lin_week['geometric_mean'], sorted_data_lin_week['flux_tot_value'], sorted_data_lin_week['flux_tot_error'], sorted_data_lin_week['emin'], sorted_data_lin_week['emax']),
+                                        f"month": (sorted_data_lin_month['geometric_mean'], sorted_data_lin_month['flux_tot_value'], sorted_data_lin_month['flux_tot_error'], sorted_data_lin_month['emin'], sorted_data_lin_month['emax'])}
+                        #print(source_name)
+                       '''
+                        #fig = simple_plot(datasets, datasets_snr, colors_snr, datasets_lin, colors_lin, source_name, with_cat=False)
+                        fig = simple_plot(datasets, None, None, None, None, source_name, with_cat=False)
+                        pdf.savefig(fig)
+                        plt.close(fig)
+'''
+with PdfPages('./fit_results/NEW_spectral_points_wCat.pdf') as pdf:
     with open(f'Source_ra_dec_specin.txt', 'r') as file:
                     for line in file:
                         parts = line.strip().split()
@@ -277,19 +282,8 @@ with PdfPages('./fit_results/NEW_spectral_points.pdf') as pdf:
                                         f"month": (sorted_data_lin_month['geometric_mean'], sorted_data_lin_month['flux_tot_value'], sorted_data_lin_month['flux_tot_error'], sorted_data_lin_month['emin'], sorted_data_lin_month['emax'])}
                         #print(source_name)
                        
-                        fig = simple_plot(datasets, datasets_snr, colors_snr, datasets_lin, colors_lin, source_name, png_naming="")
+                        fig = simple_plot(datasets, datasets_snr, colors_snr, datasets_lin, colors_lin, source_name, with_cat=True)
                         pdf.savefig(fig)
                         plt.close(fig)
 
-'''
-                for when I need example walk throug of NGC 1275
-                    print()
-                    print(f"CURVE FIT for {source_name}")
-                    results = fit_data("iminuit", datasets, png_naming =f"_{source_name_cleaned}")
-                    results_snr = fit_data("iminuit", datasets_snr, png_naming =f"_{source_name_cleaned}")
-                    results_lin = fit_data("iminuit", datasets_lin, png_naming =f"_{source_name_cleaned}")
-                    
-                    plot_fits_with_residuals(datasets, results, e_lowers, e_uppers, png_naming =f"_{source_name_cleaned}")
-                    plot_fits_with_residuals(datasets_snr, results_snr, e_lowers, e_uppers, png_naming =f"_{source_name_cleaned}")
-                    plot_fits_with_residuals(datasets_lin, results_lin, e_lowers, e_uppers, png_naming =f"_{source_name_cleaned}")
 '''
