@@ -1,7 +1,7 @@
 import pickle
 
 # Load the data
-with open("none_new0_sys_error.pkl", "rb") as file:
+with open("none_new0_nosys_error.pkl", "rb") as file:
     all_results_none_sys = pickle.load(file)
 
 # Choose the source you're interested in
@@ -15,6 +15,8 @@ results_list = results_dict['No_Filtering']  # shape: [mass_rows][g_cols]
 flat_results = []
 for row in results_list:
     for entry in row:
+        m = entry["m"]
+        g = entry["g"]
         p0 = entry["p0"]
         Ec = entry["E_c"]
         chi2_base = entry["fit_result"]["Base"]["chi2"]
@@ -23,6 +25,8 @@ for row in results_list:
         dof_axion = entry["fit_result"]["Axion"]["dof"]
         delta_chi2 = chi2_axion - chi2_base
         flat_results.append({
+            "m": m/1e-9,
+            "g":g,
             "p0": p0,
             "Ec": Ec,
             "chi2_base": chi2_base,
@@ -34,7 +38,7 @@ for row in results_list:
 flat_results_sorted = sorted(flat_results, key=lambda x: x["delta_chi2"])
 
 # Print results
-print("E_c [MeV]      p₀         χ²_base      χ²_axion      Δχ²")
+print("m      g         E_c [MeV]      p₀         χ²_base      χ²_axion      Δχ²")
 print("------------------------------------------------------------")
 for r in flat_results_sorted:
-    print(f"{r['Ec']:.3e}   {r['p0']:.3e}   {r['chi2_base']:.3f}      {r['chi2_axion']:.3f}      {r['delta_chi2']:.3f}")
+    print(f"{r['m']:.3e}   {r['g']:.3e}  {r['Ec']:.3e}   {r['p0']:.3e}   {r['chi2_base']:.3f}      {r['chi2_axion']:.3f}      {r['delta_chi2']:.3f}")
