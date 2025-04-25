@@ -220,8 +220,8 @@ def plot_individual_delta_chi2_heatmap_with_pdf(all_results, dataset_labels, sys
                     plot_specs.append({
                         'grid': mean_delta_chi2_grid,
                         'label': 'Without systematics',
-                        'color_pos': 'red',   'linestyle_pos': 'solid',
-                        'color_neg': 'lime',  'linestyle_neg': 'solid'
+                        'color_pos': 'cyan',   'linestyle_pos': 'solid',
+                        'color_neg': 'green',  'linestyle_neg': 'solid'
                     })
 
                 # — Systematics (filtered) —
@@ -229,8 +229,8 @@ def plot_individual_delta_chi2_heatmap_with_pdf(all_results, dataset_labels, sys
                     plot_specs.append({
                         'grid': mean_systematic_results,
                         'label': 'With systematics',
-                        'color_pos': 'red',   'linestyle_pos': 'dashed',
-                        'color_neg': 'lime',  'linestyle_neg': 'dashed'
+                        'color_pos': 'green',   'linestyle_pos': 'dashed',
+                        'color_neg': 'red',  'linestyle_neg': 'dashed'
                     })
 
 
@@ -279,32 +279,32 @@ def plot_individual_delta_chi2_heatmap_with_pdf(all_results, dataset_labels, sys
                 plt.ylabel(r'$g_{a\gamma}$ [GeV$^{-1}$]')
                 if filter_label == "No_Filtering":
                     if source_name == "4FGL J0319.8+4130":
-                        plt.title(f'No filtering $ \Delta \chi^2 $ Heatmap')
+                        plt.title(f'No filtering')
                     else:
                         plt.title(f'{source_name} : No filtering $ \Delta \chi^2 $ Heatmap')
                 elif filter_label == "week":
                     if source_name == "4FGL J0319.8+4130":
-                        plt.title(f'Weekly filter $ \Delta \chi^2 $ Heatmap')
+                        plt.title(f'Weekly filter')
                     else:
                         plt.title(f'{source_name} : Weekly filter $ \Delta \chi^2 $ Heatmap')
                 elif filter_label == "month":
                     if source_name == "4FGL J0319.8+4130":
-                        plt.title(f'Monthly filter $ \Delta \chi^2 $ Heatmap')
+                        plt.title(f'Monthly filter')
                     else:
                         plt.title(f'{source_name} : Monthly filter $ \Delta \chi^2 $ Heatmap')
                 elif filter_label == "snr_3":
                     if source_name == "4FGL J0319.8+4130":
-                        plt.title(f'SNR 3 filter $ \Delta \chi^2 $ Heatmap')
+                        plt.title(f'SNR=3 filter')
                     else:
-                        plt.title(f'{source_name} : SNR 3 filter $ \Delta \chi^2 $ Heatmap')
+                        plt.title(f'{source_name} : SNR=3 filter $ \Delta \chi^2 $ Heatmap')
                 elif filter_label == "snr_5":
                     if source_name == "4FGL J0319.8+4130":
-                        plt.title(f'SNR 5 filter $ \Delta \chi^2 $ Heatmap')
+                        plt.title(f'SNR 5 filter ')
                     else:
-                        plt.title(f'{source_name} : SNR 5 filter $ \Delta \chi^2 $ Heatmap')
+                        plt.title(f'{source_name} : SNR=5 filter $ \Delta \chi^2 $ Heatmap')
                 elif filter_label == "snr_10":
                     if source_name == "4FGL J0319.8+4130":
-                        plt.title(f'SNR 10 filter $ \Delta \chi^2 $ Heatmap')
+                        plt.title(f'SNR=10 filter')
                     else:
                         plt.title(f'{source_name} : SNR 10 filter $ \Delta \chi^2 $ Heatmap')
                 plt.xscale('log')
@@ -500,17 +500,17 @@ def plot_mean_delta_chi2_heatmap_nosys_base(all_results,
         plt.ylabel(r'$g_{a\gamma}$ [GeV$^{-1}$]')
         #plt.title(f'Summed $\Delta \chi^2$ Heatmap for {filter_label}', fontsize=15)
         if filter_label == "No_Filtering":
-            plt.title(f'Summed $\Delta \chi^2$ Heatmap for No filtering')
+            plt.title(f'No filtering')
         elif filter_label == "week":
-            plt.title(f'Summed $\Delta \chi^2$ Heatmap for Weekly filter')
+            plt.title(f'Weekly filter')
         elif filter_label == "month":
-            plt.title(f'Summed $\Delta \chi^2$ Heatmap for Monthly filter')
+            plt.title(f'Monthly filter')
         elif filter_label == "snr_3":
-            plt.title(f'Summed $\Delta \chi^2$ Heatmap for SNR 3 filter')
+            plt.title(f'SNR=3 filter')
         elif filter_label == "snr_5":
-            plt.title(f'Summed $\Delta \chi^2$ Heatmap for SNR 5 filter')
+            plt.title(f'SNR=5 filter')
         elif filter_label == "snr_10":
-            plt.title(f'Summed $\Delta \chi^2$ Heatmap for SNR 10 filter')
+            plt.title(f'SNR=10 filter')
         plt.xscale('log')
         plt.yscale('log')
         #plt.xticks(fontsize=15)
@@ -745,7 +745,7 @@ no_filtering_sources = list(all_results_none.keys())
 
 
 
-#plot_individual_delta_chi2_heatmap_with_pdf(all_results_none, no_filtering_sources, all_results_none_sys, "nosys", filtering_methods="No_Filtering", pdf_filename="NEW_indv_heatmaps_no_filter_logpar_no_sys_error.pdf")
+plot_individual_delta_chi2_heatmap_with_pdf(all_results_none, no_filtering_sources, all_results_none_sys, "nosys", filtering_methods="No_Filtering", pdf_filename="NEW_indv_heatmaps_no_filter_logpar_no_sys_error.pdf")
 #plot_individual_delta_chi2_heatmap_with_pdf(all_results_lin, no_filtering_sources, all_results_lin_sys, "nosys", filtering_methods="week", pdf_filename="NEW_indv_heatmaps_week_logpar_no_sys_error.pdf")
 #plot_individual_delta_chi2_heatmap_with_pdf(all_results_lin, no_filtering_sources, all_results_lin_sys, "nosys", filtering_methods="month", pdf_filename="NEW_indv_heatmaps_month_logpar_no_sys_error.pdf")
 #plot_individual_delta_chi2_heatmap_with_pdf(all_results_snr, no_filtering_sources, all_results_snr_sys, "nosys", filtering_methods="snr_3", pdf_filename="NEW_indv_heatmaps_snr3_logpar_no_sys_error.pdf")
