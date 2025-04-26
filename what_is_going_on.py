@@ -311,7 +311,7 @@ def plot_individual_delta_chi2_heatmap_with_pdf(all_results, dataset_labels, sys
                 plt.yscale('log')
                 ax = plt.gca()
                 #ax.xaxis.set_major_formatter(ticker.FormatStrFormatter("%g"))
-                ax.set_xlim(0.3, 8)
+                ax.set_xlim(0.3, 9)
                 plt.tick_params(
                 axis='both',
                 which='both',
@@ -320,8 +320,8 @@ def plot_individual_delta_chi2_heatmap_with_pdf(all_results, dataset_labels, sys
                 direction='in',
                 top=True, right=True
                 )
-                ax.set_xticks([1, 8])                  # put ticks at 10^0, 10^1
-                ax.set_xticklabels(['1', '8'])  
+                ax.set_xticks([1, 9])                  # put ticks at 10^0, 10^1
+                ax.set_xticklabels(['1', '9'])  
                 plt.tight_layout()
                 
                 # Save the current figure as a PNG file.
@@ -525,9 +525,9 @@ def plot_mean_delta_chi2_heatmap_nosys_base(all_results,
         direction='in',
         top=True, right=True
         )
-        plt.xlim(0.3, 8)
-        ax.set_xticks([1, 8])                  # put ticks at 10^0, 10^1
-        ax.set_xticklabels(['1', '8'])  
+        plt.xlim(0.3, 9)
+        ax.set_xticks([1, 9])                  # put ticks at 10^0, 10^1
+        ax.set_xticklabels(['1', '9'])  
         plt.tight_layout()
         plt.savefig(f'{path_to_save_heatmap_m_g}{png_naming}_{filter_label}_ma_ga.png', dpi=300)
         plt.close()
@@ -701,9 +701,9 @@ def plot_mean_delta_chi2_heatmap_sys_base(
         plt.yticks(fontsize=15)
         #plt.gca().xaxis.set_major_formatter(ticker.FormatStrFormatter("%g"))
         ax = plt.gca()
-        plt.xlim(0.3, 8)
-        ax.set_xticks([1, 8])                  # put ticks at 10^0, 10^1
-        ax.set_xticklabels(['1', '8']) 
+        plt.xlim(0.3, 9)
+        ax.set_xticks([1, 9])                  # put ticks at 10^0, 10^1
+        ax.set_xticklabels(['1', '9']) 
         plt.tight_layout()
         plt.savefig(f'{path_to_save_heatmap_m_g}{png_naming}_{filter_label}_ma_ga.png', dpi=300)
         plt.close()
