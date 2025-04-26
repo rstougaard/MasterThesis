@@ -127,6 +127,7 @@ def lc_plotting(vars, snrratios=None, time_intervals=None):
         # Customize plot
         plt.ylabel('Flux [photons/cm²/s]')
         plt.xlabel('Time [s]')
+        '''
         if method == "LIN":
             plt.title(f'Lightcurve for {loop_item}')
         if method == "SNR":
@@ -136,17 +137,19 @@ def lc_plotting(vars, snrratios=None, time_intervals=None):
                 plt.title(f'Lightcurve for SNR=5')
             elif loop_item == "snr10":
                 plt.title(f'Lightcurve for SNR=10')
+        '''
         plt.xscale('log')
         plt.yscale('log')
         plt.grid(True, which="both", linestyle="--", linewidth=0.5)
         
-        if method == 'SNR':
-            plt.ylim(5e-6, 5e-5)
-        elif method == 'LIN':
+        
+        if method == 'LIN':
             if loop_item == "week":
                 plt.ylim(1e-9, 1e15)
             elif loop_item == "month":
                 None #plt.ylim(1.325e-5, 2e-5)
+        else:
+            None
 
         
         # Explicitly set tick params
@@ -154,7 +157,7 @@ def lc_plotting(vars, snrratios=None, time_intervals=None):
         plt.tick_params(axis='both', which='minor', width=1.5, length=5, color='black', direction='in')
 
         # Move the legend outside the plot
-        plt.legend( ncol=2, loc='upper left', frameon=True)
+        plt.legend( ncol=1, loc='upper left', frameon=True)
 
         # Save or display the plot
         plt.tight_layout()
