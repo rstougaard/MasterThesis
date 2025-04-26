@@ -793,7 +793,7 @@ def get_filter_grids(all_results, all_results_sys, sources, filters, remove_sour
 
 
 # Main plotting function
-def plot_mean_delta_chi2_heatmap_nosys_base(all_results, all_results_sys, dataset_labels, png_naming, filter_grids, remove_source_label=None):
+def plot_delta_chi2_heatmap_nosys_base(all_results, all_results_sys, dataset_labels, png_naming, filter_grids, remove_source_label=None):
     # Remove the specified source, if provided (although you will not use this for filter-based removals)
     if remove_source_label is not None:
         if isinstance(remove_source_label, (list, tuple, set)):
@@ -843,7 +843,7 @@ def plot_mean_delta_chi2_heatmap_nosys_base(all_results, all_results_sys, datase
                 'color_pos': 'cyan', 'linestyle_pos': 'solid',
                 'color_neg': 'lime', 'linestyle_neg': 'solid'
             })
-
+        '''
         # Mean (no filtering)
         if no_filtering_grid is not None:
             plot_specs.append({
@@ -852,6 +852,7 @@ def plot_mean_delta_chi2_heatmap_nosys_base(all_results, all_results_sys, datase
                 'color_neg': 'brown', 'linestyle_neg': 'solid',
                 'color_pos': 'cyan', 'linestyle_pos': 'solid'
             })
+        '''
 
         # Systematics (filtered)
         if systematic_grid is not None:
@@ -861,7 +862,7 @@ def plot_mean_delta_chi2_heatmap_nosys_base(all_results, all_results_sys, datase
                 'color_pos': 'green', 'linestyle_pos': 'dashed',
                 'color_neg': 'red', 'linestyle_neg': 'dashed'
             })
-
+        '''
         # Systematics (no filtering)
         if no_filtering_grid_other is not None:
             plot_specs.append({
@@ -870,7 +871,7 @@ def plot_mean_delta_chi2_heatmap_nosys_base(all_results, all_results_sys, datase
                 'color_neg': 'darkorange', 'linestyle_neg': 'dashed',
                 'color_pos': 'cyan', 'linestyle_pos': 'dashed'
             })
-
+        '''
         # --- Plot contours ---
         for spec in plot_specs:
             grid = spec['grid']
@@ -953,7 +954,7 @@ no_filtering_grids = get_filter_grids(
 )
 
 # Call the plotting function
-plot_mean_delta_chi2_heatmap_nosys_base(
+plot_delta_chi2_heatmap_nosys_base(
     all_results_lin,
     all_results_lin_sys,
     list(all_results_lin.keys()),
