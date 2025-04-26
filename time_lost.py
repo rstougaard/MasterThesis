@@ -107,14 +107,13 @@ from astropy.io import fits
 general_path_for_slurm = "/groups/pheno/sqd515/MasterThesis/data"
 methods = {
     'week':  ('LIN', 'week'),
-    'month': ('LIN', 'month')
+    'month': ('LIN', 'month'),
+    'snr3':  ('SNR', 'snr3'),
+    'snr5':  ('SNR', 'snr5'),
+    'snr10': ('SNR', 'snr10')
     
 }
-'''
-'snr3':  ('SNR', 'snr3'),
-'snr5':  ('SNR', 'snr5'),
-'snr10': ('SNR', 'snr10'),
-'''
+
 
 # Read sources
 results = []
@@ -153,7 +152,7 @@ with open('Source_ra_dec_specin.txt', 'r') as file:
 
 # Create DataFrame
 df = pd.DataFrame(results)
-df = df[['source', 'week', 'month']] #, 'snr3', 'snr5', 'snr10'
+df = df[['source', 'week', 'month', 'snr3', 'snr5', 'snr10']] 
 
 # Generate LaTeX table
 latex_table = df.to_latex(index=False, float_format="%.2f", caption="Flare Time Lost Percentage", label="tab:flare_loss")
