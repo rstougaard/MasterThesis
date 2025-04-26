@@ -59,7 +59,7 @@ _m  = mass_all_full
 _g  = g_all_full
 
 # ————— Load fit results —————
-with open("none_new0_no_sys_error.pkl", "rb") as f:
+with open("none_new0_sys_error.pkl", "rb") as f:
     all_results_none = pickle.load(f)
 
 # ————— Prepare data points —————
@@ -129,7 +129,7 @@ def simple_plot_fit(dataset_dict, fit_results_dict, source):
                 "params_base": params_b, "params_axion": params_a,
                 "m": mv, "g": gv
             }
-    target_delta = -8.745
+    target_delta = -1.072
     # find exact or nearest by Δχ²
     match = None
     for spec in fitspec.values():
@@ -204,7 +204,7 @@ def simple_plot_fit(dataset_dict, fit_results_dict, source):
     )
 
     fig.tight_layout()
-    plt.savefig(f"./fit_results/NGC_bestfits.png", dpi=300)
+    plt.savefig(f"./fit_results/NGC_bestfits_none.png", dpi=300)
     return fig
 
 if __name__ == '__main__':
