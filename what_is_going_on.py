@@ -694,7 +694,7 @@ def plot_mean_delta_chi2_heatmap_sys_base(
         cbar.set_label(r'$\sum \Delta \chi^2$', fontsize=15)
         plt.xlabel(r'$m_a$ [neV]', fontsize=15)
         plt.ylabel(r'$g_{a\gamma}$ [GeV$^{-1}$]', fontsize=15)
-        plt.title(f'Mean $\Delta \chi^2$ Heatmap for {filter_label}', fontsize=15)
+        plt.title(f'$\Delta \chi^2$ Heatmap for {filter_label}', fontsize=15)
         plt.xscale('log')
         plt.yscale('log')
         plt.xticks(fontsize=15)
@@ -774,7 +774,7 @@ no_filtering_grid = compute_mean_delta_chi2_grid(
 ) 
 # Summed heatmaps for no filter
 #plot_mean_delta_chi2_heatmap_sys_base(all_results_none, all_results_none_sys, list(all_results_none.keys()), "base_sys_", no_filtering_grid_other=None, remove_source_label="4FGL J0317.8-4414")
-#plot_mean_delta_chi2_heatmap_nosys_base(all_results_none, all_results_none_sys, list(all_results_none.keys()), "base_nosys_",no_filtering_grid_other=None,  remove_source_label="4FGL J0317.8-4414")
+plot_mean_delta_chi2_heatmap_nosys_base(all_results_none, all_results_none_sys, list(all_results_none.keys()), "base_nosys_",no_filtering_grid_other=None,  remove_source_label="4FGL J0317.8-4414")
 
 # Summed heatmaps for month and week
 no_filtering_grid_sys = compute_mean_delta_chi2_grid(
