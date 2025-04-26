@@ -759,18 +759,37 @@ def plot_delta_chi2_heatmap_nosys_base(
     all_results_sys,
     dataset_labels,
     png_naming,
-    filter_label="No_Filtering",  # Allow the user to choose the filter
     no_filtering_grid=None,
     no_filtering_grid_other=None,
     remove_source_label=None
 ):
-    
-    if remove_source_label is not None:
-        if isinstance(remove_source_label, (list, tuple, set)):
-            labels_to_remove = remove_source_label
-        else:
-            labels_to_remove = [remove_source_label]
+    # Extract all filter labels from the first remaining source.
+    first_source = next(iter(all_results.values()))
+    filtering_methods = list(first_source.keys())
 
+    # Define a dictionary for filter-based source removals
+    filter_source_removals = {
+        "No_Filtering": ["4FGL J0317.8-4414"],
+        "week": ["4FGL J0317.8-4414"],
+        "month": ["4FGL J0317.8-4414", "4FGL J1242.9+7315"]
+    }
+
+    # Loop over the filtering methods and compute grids
+    for filter_label in filtering_methods:
+        # Remove sources based on the selected filter (from the dictionary)
+        if filter_label in filter_source_removals:
+            labels_to_remove = filter_source_removals[filter_label]
+        else:
+            labels_to_remove = []
+
+        # Additionally remove sources manually if specified
+        if remove_source_label is not None:
+            if isinstance(remove_source_label, (list, tuple, set)):
+                labels_to_remove.extend(remove_source_label)
+            else:
+                labels_to_remove.append(remove_source_label)
+
+        # Remove the sources from both `all_results` and `all_results_sys`
         for lbl in labels_to_remove:
             all_results.pop(lbl, None)
             all_results_sys.pop(lbl, None)
@@ -923,10 +942,7 @@ def plot_delta_chi2_heatmap_nosys_base(
         plt.close()
 
         print(f"Finished plotting for filter: {filter_label}")
-
-
-
-
+'''
 no_filtering_grid_sys = compute_mean_delta_chi2_grid(
     all_results=all_results_none_sys,
     dataset_labels=no_filtering_sources_sys,
@@ -945,7 +961,8 @@ no_filtering_grid = compute_mean_delta_chi2_grid(
     remove_source_label = "4FGL J0317.8-4414" #7
 
 )
-plot_delta_chi2_heatmap_nosys_base(all_results_none, all_results_none_sys, list(all_results_none.keys()), "base_nosys_", filter_label="No_Filtering", remove_source_label=["4FGL J0317.8-4414"])
+'''
+plot_delta_chi2_heatmap_nosys_base(all_results_none, all_results_none_sys, list(all_results_none.keys()), "base_nosys_", remove_source_label=["4FGL J0317.8-4414"])
 
 
 # Summed heatmaps for no filter
@@ -986,8 +1003,8 @@ no_filtering_grid_sys_month = compute_mean_delta_chi2_grid(
     ec_masked=ec_masked,
     remove_source_label = ["4FGL J0317.8-4414", "4FGL J1242.9+7315"]) #7 and 12
 
-plot_delta_chi2_heatmap_nosys_base(all_results_lin, all_results_lin_sys, list(all_results_lin.keys()), "base_nosys_", filter_label="week", no_filtering_grid=no_filtering_grid_week , no_filtering_grid_other=no_filtering_grid_sys_week, remove_source_label=["4FGL J0317.8-4414"])
-plot_delta_chi2_heatmap_nosys_base(all_results_lin, all_results_lin_sys, list(all_results_lin.keys()), "base_nosys_", filter_label="month", no_filtering_grid=no_filtering_grid_month , no_filtering_grid_other=no_filtering_grid_sys_month, remove_source_label=["4FGL J0317.8-4414", "4FGL J1242.9+7315"])
+plot_delta_chi2_heatmap_nosys_base(all_results_lin, all_results_lin_sys, list(all_results_lin.keys()), "base_nosys_", no_filtering_grid=no_filtering_grid_week , no_filtering_grid_other=no_filtering_grid_sys_week, remove_source_label=["4FGL J0317.8-4414"])
+plot_delta_chi2_heatmap_nosys_base(all_results_lin, all_results_lin_sys, list(all_results_lin.keys()), "base_nosys_", no_filtering_grid=no_filtering_grid_month , no_filtering_grid_other=no_filtering_grid_sys_month, remove_source_label=["4FGL J0317.8-4414", "4FGL J1242.9+7315"])
 
 ##plot_mean_delta_chi2_heatmap_sys_base(all_results_lin, all_results_lin_sys, list(all_results_lin.keys()), "base_sys_", no_filtering_grid=no_filtering_grid_sys,no_filtering_grid_other=None, remove_source_label=["4FGL J1242.9+7315", "4FGL J0912.5+1556", "4FGL J1516.8+2918"])
 #plot_mean_delta_chi2_heatmap_nosys_base(all_results_lin, all_results_lin_sys, list(all_results_lin.keys()), "base_nosys_", no_filtering_grid=[no_filtering_grid_week, no_filtering_grid_month] , no_filtering_grid_other=[no_filtering_grid_sys_week, no_filtering_grid_sys_month], remove_source_label=["4FGL J0317.8-4414", ["4FGL J0317.8-4414", "4FGL J1242.9+7315"]])
