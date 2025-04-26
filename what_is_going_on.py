@@ -939,9 +939,7 @@ def plot_delta_chi2_heatmap_nosys_base(all_results, all_results_sys, dataset_lab
 remove_sources_config = {
     "No_Filtering": ["4FGL J0317.8-4414"],
     "week": ["4FGL J0317.8-4414"],
-    "month": ["4FGL J0317.8-4414", "4FGL J1242.9+7315"],
-    "sys_week": ["4FGL J0317.8-4414"],
-    "sys_month": ["4FGL J0317.8-4414", "4FGL J1242.9+7315"]
+    "month": ["4FGL J0317.8-4414", "4FGL J1242.9+7315"]
 }
 
 # Get the grids with the respective source removal for each filter
