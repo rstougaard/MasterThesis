@@ -72,7 +72,7 @@ mass_unique = axion_data[::n_g, 0]     # length = n_mass
 # Define your desired start and stop values
 m_start_val = 1e-10
 g_start_val = 5e-13
-m_stop_val  = 1e-8
+m_stop_val  = 9e-9
 g_stop_val  = 1e-11
 
 # Find the row (mass) and column (g) indices closest to the desired start values.
@@ -773,8 +773,8 @@ no_filtering_grid = compute_mean_delta_chi2_grid(
 
 ) 
 # Summed heatmaps for no filter
-plot_mean_delta_chi2_heatmap_sys_base(all_results_none, all_results_none_sys, list(all_results_none.keys()), "base_sys_", no_filtering_grid_other=None, remove_source_label="4FGL J0317.8-4414")
-plot_mean_delta_chi2_heatmap_nosys_base(all_results_none, all_results_none_sys, list(all_results_none.keys()), "base_nosys_",no_filtering_grid_other=None,  remove_source_label="4FGL J0317.8-4414")
+#plot_mean_delta_chi2_heatmap_sys_base(all_results_none, all_results_none_sys, list(all_results_none.keys()), "base_sys_", no_filtering_grid_other=None, remove_source_label="4FGL J0317.8-4414")
+#plot_mean_delta_chi2_heatmap_nosys_base(all_results_none, all_results_none_sys, list(all_results_none.keys()), "base_nosys_",no_filtering_grid_other=None,  remove_source_label="4FGL J0317.8-4414")
 
 # Summed heatmaps for month and week
 no_filtering_grid_sys = compute_mean_delta_chi2_grid(
@@ -796,7 +796,7 @@ no_filtering_grid = compute_mean_delta_chi2_grid(
 
 ) 
 ##plot_mean_delta_chi2_heatmap_sys_base(all_results_lin, all_results_lin_sys, list(all_results_lin.keys()), "base_sys_", no_filtering_grid=no_filtering_grid_sys,no_filtering_grid_other=None, remove_source_label=["4FGL J1242.9+7315", "4FGL J0912.5+1556", "4FGL J1516.8+2918"])
-plot_mean_delta_chi2_heatmap_nosys_base(all_results_lin, all_results_lin_sys, list(all_results_lin.keys()), "base_nosys_", no_filtering_grid=no_filtering_grid, no_filtering_grid_other=None, remove_source_label=["4FGL J1242.9+7315", "4FGL J0912.5+1556", "4FGL J1516.8+2918"])
+#plot_mean_delta_chi2_heatmap_nosys_base(all_results_lin, all_results_lin_sys, list(all_results_lin.keys()), "base_nosys_", no_filtering_grid=no_filtering_grid, no_filtering_grid_other=None, remove_source_label=["4FGL J1242.9+7315", "4FGL J0912.5+1556", "4FGL J1516.8+2918"])
 
 # summed heatmaps for snr
 no_filtering_grid_sys = compute_mean_delta_chi2_grid(
