@@ -851,8 +851,8 @@ def plot_delta_chi2_heatmap_nosys_base(
             plot_specs.append({
                 'grid': no_filtering_grid,
                 'label': 'No filtering',
-                'color_neg': 'brown', 'linestyle_neg': 'solid',
-                'color_pos': 'cyan', 'linestyle_pos': 'solid'
+                'color_neg': 'white', 'linestyle_neg': 'dotted',
+                'color_pos': 'black', 'linestyle_pos': 'dotted'
             })
 
         # — Systematics (filtered) —
@@ -869,8 +869,8 @@ def plot_delta_chi2_heatmap_nosys_base(
             plot_specs.append({
                 'grid': no_filtering_grid_other,
                 'label': 'No filtering',
-                'color_neg': 'darkorange', 'linestyle_neg': 'dashed',
-                'color_pos': 'cyan', 'linestyle_pos': 'dashed'
+                'color_neg': 'white', 'linestyle_neg': 'dashed',
+                'color_pos': 'black', 'linestyle_pos': 'dashed'
             })
 
         # --- Plot contours ---
