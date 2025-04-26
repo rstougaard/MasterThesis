@@ -1,7 +1,7 @@
 import pickle
 
 # Load the data
-with open("none_new0_no_sys_error.pkl", "rb") as file:
+with open("none_new0_sys_error.pkl", "rb") as file:
     all_results_none_sys = pickle.load(file)
 
 # Choose the source you're interested in
@@ -43,7 +43,7 @@ print("------------------------------------------------------------")
 for r in flat_results_sorted:
     print(f"{r['m']:.3e}   {r['g']:.3e}  {r['Ec']:.3e}   {r['p0']:.3e}   {r['chi2_base']:.3f}      {r['chi2_axion']:.3f}      {r['delta_chi2']:.3f}")
 import math
-target_m = 0.91      # in neV
+target_m = 1      # in neV
 target_g = 2.1e-12    # in GeV⁻¹
 best = min(flat_results,
            key=lambda r: math.hypot(r['m'] - target_m,
