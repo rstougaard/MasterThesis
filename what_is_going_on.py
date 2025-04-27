@@ -833,7 +833,7 @@ def plot_delta_chi2_heatmap_nosys_base(
                 linestyles=['solid', 'solid'],
                 linewidths=2
             )
-           ''' verts = []
+            ''' verts = []
             for i in range(len(cs_nosys.levels)):
                 for path in cs_nosys.collections[i].get_paths():
                     verts.append(path.vertices)
