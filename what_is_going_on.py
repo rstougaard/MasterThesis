@@ -1045,23 +1045,32 @@ def plot_loaded_contours(
         for fl in filters:
             file_path = os.path.join(contour_dir, f"{fl}_{mode}.txt")
             data = np.loadtxt(file_path)
-            # Expect three columns: x, y, level
-            if data.ndim != 2 or data.shape[1] != 3:
-                raise ValueError(f"Contour file '{file_path}' must have three columns: x, y, level.")
-
-            xs, ys, levels = data[:,0], data[:,1], data[:,2]
-            # Separate positive and negative levels
-            mask_pos = levels > 0
-            mask_neg = levels < 0
-            pos_x, pos_y = xs[mask_pos], ys[mask_pos]
-            neg_x, neg_y = xs[mask_neg], ys[mask_neg]
+            # If three columns, use level column; if two, fallback to largest-gap split
+            if data.ndim == 2 and data.shape[1] == 3:
+                xs, ys, levels = data[:,0], data[:,1], data[:,2]
+                mask_pos = levels > 0
+                mask_neg = levels < 0
+                pos_x, pos_y = xs[mask_pos], ys[mask_pos]
+                neg_x, neg_y = xs[mask_neg], ys[mask_neg]
+            elif data.ndim == 2 and data.shape[1] == 2:
+                pts = data
+                # fallback: split at largest jump between consecutive points
+                deltas = np.diff(pts, axis=0)
+                dists = np.hypot(deltas[:,0], deltas[:,1])
+                split_idx = int(np.argmax(dists)) + 1
+                neg_pts = pts[:split_idx]
+                pos_pts = pts[split_idx:]
+                neg_x, neg_y = neg_pts[:,0], neg_pts[:,1]
+                pos_x, pos_y = pos_pts[:,0], pos_pts[:,1]
+            else:
+                raise ValueError(
+                    f"Contour file '{file_path}' must have 2 or 3 columns (x, y[, level])."
+                )
 
             if fl == 'No_Filtering':
-                # fill for No_Filtering
                 ax.fill(pos_x, pos_y, facecolor='lightgrey', edgecolor='none')
                 ax.fill(neg_x, neg_y, facecolor='forestgreen', edgecolor='none')
             else:
-                # solid for >6.2, dashed for <-6.2
                 color = 'purple' if fl == 'week' else 'red'
                 ax.plot(pos_x, pos_y, linestyle='solid', color=color)
                 ax.plot(neg_x, neg_y, linestyle='dashed', color=color)
