@@ -1049,7 +1049,7 @@ def split_clusters(xs, ys, threshold=1.0):
     if last.shape[0] > 1:
         clusters.append((last[:,0], last[:,1]))
     return clusters
-
+import matplotlib.patheffects as pe
 
 def plot_line(ax, x, y, style, color, alpha=1.0):
     """
