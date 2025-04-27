@@ -4,6 +4,7 @@ import matplotlib.colors as mcolors
 import matplotlib.ticker as ticker
 from matplotlib.lines import Line2D
 import numpy as np
+import os
 from matplotlib.backends.backend_pdf import PdfPages
 
 plt.rcParams["text.usetex"]     = True
@@ -763,47 +764,45 @@ def plot_delta_chi2_heatmap_nosys_base(
     no_filtering_grid_other=None,
     remove_source_label=None
 ):
-    # Extract all filter labels from the first remaining source.
+    # Assumes these are defined in the calling scope:
+    # m_masked, g_masked, p0_masked, ec_masked, path_to_save_heatmap_m_g
+
+    # Extract filter labels
     first_source = next(iter(all_results.values()))
     filtering_methods = list(first_source.keys())
 
-    # Define a dictionary for filter-based source removals
+    # Define filter-based source removals
     filter_source_removals = {
         "No_Filtering": ["4FGL J0317.8-4414"],
         "week": ["4FGL J0317.8-4414"],
         "month": ["4FGL J0317.8-4414", "4FGL J1242.9+7315"]
     }
 
-    # Loop over the filtering methods and compute grids
+    # Remove specified sources
     for filter_label in filtering_methods:
-        # Remove sources based on the selected filter (from the dictionary)
-        if filter_label in filter_source_removals:
-            labels_to_remove = filter_source_removals[filter_label]
-        else:
-            labels_to_remove = []
-
-        # Additionally remove sources manually if specified
+        labels_to_remove = filter_source_removals.get(filter_label, [])[:]
         if remove_source_label is not None:
             if isinstance(remove_source_label, (list, tuple, set)):
                 labels_to_remove.extend(remove_source_label)
             else:
                 labels_to_remove.append(remove_source_label)
-
-        # Remove the sources from both `all_results` and `all_results_sys`
         for lbl in labels_to_remove:
             all_results.pop(lbl, None)
             all_results_sys.pop(lbl, None)
 
-    # Extract all filter labels from the first remaining source.
+    # Refresh filter labels after removals
     first_source = next(iter(all_results.values()))
     filtering_methods = list(first_source.keys())
 
-    # Build the (m_a, g_a) mesh
+    # Precompute mesh
     ma_mesh, g_mesh = np.meshgrid(m_masked, g_masked, indexing='ij')
 
-    # Loop over the filtering methods and compute grids
+    # Ensure output directory exists
+    outdir = path_to_save_heatmap_m_g
+    os.makedirs(outdir, exist_ok=True)
+
     for filter_label in filtering_methods:
-        # -- 1) Compute mean Δχ² for this filter_label --
+        # Compute grids
         mean_delta_chi2_grid = compute_mean_delta_chi2_grid(
             all_results=all_results,
             dataset_labels=dataset_labels,
@@ -812,8 +811,6 @@ def plot_delta_chi2_heatmap_nosys_base(
             ec_masked=ec_masked,
             remove_source_label=None
         )
-
-        # Compute systematics grid if available
         systematic_grid = (compute_mean_delta_chi2_grid(
             all_results=all_results_sys,
             dataset_labels=dataset_labels,
@@ -823,125 +820,111 @@ def plot_delta_chi2_heatmap_nosys_base(
             remove_source_label=None
         ) if all_results_sys else None)
 
-        # Set up colormap.
-        vmin, vmax = -10, 25  # Intensity range for heatmap
-        num_colors = 120
-        boundaries = np.linspace(vmin, vmax, num_colors + 1)
-        cmap = plt.get_cmap('gnuplot2', num_colors)
-        norm = mcolors.BoundaryNorm(boundaries=boundaries, ncolors=num_colors, clip=True)
+        # Save contour points as text files
+        x = ma_mesh / 1e-9
+        y = g_mesh
 
-        ma_mesh, g_mesh = np.meshgrid(m_masked, g_masked, indexing='ij')
-
-        plt.figure(figsize=(10, 6))
-        heatmap = plt.pcolormesh(ma_mesh / 1e-9, g_mesh, mean_delta_chi2_grid,
-                                 cmap=cmap, norm=norm, shading='auto')
-
-        plot_specs = []
-        # — Mean (filtered) —
+        # Without systematics
         if mean_delta_chi2_grid is not None:
-            plot_specs.append({
-                'grid': mean_delta_chi2_grid,
-                'label': 'Without systematics',
-                'color_pos': 'cyan', 'linestyle_pos': 'solid',
-                'color_neg': 'lime', 'linestyle_neg': 'solid'
-            })
+            cs_nosys = plt.contour(
+                x, y, mean_delta_chi2_grid,
+                levels=[-6.2, 6.2],
+                colors=['lime', 'cyan'],
+                linestyles=['solid', 'solid'],
+                linewidths=2
+            )
+            verts = []
+            for i in range(len(cs_nosys.levels)):
+                for path in cs_nosys.collections[i].get_paths():
+                    verts.append(path.vertices)
+            all_verts_nosys = np.vstack(verts) if verts else np.empty((0, 2))
+            np.savetxt(
+                os.path.join(outdir, f"{filter_label}_nosys.txt"),
+                all_verts_nosys,
+                header="x [neV]    y [GeV^-1]"
+            )
 
-        # — Mean (no filtering) —
-        if no_filtering_grid is not None:
-            plot_specs.append({
-                'grid': no_filtering_grid,
-                'label': 'No filtering',
-                'color_neg': 'white', 'linestyle_neg': 'dotted',
-                'color_pos': 'black', 'linestyle_pos': 'dotted'
-            })
-
-        # — Systematics (filtered) —
+        # With systematics
         if systematic_grid is not None:
-            plot_specs.append({
-                'grid': systematic_grid,
-                'label': 'With systematics',
-                'color_pos': 'green', 'linestyle_pos': 'dashed',
-                'color_neg': 'red', 'linestyle_neg': 'dashed'
-            })
+            cs_withsys = plt.contour(
+                x, y, systematic_grid,
+                levels=[-6.2, 6.2],
+                colors=['red', 'green'],
+                linestyles=['dashed', 'dashed'],
+                linewidths=2
+            )
+            verts = []
+            for i in range(len(cs_withsys.levels)):
+                for path in cs_withsys.collections[i].get_paths():
+                    verts.append(path.vertices)
+            all_verts_withsys = np.vstack(verts) if verts else np.empty((0, 2))
+            np.savetxt(
+                os.path.join(outdir, f"{filter_label}_withsys.txt"),
+                all_verts_withsys,
+                header="x [neV]    y [GeV^-1]"
+            )
 
-        # — Systematics (no filtering) —
+        # Plot heatmap
+        plt.figure(figsize=(10, 6))
+        cmap = plt.get_cmap('gnuplot2', 120)
+        norm = mcolors.BoundaryNorm(np.linspace(-10, 25, 121), ncolors=120, clip=True)
+        heatmap = plt.pcolormesh(
+            x, y, mean_delta_chi2_grid,
+            cmap=cmap, norm=norm, shading='auto'
+        )
+
+        # Plot contours again for visualization
+        # Build specs
+        plot_specs = []
+        if mean_delta_chi2_grid is not None:
+            plot_specs.append({'grid': mean_delta_chi2_grid, 'color_pos': 'cyan', 'linestyle_pos': 'solid', 'color_neg': 'lime', 'linestyle_neg': 'solid'})
+        if no_filtering_grid is not None:
+            plot_specs.append({'grid': no_filtering_grid, 'color_neg': 'white', 'linestyle_neg': 'dotted', 'color_pos': 'black', 'linestyle_pos': 'dotted'})
+        if systematic_grid is not None:
+            plot_specs.append({'grid': systematic_grid, 'color_pos': 'green', 'linestyle_pos': 'dashed', 'color_neg': 'red', 'linestyle_neg': 'dashed'})
         if no_filtering_grid_other is not None:
-            plot_specs.append({
-                'grid': no_filtering_grid_other,
-                'label': 'No filtering',
-                'color_neg': 'white', 'linestyle_neg': 'dashed',
-                'color_pos': 'black', 'linestyle_pos': 'dashed'
-            })
+            plot_specs.append({'grid': no_filtering_grid_other, 'color_neg': 'white', 'linestyle_neg': 'dashed', 'color_pos': 'black', 'linestyle_pos': 'dashed'})
 
-        # --- Plot contours ---
         for spec in plot_specs:
             grid = spec['grid']
-            x = ma_mesh / 1e-9
-            y = g_mesh
-
             if spec.get('color_pos') and np.any(grid >= 6.2):
-                plt.contour(x, y, grid,
-                            levels=[6.2],
-                            colors=spec['color_pos'],
-                            linestyles=spec['linestyle_pos'],
-                            linewidths=2)
-
+                plt.contour(x, y, grid, levels=[6.2], colors=spec['color_pos'], linestyles=spec['linestyle_pos'], linewidths=2)
             if spec.get('color_neg') and np.any(grid <= -6.2):
-                plt.contour(x, y, grid,
-                            levels=[-6.2],
-                            colors=spec['color_neg'],
-                            linestyles=spec['linestyle_neg'],
-                            linewidths=2)
+                plt.contour(x, y, grid, levels=[-6.2], colors=spec['color_neg'], linestyles=spec['linestyle_neg'], linewidths=2)
 
-        # --- Build proxy legend handles ---
-        color_handles = [
-            Line2D([0], [0], color='red', linestyle='-', linewidth=2, label=f'$> 6.2$'),
-            Line2D([0], [0], color='lime', linestyle='-', linewidth=2, label=f'$< -6.2$')
-        ]
-
-        linestyle_handles = [
-            Line2D([0], [0], color='black', linestyle='solid', linewidth=2, label='Without systematics'),
-            Line2D([0], [0], color='black', linestyle='dashed', linewidth=2, label='With systematics')
-        ]
-
-        cbar = plt.colorbar(heatmap, ticks=np.linspace(vmin, vmax, 11))
+        # Colorbar and labels
+        cbar = plt.colorbar(heatmap, ticks=np.linspace(-10, 25, 11))
         cbar.set_label(r'$\sum \Delta \chi^2$')
         plt.xlabel(r'$m_a$ [neV]')
         plt.ylabel(r'$g_{a\gamma}$ [GeV$^{-1}$]')
-        
-        # Plot the title based on the filter_label
-        if filter_label == "No_Filtering":
-            plt.title(f'No filtering')
-        elif filter_label == "week":
-            plt.title(f'Weekly filter')
-        elif filter_label == "month":
-            plt.title(f'Monthly filter')
-        elif filter_label == "snr_3":
-            plt.title(f'SNR=3 filter')
-        elif filter_label == "snr_5":
-            plt.title(f'SNR=5 filter')
-        elif filter_label == "snr_10":
-            plt.title(f'SNR=10 filter')
 
+        # Title
+        title_map = {
+            "No_Filtering": "No filtering",
+            "week": "Weekly filter",
+            "month": "Monthly filter",
+            "snr_3": "SNR=3 filter",
+            "snr_5": "SNR=5 filter",
+            "snr_10": "SNR=10 filter"
+        }
+        plt.title(title_map.get(filter_label, filter_label))
+
+        # Log scales and ticks
         plt.xscale('log')
         plt.yscale('log')
         ax = plt.gca()
-        plt.tick_params(
-            axis='both',
-            which='both',
-            color='white',  # tick *lines*
-            labelcolor='black',
-            direction='in',
-            top=True, right=True
-        )
+        plt.tick_params(axis='both', which='both', color='white', labelcolor='black', direction='in', top=True, right=True)
         plt.xlim(0.3, 9)
-        ax.set_xticks([1, 9])  # Put ticks at 10^0, 10^1
+        ax.set_xticks([1, 9])
         ax.set_xticklabels(['1', '9'])
+
+        # Save figure
         plt.tight_layout()
-        plt.savefig(f'{path_to_save_heatmap_m_g}{png_naming}_{filter_label}_ma_ga.png', dpi=300)
+        plt.savefig(f'{outdir}/{png_naming}_{filter_label}_ma_ga.png', dpi=300)
         plt.close()
 
         print(f"Finished plotting for filter: {filter_label}")
+
 '''
 no_filtering_grid_sys = compute_mean_delta_chi2_grid(
     all_results=all_results_none_sys,
@@ -1042,3 +1025,54 @@ plot_mean_delta_chi2_heatmap_sys_base(all_results_lin, all_results_lin_sys, list
 plot_mean_delta_chi2_heatmap_sys_base(all_results_snr, all_results_snr_sys, list(all_results_snr.keys()), "base_sys_", no_filtering_grid=no_filtering_grid_sys, no_filtering_grid_other=no_filtering_grid, remove_source_label=None)
 
 '''
+def plot_loaded_contours(
+    contour_dir,
+    output_prefix,
+    filters=['No_Filtering', 'week', 'month']
+):
+    """
+    Load contour-point files saved by filter and mode, and create two plots:
+    1) 'nosys' plot: filled contours for No_Filtering, and line contours for week/month.
+    2) 'withsys' plot: same styling, using the '_withsys.txt' files.
+
+    contour_dir: directory where the txt files are stored.
+    output_prefix: prefix for saved PNG files (without extension).
+    filters: list of filter labels to load.
+    """
+    modes = ['nosys', 'withsys']
+    for mode in modes:
+        fig, ax = plt.subplots(figsize=(8, 6))
+        for fl in filters:
+            file_path = os.path.join(contour_dir, f"{fl}_{mode}.txt")
+            data = np.loadtxt(file_path)
+            # If level column present, split by sign of level
+            if data.ndim == 2 and data.shape[1] == 3:
+                pts = data[:, :2]
+                levels = data[:, 2]
+                neg_pts = pts[levels < 0]
+                pos_pts = pts[levels > 0]
+            else:
+                # Robust split by largest gap in consecutive points
+                pts = data.reshape(-1, 2)
+                deltas = np.diff(pts, axis=0)
+                dists = np.hypot(deltas[:,0], deltas[:,1])
+                split_idx = int(np.argmax(dists)) + 1
+                neg_pts = pts[:split_idx]
+                pos_pts = pts[split_idx:]
+
+            if fl == 'No_Filtering':
+                ax.fill(pos_pts[:, 0], pos_pts[:, 1], facecolor='lightgrey', edgecolor='none', label=f'{fl} >6.2 ({mode})')
+                ax.fill(neg_pts[:, 0], neg_pts[:, 1], facecolor='forestgreen', edgecolor='none', label=f'{fl} <-6.2 ({mode})')
+            else:
+                color = 'purple' if fl == 'week' else 'red'
+                ax.plot(pos_pts[:, 0], pos_pts[:, 1], linestyle='solid', color=color, label=f'{fl} >6.2')
+                ax.plot(neg_pts[:, 0], neg_pts[:, 1], linestyle='dashed', color=color, label=f'{fl} <-6.2')
+
+        ax.set_xscale('log')
+        ax.set_yscale('log')
+        ax.set_xlabel(r'$m_a$ [neV]')
+        ax.set_ylabel(r'$g_{a\gamma}$ [GeV$^{-1}$]')
+        ax.legend(loc='best', fontsize='small')
+        plt.tight_layout()
+        plt.savefig(f'{output_prefix}_{mode}.png', dpi=300)
+        plt.close()
