@@ -1122,7 +1122,7 @@ def compute_and_plot_contours(
                 x, y, grid,
                 levels=[-6.2, 6.2],
                 colors=[colors[fl]]*2,
-                linestyles=['dashed','solid'],
+                linestyles=linestyles,
                 linewidths=2,
                 alpha=alphas[fl]
             )
