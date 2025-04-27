@@ -1068,103 +1068,70 @@ def compute_and_plot_contours(
 ):
     """
     Remove sources uniformly, compute and plot ±6.2 Δχ² contours for three filters:
-      - No_Filtering uses all_results_none[_sys] and dataset_labels_none
-      - week/month use all_results_lin[_sys] and dataset_labels_lin
+      - No_Filtering uses none datasets
+      - week/month use linear datasets
     Produces two plots: one without systematics (_nosys) and one with systematics (_withsys).
-
-    Parameters:
-    all_results_none: dict of results for no filtering (no sys)
-    all_results_none_sys: dict of results for no filtering (with sys)
-    all_results_lin: dict of results for week/month filters (no sys)
-    all_results_lin_sys: dict of results for week/month filters (with sys)
-    dataset_labels_none: list of dataset labels corresponding to all_results_none
-    dataset_labels_lin: list of dataset labels corresponding to all_results_lin
-    remove_sources: list of source labels to remove from all datasets
-    output_prefix: prefix for saved figures
-    threshold: maximum distance to connect contour points into clusters
     """
-    # Helper to prune sources
+    # Prune unwanted sources from all datasets
     def prune(results):
         return {k: v for k, v in results.items() if k not in remove_sources}
 
-    # Prune all datasets
     none = prune(all_results_none)
     none_sys = prune(all_results_none_sys)
     lin = prune(all_results_lin)
     lin_sys = prune(all_results_lin_sys)
 
-    # Prepare mesh
+    # Create meshgrid
     ma_mesh, g_mesh = np.meshgrid(m_masked, g_masked, indexing='ij')
     x = ma_mesh / 1e-9
     y = g_mesh
 
+    # Plot settings
     filters = ['No_Filtering', 'week', 'month']
-    colors = {'No_Filtering':'black', 'week':'green', 'month':'red'}
-    alphas = {'No_Filtering': 1.0, 'week': 0.75, 'month': 0.75}
+    colors = {'No_Filtering':'grey', 'week':'green', 'month':'red'}
+    alphas = {'No_Filtering':1.0, 'week':0.75, 'month':0.75}
 
-    # Plot without systematics
-    fig, ax = plt.subplots(figsize=(8,6))
-    for fl in filters:
-        if fl == 'No_Filtering':
-            res, ds_labels = none, dataset_labels_none
-        else:
-            res, ds_labels = lin, dataset_labels_lin
+    # Loop over mode: nosys and withsys
+    for mode_label, (res_none_dict, res_lin_dict) in {
+        'nosys': (none, lin),
+        'withsys': (none_sys, lin_sys)
+    }.items():
+        fig, ax = plt.subplots(figsize=(8,6))
+        for fl in filters:
+            # Select appropriate result dict and dataset_labels
+            if fl == 'No_Filtering':
+                res_dict = res_none_dict
+                ds_labels = dataset_labels_none
+            else:
+                res_dict = res_lin_dict
+                ds_labels = dataset_labels_lin
 
-        grid = compute_mean_delta_chi2_grid(
-            res, ds_labels, fl,
-            p0_masked, ec_masked, remove_source_label=None
-        )
-        cs = plt.contour(x, y, grid, levels=[-6.2, 6.2], linewidths=2)
-        for lvl_idx, lvl in enumerate(cs.levels):
-            for path in cs.collections[lvl_idx].get_paths():
-                vx, vy = path.vertices.T
-                clusters = split_clusters(vx, vy, threshold)
-                style = 'solid' if lvl > 0 else 'dashed'
-                color = colors[fl]
-                for xc, yc in clusters:
-                    ax.plot(xc, yc, linestyle=style, color=color, alpha=alphas[fl])
-    ax.set_xscale('log')
-    ax.set_yscale('log')
-    ax.set_xlim(0.3,9)
-    ax.set_xticks([1,9])
-    ax.set_xticklabels(['1','9'])
-    ax.set_xlabel(r'$m_a$ [neV]')
-    ax.set_ylabel(r'$g_{a\gamma}$ [GeV$^{-1}$]')
-    plt.tight_layout()
-    fig.savefig(f"{output_prefix}_nosys.png", dpi=300)
-    plt.close(fig)
+            # Compute Δχ² grid for this filter and mode
+            grid = compute_mean_delta_chi2_grid(
+                res_dict, ds_labels, fl,
+                p0_masked, ec_masked, remove_source_label=None
+            )
 
-    # Plot with systematics
-    fig, ax = plt.subplots(figsize=(8,6))
-    for fl in filters:
-        if fl == 'No_Filtering':
-            res, ds_labels = none_sys, dataset_labels_none
-        else:
-            res, ds_labels = lin_sys, dataset_labels_lin
-
-        grid = compute_mean_delta_chi2_grid(
-            res, ds_labels, fl,
-            p0_masked, ec_masked, remove_source_label=None
-        )
-        cs = plt.contour(x, y, grid, levels=[-6.2, 6.2], linewidths=2)
-        for lvl_idx, lvl in enumerate(cs.levels):
-            for path in cs.collections[lvl_idx].get_paths():
-                vx, vy = path.vertices.T
-                clusters = split_clusters(vx, vy, threshold)
-                style = 'solid' if lvl > 0 else 'dashed'
-                color = colors[fl]
-                for xc, yc in clusters:
-                    ax.plot(xc, yc, linestyle=style, color=color)
-    ax.set_xscale('log')
-    ax.set_yscale('log')
-    ax.set_xlim(0.3,9)
-    ax.set_xticks([1,9])
-    ax.set_xticklabels(['1','9'])
-    ax.set_xlabel(r'$m_a$ [neV]')
-    ax.set_ylabel(r'$g_{a\gamma}$ [GeV$^{-1}$]')
-    plt.tight_layout()
-    fig.savefig(f"{output_prefix}_withsys.png", dpi=300)
-    plt.close(fig)
+            # Extract and plot contours at ±6.2
+            cs = ax.contour(
+                x, y, grid,
+                levels=[-6.2, 6.2],
+                colors=[colors[fl]]*2,
+                linestyles=['dashed','solid'],
+                linewidths=2,
+                alpha=alphas[fl]
+            )
+        # Axis formatting
+        ax.set_xscale('log')
+        ax.set_yscale('log')
+        ax.set_xlim(0.3, 9)
+        ax.set_xticks([1, 9])
+        ax.set_xticklabels(['1', '9'])
+        ax.set_xlabel(r'$m_a$ [neV]')
+        ax.set_ylabel(r'$g_{a\gamma}$ [GeV$^{-1}$]')
+        plt.tight_layout()
+        fig.savefig(f"{output_prefix}_{mode_label}.png", dpi=300)
+        plt.close(fig)
 
 outdir = path_to_save_heatmap_m_g
 compute_and_plot_contours(all_results_none,
