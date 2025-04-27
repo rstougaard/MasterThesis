@@ -68,10 +68,10 @@ with open("lin_new0_sys_error.pkl", "rb") as f:
 source_name = "4FGL J0319.8+4130"
 cleaned = (source_name.replace(" ", "").replace(".", "dot")
                          .replace("+", "plus").replace("-", "minus").replace('"',''))
-f_bin = fits.open(f'./fit_results/{source_name_cleaned}_fit_data_NONE.fits')
+f_bin = fits.open(f'./fit_results/{cleaned}_fit_data_NONE.fits')
 
-#f_bin_snr = fits.open(f'./fit_results/{source_name_cleaned}_fit_data_SNR.fits')
-f_bin_lin = fits.open(f'./fit_results/{source_name_cleaned}_fit_data_LIN.fits')
+#f_bin_snr = fits.open(f'./fit_results/{cleaned}_fit_data_SNR.fits')
+f_bin_lin = fits.open(f'./fit_results/{cleaned}_fit_data_LIN.fits')
 
 bin_data = f_bin[1].data
 
