@@ -119,7 +119,7 @@ def maketable_best_fit_all_deltaChi(
             avg_sig = sig_lookup.get(src, np.nan)
 
             # get Δχ² for each filter
-            d_none  = _find_match_delta(all_none .get(src, {}).get("No_filtering", []),
+            d_none  = _find_match_delta(all_none .get(src, {}).get("No_Filtering", []),
                                         target_m, target_g, target_d)
             week    = _find_match_delta(all_lin  .get(src, {}).get("week", []),
                                         target_m, target_g, target_d)
