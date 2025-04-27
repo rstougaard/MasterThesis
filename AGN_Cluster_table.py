@@ -136,6 +136,13 @@ def maketable_best_fit_all_deltaChi(
 
     df = pd.DataFrame(rows)
 
+    # --- add Total row summing numeric columns ---
+    total = {
+        "Source": "Total",
+        **{col: df[col].sum() for col in df.columns if col != "Source"}
+    }
+    df = df.append(total, ignore_index=True)
+
     # --- emit LaTeX longtable ---
     with open(output_tex, "w") as out:
         out.write(r"""\begin{longtable}{l r r r r}
@@ -147,7 +154,7 @@ Source & Signif.\ Avg.\ & \multicolumn{3}{c}{$\Delta\chi^2$} \\
 \midrule
 \endfirsthead
 
-\multicolumn{5}{c}%
+\multicolumn{5}{c}% 
 {{\tablename\ \thetable{} -- continued}} \\
 \toprule
 Source & Signif.\ Avg.\ & \multicolumn{3}{c}{$\Delta\chi^2$} \\
