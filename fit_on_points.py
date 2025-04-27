@@ -61,21 +61,62 @@ _g  = g_all_full
 # ————— Load fit results —————
 with open("none_new0_sys_error.pkl", "rb") as f:
     all_results_none = pickle.load(f)
+with open("lin_new0_sys_error.pkl", "rb") as f:
+    all_results_lin = pickle.load(f)
 
 # ————— Prepare data points —————
 source_name = "4FGL J0319.8+4130"
 cleaned = (source_name.replace(" ", "").replace(".", "dot")
                          .replace("+", "plus").replace("-", "minus").replace('"',''))
-f_bin = fits.open(f'./fit_results/{cleaned}_fit_data_NONE.fits')
-sd = f_bin[1].data
-sorted_idx = np.argsort(sd['emin'])
-sd = sd[sorted_idx]
-datasets = {
-    "No_Filtering": (
-        sd['geometric_mean'], sd['flux_tot_value'], sd['flux_tot_error'],
-        sd['emin'], sd['emax']
-    )
-}
+f_bin = fits.open(f'./fit_results/{source_name_cleaned}_fit_data_NONE.fits')
+
+#f_bin_snr = fits.open(f'./fit_results/{source_name_cleaned}_fit_data_SNR.fits')
+f_bin_lin = fits.open(f'./fit_results/{source_name_cleaned}_fit_data_LIN.fits')
+
+bin_data = f_bin[1].data
+
+#bin_data_snr = f_bin_snr[1].data
+bin_data_lin = f_bin_lin[1].data
+
+# Sort the data by the 'emin' column
+sorted_indices = np.argsort(bin_data['emin'])  # Get sorted indices
+sorted_data_none = bin_data[sorted_indices]  # Reorder the data using sorted indices
+#print(sorted_data_none)
+
+'''snr3 = bin_data_snr[bin_data_snr['loop_item'] == '3']
+sorted_indices_snr3 = np.argsort(snr3['emin'])  # Get sorted indices
+sorted_data_snr3 = snr3[sorted_indices_snr3]
+#print(sorted_data_snr3)
+
+snr5 = bin_data_snr[bin_data_snr['loop_item'] == '5']
+sorted_indices_snr5 = np.argsort(snr5['emin'])  # Get sorted indices
+sorted_data_snr5 = snr5[sorted_indices_snr5]
+#print(sorted_data_snr5)
+
+snr10 = bin_data_snr[bin_data_snr['loop_item'] == '10']
+sorted_indices_snr10 = np.argsort(snr10['emin'])  # Get sorted indices
+sorted_data_snr10 = snr10[sorted_indices_snr10]'''
+#print(sorted_data_snr10)
+
+week = bin_data_lin[bin_data_lin['loop_item'] == 'week']
+sorted_indices_lin_week = np.argsort(week['emin'])  # Get sorted indices
+sorted_data_lin_week = week[sorted_indices_lin_week]
+month = bin_data_lin[bin_data_lin['loop_item'] == 'month']
+sorted_indices_lin_month = np.argsort(month['emin'])  # Get sorted indices
+sorted_data_lin_month = month[sorted_indices_lin_month]
+
+colors_snr = ['blue', 'orange', 'green']
+colors_lin = ['purple', 'brown']
+
+                        
+datasets = {f"No_Filtering": (sorted_data_none['geometric_mean'], sorted_data_none['flux_tot_value'], sorted_data_none['flux_tot_error'], sorted_data_none['emin'], sorted_data_none['emax'] )}
+
+'''datasets_snr = {f"snr_3": (sorted_data_snr3['geometric_mean'], sorted_data_snr3['flux_tot_value'], sorted_data_snr3['flux_tot_error'], sorted_data_snr3['emin'], sorted_data_snr3['emax']),
+                f"snr_5": (sorted_data_snr5['geometric_mean'], sorted_data_snr5['flux_tot_value'], sorted_data_snr5['flux_tot_error'], sorted_data_snr5['emin'], sorted_data_snr5['emax']),
+                f"snr_10": (sorted_data_snr10['geometric_mean'], sorted_data_snr10['flux_tot_value'], sorted_data_snr10['flux_tot_error'], sorted_data_snr10['emin'], sorted_data_snr10['emax'])}
+'''
+datasets_lin = {f"week": (sorted_data_lin_week['geometric_mean'], sorted_data_lin_week['flux_tot_value'], sorted_data_lin_week['flux_tot_error'], sorted_data_lin_week['emin'], sorted_data_lin_week['emax']),
+                f"month": (sorted_data_lin_month['geometric_mean'], sorted_data_lin_month['flux_tot_value'], sorted_data_lin_month['flux_tot_error'], sorted_data_lin_month['emin'], sorted_data_lin_month['emax'])}
 
 # ————— Model definitions —————
 def logpar_base(x, Norm, alpha_, beta_, z):
@@ -88,7 +129,7 @@ def axion_mod(E, Norm, alpha, beta, w, p0, E_c, z, k=2.71):
     return logpar_base(E, Norm, alpha, beta, z) * (1 - (p00/(1 + (E_c/E)**k)))
 
 # ————— Plotting function —————
-def simple_plot_fit(dataset_dict, fit_results_dict, source,target_m=None, target_g=None):
+def simple_plot_fit(dataset_dict, fit_results_dict, source, filter_label, png='name',target_m=None, target_g=None):
     # load redshift
     with fits.open('table-4LAC-DR3-h.fits') as f:
         data1 = f[1].data
@@ -107,7 +148,7 @@ def simple_plot_fit(dataset_dict, fit_results_dict, source,target_m=None, target
 
     # flatten all fits into a dict
     fitspec = {}
-    for i_row, row in enumerate(fit_results_dict[source]["No_Filtering"]):
+    for i_row, row in enumerate(fit_results_dict[source][filter_label]):
         for j_col, r in enumerate(row):
             mv       = r["m"]
             gv       = r["g"]
@@ -208,8 +249,11 @@ def simple_plot_fit(dataset_dict, fit_results_dict, source,target_m=None, target
     )
 
     fig.tight_layout()
-    plt.savefig(f"./fit_results/NGC_bestfits_none.png", dpi=300)
+    plt.savefig(f"./fit_results/NGC_bestfits_{png}.png", dpi=300)
+    plt.close()
     return fig
 
 if __name__ == '__main__':
-    fig = simple_plot_fit(datasets, all_results_none, source_name ,target_m=1e-9, target_g=2.2e-12)
+    fig = simple_plot_fit(datasets, all_results_none, source_name, filter_label= "No_Filtering",png='none', target_m=1e-9, target_g=2.2e-12)
+    fig = simple_plot_fit(datasets_lin, all_results_lin, source_name, filter_label= "week",png='week', target_m=1e-9, target_g=2.2e-12)
+    fig = simple_plot_fit(datasets_lin, all_results_lin, source_name, filter_label= "month",png='month', target_m=1e-9, target_g=2.2e-12)
