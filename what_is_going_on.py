@@ -833,7 +833,7 @@ def plot_delta_chi2_heatmap_nosys_base(
                 linestyles=['solid', 'solid'],
                 linewidths=2
             )
-            verts = []
+           ''' verts = []
             for i in range(len(cs_nosys.levels)):
                 for path in cs_nosys.collections[i].get_paths():
                     verts.append(path.vertices)
@@ -842,7 +842,7 @@ def plot_delta_chi2_heatmap_nosys_base(
                 os.path.join(outdir, f"{filter_label}_nosys.txt"),
                 all_verts_nosys,
                 header="x [neV]    y [GeV^-1]"
-            )
+            )'''
 
         # With systematics
         if systematic_grid is not None:
@@ -853,7 +853,7 @@ def plot_delta_chi2_heatmap_nosys_base(
                 linestyles=['dashed', 'dashed'],
                 linewidths=2
             )
-            verts = []
+            '''verts = []
             for i in range(len(cs_withsys.levels)):
                 for path in cs_withsys.collections[i].get_paths():
                     verts.append(path.vertices)
@@ -862,7 +862,7 @@ def plot_delta_chi2_heatmap_nosys_base(
                 os.path.join(outdir, f"{filter_label}_withsys.txt"),
                 all_verts_withsys,
                 header="x [neV]    y [GeV^-1]"
-            )
+            )'''
 
         # Plot heatmap
         plt.figure(figsize=(10, 6))
@@ -1029,18 +1029,18 @@ plot_mean_delta_chi2_heatmap_sys_base(all_results_snr, all_results_snr_sys, list
 def split_clusters(xs, ys, threshold=1.0):
     """
     Split a sequence of points into clusters whenever the consecutive distance exceeds threshold.
-    Returns a list of (x_cluster, y_cluster) tuples.
+    Returns list of (x_cluster, y_cluster).
     """
     pts = np.column_stack((xs, ys))
-    if pts.shape[0] == 0:
+    if pts.shape[0] < 2:
         return []
     deltas = np.diff(pts, axis=0)
     dists = np.hypot(deltas[:,0], deltas[:,1])
-    break_idxs = np.where(dists > threshold)[0]
+    breaks = np.where(dists > threshold)[0]
     clusters = []
     start = 0
-    for idx in break_idxs:
-        end = idx + 1
+    for b in breaks:
+        end = b + 1
         cluster = pts[start:end]
         if cluster.shape[0] > 1:
             clusters.append((cluster[:,0], cluster[:,1]))
@@ -1051,76 +1051,89 @@ def split_clusters(xs, ys, threshold=1.0):
     return clusters
 
 
-def split_clusters(xs, ys, threshold=1.0):
-    """
-    Split a sequence of points into clusters whenever the consecutive distance exceeds threshold.
-    Returns a list of (x_cluster, y_cluster) tuples.
-    """
-    pts = np.column_stack((xs, ys))
-    if pts.shape[0] == 0:
-        return []
-    deltas = np.diff(pts, axis=0)
-    dists = np.hypot(deltas[:,0], deltas[:,1])
-    break_idxs = np.where(dists > threshold)[0]
-    clusters = []
-    start = 0
-    for idx in break_idxs:
-        end = idx + 1
-        cluster = pts[start:end]
-        if cluster.shape[0] > 1:
-            clusters.append((cluster[:,0], cluster[:,1]))
-        start = end
-    last = pts[start:]
-    if last.shape[0] > 1:
-        clusters.append((last[:,0], last[:,1]))
-    return clusters
-
-
-def plot_loaded_contours(
-    contour_dir,
+def compute_and_plot_contours(
+    all_results_none,
+    all_results_none_sys,
+    all_results_lin,
+    all_results_lin_sys,
+    dataset_labels_none,
+    dataset_labels_lin,
+    m_masked,
+    g_masked,
+    p0_masked,
+    ec_masked,
+    remove_sources,
     output_prefix,
-    filters=['No_Filtering', 'week', 'month'],
     threshold=1.0
 ):
     """
-    Load contour-point files and plot separate contour clusters.
-    contour_dir: directory of txt files.
-    output_prefix: prefix for saved PNG files.
-    filters: list of filter labels.
-    threshold: max distance to connect points in a cluster.
+    Remove sources uniformly, compute and plot ±6.2 Δχ² contours for three filters:
+      - No_Filtering uses all_results_none[_sys] and dataset_labels_none
+      - week/month use all_results_lin[_sys] and dataset_labels_lin
+    Produces two plots: one without systematics (nosys) and one with systematics (withsys).
+
+    Parameters:
+    all_results_none: dict of results for no filtering (no sys)
+    all_results_none_sys: dict of results for no filtering (with sys)
+    all_results_lin: dict of results for week/month filters (no sys)
+    all_results_lin_sys: dict of results for week/month filters (with sys)
+    dataset_labels_none: list of dataset labels corresponding to all_results_none
+    dataset_labels_lin: list of dataset labels corresponding to all_results_lin
+    remove_sources: list of source labels to remove from all datasets
+    output_prefix: prefix for saved figures
+    threshold: maximum distance to connect contour points into clusters
     """
-    modes = ['nosys', 'withsys']
-    for mode in modes:
-        fig, ax = plt.subplots(figsize=(8, 6))
+    # Helper to prune sources
+    def prune(results):
+        return {k: v for k, v in results.items() if k not in remove_sources}
+
+    none = prune(all_results_none)
+    none_sys = prune(all_results_none_sys)
+    lin = prune(all_results_lin)
+    lin_sys = prune(all_results_lin_sys)
+
+    # Prepare mesh
+    ma_mesh, g_mesh = np.meshgrid(m_masked, g_masked, indexing='ij')
+    x = ma_mesh / 1e-9
+    y = g_mesh
+
+    # Modes: tuple of (results dict, results_sys dict, dataset_labels)
+    modes = {
+        'nosys': (none, lin, dataset_labels_none, dataset_labels_lin, False),
+        'withsys': (none_sys, lin_sys, dataset_labels_none, dataset_labels_lin, True)
+    }
+
+    filters = ['No_Filtering', 'week', 'month']
+    colors = {'No_Filtering':'black', 'week':'purple', 'month':'red'}
+
+    for mode_label, (r_none, r_lin, ds_none, ds_lin, is_sys) in modes.items():
+        fig, ax = plt.subplots(figsize=(8,6))
+
         for fl in filters:
-            file_path = os.path.join(contour_dir, f"{fl}_{mode}.txt")
-            # Load data; require level column
-            data = np.loadtxt(file_path)
-            if data.ndim != 2 or data.shape[1] != 3:
-                raise ValueError(
-                    f"Contour file '{file_path}' must have three columns: x, y, level"
-                )
-            xs, ys, levels = data[:,0], data[:,1], data[:,2]
-            xs_pos, ys_pos = xs[levels > 0], ys[levels > 0]
-            xs_neg, ys_neg = xs[levels < 0], ys[levels < 0]
-
-            # Split into clusters to avoid connecting distant islands
-            pos_clusters = split_clusters(xs_pos, ys_pos, threshold)
-            neg_clusters = split_clusters(xs_neg, ys_neg, threshold)
-
-            # Plot according to filter
+            # Choose appropriate results and labels
             if fl == 'No_Filtering':
-                # solid black for positive, dashed black for negative
-                for x_c, y_c in pos_clusters:
-                    ax.plot(x_c, y_c, linestyle='solid', color='black')
-                for x_c, y_c in neg_clusters:
-                    ax.plot(x_c, y_c, linestyle='dashed', color='black')
+                res = r_none
+                ds_labels = ds_none
             else:
-                color = 'purple' if fl == 'week' else 'red'
-                for x_c, y_c in pos_clusters:
-                    ax.plot(x_c, y_c, linestyle='solid', color=color)
-                for x_c, y_c in neg_clusters:
-                    ax.plot(x_c, y_c, linestyle='dashed', color=color)
+                res = r_lin
+                ds_labels = ds_lin
+
+            # Compute grid
+            grid = compute_mean_delta_chi2_grid(
+                res, ds_labels, fl,
+                p0_masked, ec_masked, remove_source_label=None
+            )
+
+            # Extract contours
+            cs = plt.contour(x, y, grid, levels=[-6.2, 6.2], linewidths=2)
+            for lvl_idx, lvl in enumerate(cs.levels):
+                for path in cs.collections[lvl_idx].get_paths():
+                    vx, vy = path.vertices.T
+                    clusters = split_clusters(vx, vy, threshold)
+                    style = 'solid' if lvl > 0 else 'dashed'
+                    color = colors[fl]
+                    for xc, yc in clusters:
+                        ax.plot(xc, yc, linestyle=style, color=color)
         ax.set_xscale('log')
         ax.set_yscale('log')
         ax.set_xlabel(r'$m_a$ [neV]')
@@ -1130,9 +1143,21 @@ def plot_loaded_contours(
         ax.set_xticks([1, 9])
         ax.set_xticklabels(['1', '9'])
         plt.tight_layout()
-        plt.savefig(f'{output_prefix}_{mode}.png', dpi=300)
+        plt.savefig(f'{output_prefix}_contours.png', dpi=300)
         plt.close()
 
 outdir = path_to_save_heatmap_m_g
-plot_loaded_contours(outdir, "LIN",filters=['No_Filtering', 'week', 'month']
-)
+compute_and_plot_contours(all_results_none,
+                        all_results_none_sys,
+                        all_results_lin,
+                        all_results_lin_sys,
+                        list(all_results_none.keys()),
+                        list(all_results_lin.keys()),
+                        m_masked,
+                        g_masked,
+                        p0_masked,
+                        ec_masked,
+                        remove_sources=["4FGL J0132.7-0804", "4FGL J0317.8-4414", "4FGL J1242.9+7315"],
+                        output_prefix="LIN",
+                        threshold=1.0
+                    )
