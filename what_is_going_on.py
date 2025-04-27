@@ -1049,21 +1049,6 @@ def split_clusters(xs, ys, threshold=1.0):
     if last.shape[0] > 1:
         clusters.append((last[:,0], last[:,1]))
     return clusters
-import matplotlib.patheffects as pe
-
-def plot_line(ax, x, y, style, color, alpha=1.0):
-    """
-    Plot a line with optional white stroke for dashed style to ensure gaps appear white.
-    """
-    line, = ax.plot(x, y, linestyle=style, color=color, alpha=alpha)
-    if style == 'dashed':
-        # add white stroke underneath to mask background
-        lw = line.get_linewidth()
-        line.set_path_effects([
-            pe.Stroke(linewidth=lw*2, foreground='white'),
-            pe.Normal()
-        ])
-    return line
 
 
 def compute_and_plot_contours(
@@ -1103,7 +1088,7 @@ def compute_and_plot_contours(
 
     # Plot settings
     filters = ['No_Filtering', 'week', 'month']
-    colors = {'No_Filtering':'grey', 'week':'green', 'month':'red'}
+    colors = {'No_Filtering':'black', 'week':'olivedrab', 'month':'darkred'}
     alphas = {'No_Filtering':1.0, 'week':0.75, 'month':0.75}
 
     # Loop over mode: nosys and withsys
@@ -1127,24 +1112,15 @@ def compute_and_plot_contours(
                 p0_masked, ec_masked, remove_source_label=None
             )
 
-                        # Extract and plot contours at ±6.2 manually for custom linestyles
-            cs = ax.contour(x, y, grid, levels=[-6.2, 6.2], linewidths=2)
-            for lvl_idx, lvl in enumerate(cs.levels):
-                for path in cs.collections[lvl_idx].get_paths():
-                    vx, vy = path.vertices.T
-                    clusters = split_clusters(vx, vy, threshold)
-                    # Determine style per filter and level
-                    if fl == 'No_Filtering':
-                        style = 'solid' if lvl > 0 else 'dashed'
-                        col = colors[fl]
-                    elif fl == 'week':
-                        style = 'dashed' if lvl > 0 else 'dashdot'
-                        col = colors[fl]
-                    else:  # month
-                        style = 'dashdot'
-                        col = colors[fl]
-                    for xc, yc in clusters:
-                        plot_line(ax, xc, yc, style, col, alpha=alphas[fl])
+            # Extract and plot contours at ±6.2
+            cs = ax.contour(
+                x, y, grid,
+                levels=[-6.2, 6.2],
+                colors=[colors[fl]]*2,
+                linestyles=['dashed','solid'],
+                linewidths=2,
+                alpha=alphas[fl]
+            )
         # Axis formatting
         ax.set_xscale('log')
         ax.set_yscale('log')
@@ -1156,7 +1132,6 @@ def compute_and_plot_contours(
         plt.tight_layout()
         fig.savefig(f"{output_prefix}_{mode_label}.png", dpi=300)
         plt.close(fig)
-
 
 outdir = path_to_save_heatmap_m_g
 compute_and_plot_contours(all_results_none,
