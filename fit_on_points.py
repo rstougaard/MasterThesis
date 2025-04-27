@@ -222,6 +222,8 @@ def simple_plot_fit(dataset_dict, fit_results_dict, source, filter_label, png='n
         data_label = "SNR=5 filter data"
     elif filter_label == "snr_10":
         data_label = "SNR=10 filter data"
+    else:
+        data_label = "Data"
     ax_top.errorbar(
         x_m, y_m,
         xerr=[x_m-emin_m, emax_m-x_m],
