@@ -210,11 +210,23 @@ def simple_plot_fit(dataset_dict, fit_results_dict, source, filter_label, png='n
     ax_top.set_ylabel(r'E$^2$dN/dE [erg/cm$^2$/s]')
     
     ax_top.grid(True, which='both', ls='--')
+    if filter_label == "No_fitlering":
+        data_label = "No filter data"
+    elif filter_label == "week":
+        data_label = "Weekly filter data"
+    elif filter_label == "month":
+        data_label = "Monthly filter data"
+    elif filter_label == "snr_3":
+        data_label = "SNR=3 filter data"
+    elif filter_label == "snr_5":
+        data_label = "SNR=5 filter data"
+    elif filter_label == "snr_10":
+        data_label = "SNR=10 filter data"
     ax_top.errorbar(
         x_m, y_m,
         xerr=[x_m-emin_m, emax_m-x_m],
         yerr=err_m,
-        fmt='o', color='k', capsize=3, label='No filter data'
+        fmt='o', color='k', capsize=3, label=data_label
     )
     ax_top.legend(loc='upper right')
 
