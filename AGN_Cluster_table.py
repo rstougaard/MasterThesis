@@ -43,40 +43,49 @@ def maketable_best_fit_indv(AGN_list, ma, ga, OUTPUT_TEX= f"{tex_path}source_red
 
 def _find_match_delta(results, target_m=None, target_g=None, target_d=-1.072):
     """
-    Flatten results (list of {m,g,fit_result:{DeltaChi2,...},...}) into a dict,
-    then pick the entry matching (target_m,target_g) if given, else exact/nearest
-    on target_d. Return its DeltaChi2 (or np.nan if no results).
+    Given `results` which may be:
+      - a list of dicts,
+      - a list of lists of dicts,
+      - a dict whose values are lists of dicts,
+    flatten it to a single list of dicts, then pick the entry
+    closest to (target_m,target_g) if provided, otherwise exact/nearest on Δχ²=target_d.
+    Returns that entry's DeltaChi2 or np.nan if none found.
     """
-    if not results:
+    # 1) flatten
+    flat = []
+    if isinstance(results, dict):
+        iterable = results.values()
+    else:
+        iterable = results
+
+    for item in iterable:
+        if isinstance(item, dict):
+            flat.append(item)
+        elif isinstance(item, (list, tuple)):
+            for sub in item:
+                if isinstance(sub, dict):
+                    flat.append(sub)
+                # you can nest more levels here if needed
+        # else: skip non‐dicts/strings
+
+    if not flat:
         return np.nan
 
-    # flatten
-    fitspec = {}
-    for i, r in enumerate(results):
-        key = f"fit_{i}"
-        fitspec[key] = {
-            "m":          r["m"],
-            "g":          r["g"],
-            "delta":      r["fit_result"]["DeltaChi2"],
-            # ... you could store more if you like
-        }
-
-    # choose
+    # 2) pick by (m,g) if given
     if target_m is not None and target_g is not None:
-        # L1 distance in (m,g)-space
         dist = lambda s: abs(s["m"] - target_m) + abs(s["g"] - target_g)
-        best = min(fitspec.values(), key=dist)
+        best = min(flat, key=dist)
     else:
-        # try exact Δχ²
-        for s in fitspec.values():
-            if np.isclose(s["delta"], target_d, atol=1e-3):
+        # try exact Δχ² match
+        for s in flat:
+            if np.isclose(s["fit_result"]["DeltaChi2"], target_d, atol=1e-3):
                 best = s
                 break
         else:
-            # nearest Δχ²
-            best = min(fitspec.values(), key=lambda s: abs(s["delta"] - target_d))
+            best = min(flat, key=lambda s: abs(s["fit_result"]["DeltaChi2"] - target_d))
 
-    return best["delta"]
+    return best["fit_result"]["DeltaChi2"]
+
 
 def maketable_best_fit_all_deltaChi(
     AGN_list,
