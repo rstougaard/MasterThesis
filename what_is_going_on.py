@@ -986,8 +986,8 @@ no_filtering_grid_sys_month = compute_mean_delta_chi2_grid(
     ec_masked=ec_masked,
     remove_source_label = ["4FGL J0132.7-0804", "4FGL J0317.8-4414", "4FGL J1242.9+7315"]) #4, 7 and 12
 
-plot_delta_chi2_heatmap_nosys_base(all_results_lin, all_results_lin_sys, list(all_results_lin.keys()), "base_nosys_", no_filtering_grid=no_filtering_grid_week , no_filtering_grid_other=no_filtering_grid_sys_week, remove_source_label=["4FGL J0317.8-4414"])
-plot_delta_chi2_heatmap_nosys_base(all_results_lin, all_results_lin_sys, list(all_results_lin.keys()), "base_nosys_", no_filtering_grid=no_filtering_grid_month , no_filtering_grid_other=no_filtering_grid_sys_month, remove_source_label=["4FGL J0132.7-0804","4FGL J0317.8-4414", "4FGL J1242.9+7315"])
+plot_delta_chi2_heatmap_nosys_base(all_results_lin, all_results_lin_sys, list(all_results_lin.keys()), "base_nosys_", no_filtering_grid=None , no_filtering_grid_other=None, remove_source_label=["4FGL J0317.8-4414"])
+plot_delta_chi2_heatmap_nosys_base(all_results_lin, all_results_lin_sys, list(all_results_lin.keys()), "base_nosys_", no_filtering_grid=None , no_filtering_grid_other=None, remove_source_label=["4FGL J0132.7-0804","4FGL J0317.8-4414", "4FGL J1242.9+7315"])
 
 ##plot_mean_delta_chi2_heatmap_sys_base(all_results_lin, all_results_lin_sys, list(all_results_lin.keys()), "base_sys_", no_filtering_grid=no_filtering_grid_sys,no_filtering_grid_other=None, remove_source_label=["4FGL J1242.9+7315", "4FGL J0912.5+1556", "4FGL J1516.8+2918"])
 #plot_mean_delta_chi2_heatmap_nosys_base(all_results_lin, all_results_lin_sys, list(all_results_lin.keys()), "base_nosys_", no_filtering_grid=[no_filtering_grid_week, no_filtering_grid_month] , no_filtering_grid_other=[no_filtering_grid_sys_week, no_filtering_grid_sys_month], remove_source_label=["4FGL J0317.8-4414", ["4FGL J0317.8-4414", "4FGL J1242.9+7315"]])
@@ -1025,19 +1025,46 @@ plot_mean_delta_chi2_heatmap_sys_base(all_results_lin, all_results_lin_sys, list
 plot_mean_delta_chi2_heatmap_sys_base(all_results_snr, all_results_snr_sys, list(all_results_snr.keys()), "base_sys_", no_filtering_grid=no_filtering_grid_sys, no_filtering_grid_other=no_filtering_grid, remove_source_label=None)
 
 '''
+def split_clusters(xs, ys, threshold=1.0):
+    """
+    Split a sequence of points into clusters whenever the consecutive distance exceeds threshold.
+    Returns a list of (x_cluster, y_cluster) tuples.
+    """
+    pts = np.column_stack((xs, ys))
+    if pts.shape[0] == 0:
+        return []
+    # distances between consecutive points
+    deltas = np.diff(pts, axis=0)
+    dists = np.hypot(deltas[:,0], deltas[:,1])
+    # break indices where distance > threshold
+    break_idxs = np.where(dists > threshold)[0]
+    clusters = []
+    start = 0
+    for idx in break_idxs:
+        end = idx + 1
+        cluster = pts[start:end]
+        if cluster.shape[0] > 1:
+            clusters.append((cluster[:,0], cluster[:,1]))
+        start = end
+    # last cluster
+    last_cluster = pts[start:]
+    if last_cluster.shape[0] > 1:
+        clusters.append((last_cluster[:,0], last_cluster[:,1]))
+    return clusters
+
+
 def plot_loaded_contours(
     contour_dir,
     output_prefix,
-    filters=['No_Filtering', 'week', 'month']
+    filters=['No_Filtering', 'week', 'month'],
+    threshold=1.0
 ):
     """
-    Load contour-point files saved by filter and mode, and create two plots:
-    1) 'nosys' plot: filled contours for No_Filtering, and line contours for week/month.
-    2) 'withsys' plot: same styling, using the '_withsys.txt' files.
-
-    contour_dir: directory where the txt files are stored.
-    output_prefix: prefix for saved PNG files (without extension).
-    filters: list of filter labels to load.
+    Load contour-point files and plot separate contour clusters.
+    contour_dir: directory of txt files.
+    output_prefix: prefix for saved PNG files.
+    filters: list of filter labels.
+    threshold: max distance to connect points in a cluster.
     """
     modes = ['nosys', 'withsys']
     for mode in modes:
@@ -1045,36 +1072,36 @@ def plot_loaded_contours(
         for fl in filters:
             file_path = os.path.join(contour_dir, f"{fl}_{mode}.txt")
             data = np.loadtxt(file_path)
-            # If three columns, use level column; if two, fallback to largest-gap split
+            # Determine if level column exists
             if data.ndim == 2 and data.shape[1] == 3:
                 xs, ys, levels = data[:,0], data[:,1], data[:,2]
                 mask_pos = levels > 0
                 mask_neg = levels < 0
-                pos_x, pos_y = xs[mask_pos], ys[mask_pos]
-                neg_x, neg_y = xs[mask_neg], ys[mask_neg]
+                xs_pos, ys_pos = xs[mask_pos], ys[mask_pos]
+                xs_neg, ys_neg = xs[mask_neg], ys[mask_neg]
             elif data.ndim == 2 and data.shape[1] == 2:
-                pts = data
-                # fallback: split at largest jump between consecutive points
-                deltas = np.diff(pts, axis=0)
-                dists = np.hypot(deltas[:,0], deltas[:,1])
-                split_idx = int(np.argmax(dists)) + 1
-                neg_pts = pts[:split_idx]
-                pos_pts = pts[split_idx:]
-                neg_x, neg_y = neg_pts[:,0], neg_pts[:,1]
-                pos_x, pos_y = pos_pts[:,0], pos_pts[:,1]
+                xs_pos, ys_pos = data[:,0], data[:,1]
+                xs_neg, ys_neg = np.array([]), np.array([])
             else:
                 raise ValueError(
-                    f"Contour file '{file_path}' must have 2 or 3 columns (x, y[, level])."
+                    f"Contour file '{file_path}' must have 2 or 3 columns"
                 )
+            # Split into clusters
+            pos_clusters = split_clusters(xs_pos, ys_pos, threshold)
+            neg_clusters = split_clusters(xs_neg, ys_neg, threshold) if xs_neg.size else []
 
+            # Plot clusters
             if fl == 'No_Filtering':
-                ax.fill(pos_x, pos_y, facecolor='lightgrey', edgecolor='none')
-                ax.fill(neg_x, neg_y, facecolor='forestgreen', edgecolor='none')
+                for x_c, y_c in pos_clusters:
+                    ax.fill(x_c, y_c, facecolor='lightgrey', edgecolor='none')
+                for x_c, y_c in neg_clusters:
+                    ax.fill(x_c, y_c, facecolor='forestgreen', edgecolor='none')
             else:
                 color = 'purple' if fl == 'week' else 'red'
-                ax.plot(pos_x, pos_y, linestyle='solid', color=color)
-                ax.plot(neg_x, neg_y, linestyle='dashed', color=color)
-
+                for x_c, y_c in pos_clusters:
+                    ax.plot(x_c, y_c, linestyle='solid', color=color)
+                for x_c, y_c in neg_clusters:
+                    ax.plot(x_c, y_c, linestyle='dashed', color=color)
         ax.set_xscale('log')
         ax.set_yscale('log')
         ax.set_xlabel(r'$m_a$ [neV]')
