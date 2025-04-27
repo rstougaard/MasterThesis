@@ -945,7 +945,7 @@ no_filtering_grid = compute_mean_delta_chi2_grid(
 
 )
 '''
-plot_delta_chi2_heatmap_nosys_base(all_results_none, all_results_none_sys, list(all_results_none.keys()), "base_nosys_", remove_source_label=["4FGL J0317.8-4414"])
+#plot_delta_chi2_heatmap_nosys_base(all_results_none, all_results_none_sys, list(all_results_none.keys()), "base_nosys_", remove_source_label=["4FGL J0317.8-4414"])
 
 
 # Summed heatmaps for no filter
@@ -986,8 +986,9 @@ no_filtering_grid_sys_month = compute_mean_delta_chi2_grid(
     ec_masked=ec_masked,
     remove_source_label = ["4FGL J0132.7-0804", "4FGL J0317.8-4414", "4FGL J1242.9+7315"]) #4, 7 and 12
 
-plot_delta_chi2_heatmap_nosys_base(all_results_lin, all_results_lin_sys, list(all_results_lin.keys()), "base_nosys_", no_filtering_grid=None , no_filtering_grid_other=None, remove_source_label=["4FGL J0317.8-4414"])
-plot_delta_chi2_heatmap_nosys_base(all_results_lin, all_results_lin_sys, list(all_results_lin.keys()), "base_nosys_", no_filtering_grid=None , no_filtering_grid_other=None, remove_source_label=["4FGL J0132.7-0804","4FGL J0317.8-4414", "4FGL J1242.9+7315"])
+
+##plot_delta_chi2_heatmap_nosys_base(all_results_lin, all_results_lin_sys, list(all_results_lin.keys()), "base_nosys_", no_filtering_grid=None , no_filtering_grid_other=None, remove_source_label=["4FGL J0317.8-4414"])
+#plot_delta_chi2_heatmap_nosys_base(all_results_lin, all_results_lin_sys, list(all_results_lin.keys()), "base_nosys_", no_filtering_grid=None , no_filtering_grid_other=None, remove_source_label=["4FGL J0132.7-0804","4FGL J0317.8-4414", "4FGL J1242.9+7315"])
 
 ##plot_mean_delta_chi2_heatmap_sys_base(all_results_lin, all_results_lin_sys, list(all_results_lin.keys()), "base_sys_", no_filtering_grid=no_filtering_grid_sys,no_filtering_grid_other=None, remove_source_label=["4FGL J1242.9+7315", "4FGL J0912.5+1556", "4FGL J1516.8+2918"])
 #plot_mean_delta_chi2_heatmap_nosys_base(all_results_lin, all_results_lin_sys, list(all_results_lin.keys()), "base_nosys_", no_filtering_grid=[no_filtering_grid_week, no_filtering_grid_month] , no_filtering_grid_other=[no_filtering_grid_sys_week, no_filtering_grid_sys_month], remove_source_label=["4FGL J0317.8-4414", ["4FGL J0317.8-4414", "4FGL J1242.9+7315"]])
@@ -1033,10 +1034,8 @@ def split_clusters(xs, ys, threshold=1.0):
     pts = np.column_stack((xs, ys))
     if pts.shape[0] == 0:
         return []
-    # distances between consecutive points
     deltas = np.diff(pts, axis=0)
     dists = np.hypot(deltas[:,0], deltas[:,1])
-    # break indices where distance > threshold
     break_idxs = np.where(dists > threshold)[0]
     clusters = []
     start = 0
@@ -1046,10 +1045,9 @@ def split_clusters(xs, ys, threshold=1.0):
         if cluster.shape[0] > 1:
             clusters.append((cluster[:,0], cluster[:,1]))
         start = end
-    # last cluster
-    last_cluster = pts[start:]
-    if last_cluster.shape[0] > 1:
-        clusters.append((last_cluster[:,0], last_cluster[:,1]))
+    last = pts[start:]
+    if last.shape[0] > 1:
+        clusters.append((last[:,0], last[:,1]))
     return clusters
 
 
@@ -1072,30 +1070,34 @@ def plot_loaded_contours(
         for fl in filters:
             file_path = os.path.join(contour_dir, f"{fl}_{mode}.txt")
             data = np.loadtxt(file_path)
-            # Determine if level column exists
+            # Expect x,y[,level]
             if data.ndim == 2 and data.shape[1] == 3:
                 xs, ys, levels = data[:,0], data[:,1], data[:,2]
-                mask_pos = levels > 0
-                mask_neg = levels < 0
-                xs_pos, ys_pos = xs[mask_pos], ys[mask_pos]
-                xs_neg, ys_neg = xs[mask_neg], ys[mask_neg]
+                xs_pos, ys_pos = xs[levels>0], ys[levels>0]
+                xs_neg, ys_neg = xs[levels<0], ys[levels<0]
             elif data.ndim == 2 and data.shape[1] == 2:
-                xs_pos, ys_pos = data[:,0], data[:,1]
-                xs_neg, ys_neg = np.array([]), np.array([])
+                pts = data
+                # split by largest gap
+                deltas = np.diff(pts, axis=0)
+                dists = np.hypot(deltas[:,0], deltas[:,1])
+                split = int(np.argmax(dists)) + 1
+                neg, pos = pts[:split], pts[split:]
+                xs_neg, ys_neg = neg[:,0], neg[:,1]
+                xs_pos, ys_pos = pos[:,0], pos[:,1]
             else:
-                raise ValueError(
-                    f"Contour file '{file_path}' must have 2 or 3 columns"
-                )
+                raise ValueError(f"Contour file '{file_path}' must have 2 or 3 columns.")
+
             # Split into clusters
             pos_clusters = split_clusters(xs_pos, ys_pos, threshold)
-            neg_clusters = split_clusters(xs_neg, ys_neg, threshold) if xs_neg.size else []
+            neg_clusters = split_clusters(xs_neg, ys_neg, threshold)
 
-            # Plot clusters
+            # Plot for each filter
             if fl == 'No_Filtering':
+                # solid black above, dashed black below
                 for x_c, y_c in pos_clusters:
-                    ax.fill(x_c, y_c, facecolor='lightgrey', edgecolor='none')
+                    ax.plot(x_c, y_c, linestyle='solid', color='black')
                 for x_c, y_c in neg_clusters:
-                    ax.fill(x_c, y_c, facecolor='forestgreen', edgecolor='none')
+                    ax.plot(x_c, y_c, linestyle='dashed', color='black')
             else:
                 color = 'purple' if fl == 'week' else 'red'
                 for x_c, y_c in pos_clusters:
