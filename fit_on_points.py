@@ -212,4 +212,4 @@ def simple_plot_fit(dataset_dict, fit_results_dict, source,target_m=None, target
     return fig
 
 if __name__ == '__main__':
-    fig = simple_plot_fit(datasets, all_results_none, source_name ,target_m=1e-9, target_g=2.3e-12)
+    fig = simple_plot_fit(datasets, all_results_none, source_name ,target_m=1e-9, target_g=2.2e-12)
