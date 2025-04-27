@@ -8,7 +8,7 @@ tex_path = "./tex_files/"
 # ──────────────────────────────────────────────────────────────────────────
 # CONFIGURATION
 # ──────────────────────────────────────────────────────────────────────────
-SOURCE_LIST    = "sources_for_heatmaps.txt"
+SOURCE_LIST    = "sources_for_fittables.txt"
 FERMI_CAT_FiTS = './test/gll_psc_v35.fit'
 
 #choose mass and coupling
