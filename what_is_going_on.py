@@ -1099,7 +1099,8 @@ def compute_and_plot_contours(
     y = g_mesh
 
     filters = ['No_Filtering', 'week', 'month']
-    colors = {'No_Filtering':'black', 'week':'purple', 'month':'red'}
+    colors = {'No_Filtering':'black', 'week':'lime', 'month':'red'}
+    alphas = {'No_Filtering': 1.0, 'week': 0.5, 'month': 0.5}
 
     # Plot without systematics
     fig, ax = plt.subplots(figsize=(8,6))
@@ -1121,7 +1122,7 @@ def compute_and_plot_contours(
                 style = 'solid' if lvl > 0 else 'dashed'
                 color = colors[fl]
                 for xc, yc in clusters:
-                    ax.plot(xc, yc, linestyle=style, color=color)
+                    ax.plot(xc, yc, linestyle=style, color=color, alpha=alphas[fl])
     ax.set_xscale('log')
     ax.set_yscale('log')
     ax.set_xlim(0.3,9)
