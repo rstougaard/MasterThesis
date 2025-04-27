@@ -1072,6 +1072,8 @@ def compute_and_plot_contours(
       - week/month use linear datasets
     Produces two plots: one without systematics (_nosys) and one with systematics (_withsys).
     """
+    import matplotlib.pyplot as plt
+    
     # Prune unwanted sources from all datasets
     def prune(results):
         return {k: v for k, v in results.items() if k not in remove_sources}
@@ -1111,17 +1113,22 @@ def compute_and_plot_contours(
                 res_dict, ds_labels, fl,
                 p0_masked, ec_masked, remove_source_label=None
             )
-            if fl == "No_filtering":
-                linestyles = ['dashed','solid']
-            elif fl == "week":
-                linestyles = ['dashdot','dashed']
-            elif fl == "month":
-                linestyles = ['dotted','dashdot']
+
+            # Determine linestyle mapping per filter
+            if fl == 'No_Filtering':
+                linestyles = ['dashed', 'solid']  # [-6.2, +6.2]
+            elif fl == 'week':
+                linestyles = ['dashdot', 'dashed']
+            elif fl == 'month':
+                linestyles = ['dotted', 'dashdot']
+            else:
+                linestyles = ['dashed', 'solid']
+
             # Extract and plot contours at ±6.2
-            cs = ax.contour(
+            ax.contour(
                 x, y, grid,
                 levels=[-6.2, 6.2],
-                colors=[colors[fl]]*2,
+                colors=[colors[fl]] * 2,
                 linestyles=linestyles,
                 linewidths=2,
                 alpha=alphas[fl]
