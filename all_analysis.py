@@ -1381,7 +1381,7 @@ def delete_fits_and_xml_files(source_name_cleaned, method):
 ##################################################################################
 
 filename = f'{general_path_for_slurm}/Source_ra_dec_specin.txt'
-snrratios = [10, 5, 3]
+snrratios = [10] #5, 3
 time_intervals = ["week","month"]
 
 def process_line(line):
