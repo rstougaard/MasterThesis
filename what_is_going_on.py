@@ -1051,6 +1051,31 @@ def split_clusters(xs, ys, threshold=1.0):
     return clusters
 
 
+def split_clusters(xs, ys, threshold=1.0):
+    """
+    Split a sequence of points into clusters whenever the consecutive distance exceeds threshold.
+    Returns a list of (x_cluster, y_cluster) tuples.
+    """
+    pts = np.column_stack((xs, ys))
+    if pts.shape[0] == 0:
+        return []
+    deltas = np.diff(pts, axis=0)
+    dists = np.hypot(deltas[:,0], deltas[:,1])
+    break_idxs = np.where(dists > threshold)[0]
+    clusters = []
+    start = 0
+    for idx in break_idxs:
+        end = idx + 1
+        cluster = pts[start:end]
+        if cluster.shape[0] > 1:
+            clusters.append((cluster[:,0], cluster[:,1]))
+        start = end
+    last = pts[start:]
+    if last.shape[0] > 1:
+        clusters.append((last[:,0], last[:,1]))
+    return clusters
+
+
 def plot_loaded_contours(
     contour_dir,
     output_prefix,
@@ -1069,31 +1094,23 @@ def plot_loaded_contours(
         fig, ax = plt.subplots(figsize=(8, 6))
         for fl in filters:
             file_path = os.path.join(contour_dir, f"{fl}_{mode}.txt")
+            # Load data; require level column
             data = np.loadtxt(file_path)
-            # Expect x,y[,level]
-            if data.ndim == 2 and data.shape[1] == 3:
-                xs, ys, levels = data[:,0], data[:,1], data[:,2]
-                xs_pos, ys_pos = xs[levels>0], ys[levels>0]
-                xs_neg, ys_neg = xs[levels<0], ys[levels<0]
-            elif data.ndim == 2 and data.shape[1] == 2:
-                pts = data
-                # split by largest gap
-                deltas = np.diff(pts, axis=0)
-                dists = np.hypot(deltas[:,0], deltas[:,1])
-                split = int(np.argmax(dists)) + 1
-                neg, pos = pts[:split], pts[split:]
-                xs_neg, ys_neg = neg[:,0], neg[:,1]
-                xs_pos, ys_pos = pos[:,0], pos[:,1]
-            else:
-                raise ValueError(f"Contour file '{file_path}' must have 2 or 3 columns.")
+            if data.ndim != 2 or data.shape[1] != 3:
+                raise ValueError(
+                    f"Contour file '{file_path}' must have three columns: x, y, level"
+                )
+            xs, ys, levels = data[:,0], data[:,1], data[:,2]
+            xs_pos, ys_pos = xs[levels > 0], ys[levels > 0]
+            xs_neg, ys_neg = xs[levels < 0], ys[levels < 0]
 
-            # Split into clusters
+            # Split into clusters to avoid connecting distant islands
             pos_clusters = split_clusters(xs_pos, ys_pos, threshold)
             neg_clusters = split_clusters(xs_neg, ys_neg, threshold)
 
-            # Plot for each filter
+            # Plot according to filter
             if fl == 'No_Filtering':
-                # solid black above, dashed black below
+                # solid black for positive, dashed black for negative
                 for x_c, y_c in pos_clusters:
                     ax.plot(x_c, y_c, linestyle='solid', color='black')
                 for x_c, y_c in neg_clusters:
