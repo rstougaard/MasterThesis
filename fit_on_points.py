@@ -88,7 +88,7 @@ def axion_mod(E, Norm, alpha, beta, w, p0, E_c, z, k=2.71):
     return logpar_base(E, Norm, alpha, beta, z) * (1 - (p00/(1 + (E_c/E)**k)))
 
 # ————— Plotting function —————
-def simple_plot_fit(dataset_dict, fit_results_dict, source):
+def simple_plot_fit(dataset_dict, fit_results_dict, source,target_m=None, target_g=None):
     # load redshift
     with fits.open('table-4LAC-DR3-h.fits') as f:
         data1 = f[1].data
@@ -129,29 +129,33 @@ def simple_plot_fit(dataset_dict, fit_results_dict, source):
                 "params_base": params_b, "params_axion": params_a,
                 "m": mv, "g": gv
             }
-    target_delta = -1.072
-    # find exact or nearest by Δχ²
     match = None
-    for spec in fitspec.values():
-        if np.isclose(spec["delta"], target_delta, atol=1e-3):
-            match = spec
-            print(f"Exact Δχ² match: Δχ² = {spec['delta']}")
-            break
-    if match is None:
-        print("No exact Δχ² match. Using nearest Δχ²...")
-        nearest_key = min(fitspec, key=lambda k: abs(fitspec[k]["delta"] - target_delta))
-        match = fitspec[nearest_key]
-        print(f"Nearest Δχ² = {match['delta']}")
+    if target_m is not None and target_g is not None:
+        def dist(s): return abs(s['m'] - target_m) + abs(s['g'] - target_g)
+        best = min(fitspec, key=lambda k: dist(fitspec[k]))
+        match = fitspec[best]
+        print(f"Selected (m,g)=({match['m']:.3g}, {match['g']:.3g})")
+    else:
+        target_d = -1.072
+        # exact
+        for s in fitspec.values():
+            if np.isclose(s['delta'], target_d, atol=1e-3):
+                match = s
+                print(f"Exact Δχ² match: {s['delta']:.2f}")
+                break
+        if match is None:
+            nearest = min(fitspec, key=lambda k: abs(fitspec[k]['delta'] - target_d))
+            match = fitspec[nearest]
+            print(f"Nearest Δχ² = {match['delta']:.2f}")
 
+    p_b = match['params_base']
+    p_a = match['params_axion']
+    p0v, ecv = match['p0'], match['ec']
 
-    # ensure parameters present
-    params_b = match["params_base"]
-    params_a = match["params_axion"]
-
-    # compute model curves
+    # --- model curves ---
     x_grid = np.logspace(np.log10(x_m.min()), np.log10(x_m.max()), 300)
-    base_c  = logpar_base(x_grid, *params_b, z)
-    axion_c = axion_mod(x_grid, *params_a, match["p0"], match["ec"], z)
+    base_c  = logpar_base(x_grid, *p_b, z)
+    axion_c = axion_mod(x_grid, *p_a, p0v, ecv, z)
 
     # plotting
     fig, (ax_top, ax_bot) = plt.subplots(
@@ -208,4 +212,4 @@ def simple_plot_fit(dataset_dict, fit_results_dict, source):
     return fig
 
 if __name__ == '__main__':
-    fig = simple_plot_fit(datasets, all_results_none, source_name)
+    fig = simple_plot_fit(datasets, all_results_none, source_name ,target_m=1e-9, target_g=2.3e-12)
