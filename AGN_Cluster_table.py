@@ -141,7 +141,7 @@ def maketable_best_fit_all_deltaChi(
         "Source": "Total",
         **{col: df[col].sum() for col in df.columns if col != "Source"}
     }
-    df = df.append(total, ignore_index=True)
+    df = pd.concat([df, pd.DataFrame([total])], ignore_index=True)
 
     # --- emit LaTeX longtable ---
     with open(output_tex, "w") as out:
