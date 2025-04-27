@@ -1111,7 +1111,12 @@ def compute_and_plot_contours(
                 res_dict, ds_labels, fl,
                 p0_masked, ec_masked, remove_source_label=None
             )
-
+            if fl == "No_filtering":
+                linestyles = ['dashed','solid']
+            elif fl == "week":
+                linestyles = ['dashdot','dashed']
+            elif fl == "month":
+                linestyles = ['dotted','dashdot']
             # Extract and plot contours at ±6.2
             cs = ax.contour(
                 x, y, grid,
