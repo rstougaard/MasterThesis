@@ -172,7 +172,7 @@ if __name__ == "__main__":
         AGN_list=SOURCE_LIST,
         none_pickle="none_new0_sys_error.pkl",
         lin_pickle="lin_new0_sys_error.pkl",
-        fermi_fits="gll_psc_v27.fit",
+        fermi_fits=FERMI_CAT_FiTS,
         target_m=ma,      # your desired m
         target_g=ga,      # your desired g
         # if you omit target_m/target_g it will use target_d below:
