@@ -1099,8 +1099,8 @@ def compute_and_plot_contours(
     y = g_mesh
 
     filters = ['No_Filtering', 'week', 'month']
-    colors = {'No_Filtering':'black', 'week':'lime', 'month':'red'}
-    alphas = {'No_Filtering': 1.0, 'week': 0.5, 'month': 0.5}
+    colors = {'No_Filtering':'black', 'week':'green', 'month':'red'}
+    alphas = {'No_Filtering': 1.0, 'week': 0.75, 'month': 0.75}
 
     # Plot without systematics
     fig, ax = plt.subplots(figsize=(8,6))
