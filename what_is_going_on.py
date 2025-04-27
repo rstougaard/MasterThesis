@@ -1030,7 +1030,6 @@ def plot_loaded_contours(
     output_prefix,
     filters=['No_Filtering', 'week', 'month']
 ):
-    
     """
     Load contour-point files saved by filter and mode, and create two plots:
     1) 'nosys' plot: filled contours for No_Filtering, and line contours for week/month.
@@ -1046,34 +1045,35 @@ def plot_loaded_contours(
         for fl in filters:
             file_path = os.path.join(contour_dir, f"{fl}_{mode}.txt")
             data = np.loadtxt(file_path)
-            # If level column present, split by sign of level
-            if data.ndim == 2 and data.shape[1] == 3:
-                pts = data[:, :2]
-                levels = data[:, 2]
-                neg_pts = pts[levels < 0]
-                pos_pts = pts[levels > 0]
-            else:
-                # Robust split by largest gap in consecutive points
-                pts = data.reshape(-1, 2)
-                deltas = np.diff(pts, axis=0)
-                dists = np.hypot(deltas[:,0], deltas[:,1])
-                split_idx = int(np.argmax(dists)) + 1
-                neg_pts = pts[:split_idx]
-                pos_pts = pts[split_idx:]
+            # Expect three columns: x, y, level
+            if data.ndim != 2 or data.shape[1] != 3:
+                raise ValueError(f"Contour file '{file_path}' must have three columns: x, y, level.")
+
+            xs, ys, levels = data[:,0], data[:,1], data[:,2]
+            # Separate positive and negative levels
+            mask_pos = levels > 0
+            mask_neg = levels < 0
+            pos_x, pos_y = xs[mask_pos], ys[mask_pos]
+            neg_x, neg_y = xs[mask_neg], ys[mask_neg]
 
             if fl == 'No_Filtering':
-                ax.fill(pos_pts[:, 0], pos_pts[:, 1], facecolor='lightgrey', edgecolor='none', label=f'{fl} >6.2 ({mode})')
-                ax.fill(neg_pts[:, 0], neg_pts[:, 1], facecolor='forestgreen', edgecolor='none', label=f'{fl} <-6.2 ({mode})')
+                # fill for No_Filtering
+                ax.fill(pos_x, pos_y, facecolor='lightgrey', edgecolor='none')
+                ax.fill(neg_x, neg_y, facecolor='forestgreen', edgecolor='none')
             else:
+                # solid for >6.2, dashed for <-6.2
                 color = 'purple' if fl == 'week' else 'red'
-                ax.plot(pos_pts[:, 0], pos_pts[:, 1], linestyle='solid', color=color, label=f'{fl} >6.2')
-                ax.plot(neg_pts[:, 0], neg_pts[:, 1], linestyle='dashed', color=color, label=f'{fl} <-6.2')
+                ax.plot(pos_x, pos_y, linestyle='solid', color=color)
+                ax.plot(neg_x, neg_y, linestyle='dashed', color=color)
 
         ax.set_xscale('log')
         ax.set_yscale('log')
         ax.set_xlabel(r'$m_a$ [neV]')
         ax.set_ylabel(r'$g_{a\gamma}$ [GeV$^{-1}$]')
-        ax.legend(loc='best', fontsize='small')
+        plt.xlim(0.3, 9)
+        plt.ylim(5e-13, 1e-11)
+        ax.set_xticks([1, 9])
+        ax.set_xticklabels(['1', '9'])
         plt.tight_layout()
         plt.savefig(f'{output_prefix}_{mode}.png', dpi=300)
         plt.close()
