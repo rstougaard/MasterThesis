@@ -66,7 +66,7 @@ def simple_plot(dataset_none, dataset_snr, colors_snr, dataset_lin, colors_lin, 
         ax1.errorbar(x, y, xerr=[e_lowers, e_uppers], yerr=y_err,
                      fmt='s', capsize=5, color='black', label=f'{dataset_label}')
         
-    '''
+    
     # Plot the SNR datasets with their corresponding colors
     for i, (dataset_label, (x, y, y_err, emin, emax)) in enumerate(dataset_snr.items()):
         x, y, y_err, emin, emax = np.array(x), np.array(y), np.array(y_err), np.array(emin), np.array(emax)
@@ -79,7 +79,7 @@ def simple_plot(dataset_none, dataset_snr, colors_snr, dataset_lin, colors_lin, 
                      fmt='o', capsize=5, color=color, label=f'{dataset_label}')
     if with_cat == True:    
         ax1.errorbar(eav0, f0, yerr=df0, xerr=de0, fmt='o', color="pink", label='Catalogue Spectrum')
-     '''   
+        
     ax1.legend(ncol=1, loc='lower left')
     ax1.set_ylabel(r'E$^2$dN/dE [ erg/cm²/s ]')
     ax1.set_title(f'{source} - SNR Time Intervals')
@@ -101,7 +101,7 @@ def simple_plot(dataset_none, dataset_snr, colors_snr, dataset_lin, colors_lin, 
                      fmt='s', capsize=5, color='black', label=f'{dataset_label}')
     if with_cat == True:     
         ax2.errorbar(eav0, f0, yerr=df0, xerr=de0, fmt='o', color="pink", label='Catalogue Spectrum')
-    '''
+    
     # Plot the lin datasets with their corresponding colors
     for i, (dataset_label, (x, y, y_err, emin, emax)) in enumerate(dataset_lin.items()):
         x, y, y_err, emin, emax = np.array(x), np.array(y), np.array(y_err), np.array(emin), np.array(emax)
@@ -112,7 +112,7 @@ def simple_plot(dataset_none, dataset_snr, colors_snr, dataset_lin, colors_lin, 
         color = colors_lin[i] if i < len(colors_lin) else 'black'
         ax2.errorbar(x, y, xerr=[e_lowers, e_uppers], yerr=y_err,
                      fmt='o', capsize=5, color=color, label=f'{dataset_label}')
-    '''
+    
     ax2.legend(ncol=1, loc='lower left')
     ax2.set_ylabel(r'E$^2$dN/dE [ erg/cm²/s ]')
     ax2.set_xlabel('Energy [ MeV ]')
@@ -157,24 +157,23 @@ with PdfPages('./fit_results/NEW_spectral_points.pdf') as pdf:
                         )
 
                         f_bin = fits.open(f'./fit_results/{source_name_cleaned}_fit_data_NONE.fits')
-                        '''
+                        
                         f_bin_snr = fits.open(f'./fit_results/{source_name_cleaned}_fit_data_SNR.fits')
                         f_bin_lin = fits.open(f'./fit_results/{source_name_cleaned}_fit_data_LIN.fits')
-                        '''
+                        
                         bin_data = f_bin[1].data
-                        '''
                         
                         bin_data_snr = f_bin_snr[1].data
                         bin_data_lin = f_bin_lin[1].data
-                        '''
+                        
                         # Sort the data by the 'emin' column
                         sorted_indices = np.argsort(bin_data['emin'])  # Get sorted indices
                         sorted_data_none = bin_data[sorted_indices]  # Reorder the data using sorted indices
                         #print(sorted_data_none)
-                        '''
-                        snr3 = bin_data_snr[bin_data_snr['loop_item'] == '3']
+                        
+                        '''snr3 = bin_data_snr[bin_data_snr['loop_item'] == '3']
                         sorted_indices_snr3 = np.argsort(snr3['emin'])  # Get sorted indices
-                        sorted_data_snr3 = snr3[sorted_indices_snr3]
+                        sorted_data_snr3 = snr3[sorted_indices_snr3]'''
                         #print(sorted_data_snr3)
 
                         snr5 = bin_data_snr[bin_data_snr['loop_item'] == '5']
@@ -197,21 +196,20 @@ with PdfPages('./fit_results/NEW_spectral_points.pdf') as pdf:
                         colors_snr = ['blue', 'orange', 'green']
                         colors_lin = ['purple', 'brown']
                         
-                        '''                        
+                                               
                         datasets = {f"No_Filtering": (sorted_data_none['geometric_mean'], sorted_data_none['flux_tot_value'], sorted_data_none['flux_tot_error'], sorted_data_none['emin'], sorted_data_none['emax'] )}
-                        '''
-                        datasets_snr = {f"snr_3": (sorted_data_snr3['geometric_mean'], sorted_data_snr3['flux_tot_value'], sorted_data_snr3['flux_tot_error'], sorted_data_snr3['emin'], sorted_data_snr3['emax']),
-                                        f"snr_5": (sorted_data_snr5['geometric_mean'], sorted_data_snr5['flux_tot_value'], sorted_data_snr5['flux_tot_error'], sorted_data_snr5['emin'], sorted_data_snr5['emax']),
+                        '''f"snr_3": (sorted_data_snr3['geometric_mean'], sorted_data_snr3['flux_tot_value'], sorted_data_snr3['flux_tot_error'], sorted_data_snr3['emin'], sorted_data_snr3['emax']),'''
+                        datasets_snr = {f"snr_5": (sorted_data_snr5['geometric_mean'], sorted_data_snr5['flux_tot_value'], sorted_data_snr5['flux_tot_error'], sorted_data_snr5['emin'], sorted_data_snr5['emax']),
                                         f"snr_10": (sorted_data_snr10['geometric_mean'], sorted_data_snr10['flux_tot_value'], sorted_data_snr10['flux_tot_error'], sorted_data_snr10['emin'], sorted_data_snr10['emax'])}
                         datasets_lin = {f"week": (sorted_data_lin_week['geometric_mean'], sorted_data_lin_week['flux_tot_value'], sorted_data_lin_week['flux_tot_error'], sorted_data_lin_week['emin'], sorted_data_lin_week['emax']),
                                         f"month": (sorted_data_lin_month['geometric_mean'], sorted_data_lin_month['flux_tot_value'], sorted_data_lin_month['flux_tot_error'], sorted_data_lin_month['emin'], sorted_data_lin_month['emax'])}
                         #print(source_name)
-                       '''
+                       
                         #fig = simple_plot(datasets, datasets_snr, colors_snr, datasets_lin, colors_lin, source_name, with_cat=False)
                         fig = simple_plot(datasets, None, None, None, None, source_name, with_cat=False)
                         pdf.savefig(fig)
                         plt.close(fig)
-'''
+
 with PdfPages('./fit_results/NEW_spectral_points_wCat.pdf') as pdf:
     with open(f'Source_ra_dec_specin.txt', 'r') as file:
                     for line in file:
@@ -248,9 +246,9 @@ with PdfPages('./fit_results/NEW_spectral_points_wCat.pdf') as pdf:
                         sorted_data_none = bin_data[sorted_indices]  # Reorder the data using sorted indices
                         #print(sorted_data_none)
 
-                        snr3 = bin_data_snr[bin_data_snr['loop_item'] == '3']
+                        '''snr3 = bin_data_snr[bin_data_snr['loop_item'] == '3']
                         sorted_indices_snr3 = np.argsort(snr3['emin'])  # Get sorted indices
-                        sorted_data_snr3 = snr3[sorted_indices_snr3]
+                        sorted_data_snr3 = snr3[sorted_indices_snr3]'''
                         #print(sorted_data_snr3)
 
                         snr5 = bin_data_snr[bin_data_snr['loop_item'] == '5']
@@ -275,8 +273,8 @@ with PdfPages('./fit_results/NEW_spectral_points_wCat.pdf') as pdf:
                         
                                                   
                         datasets = {f"No_Filtering": (sorted_data_none['geometric_mean'], sorted_data_none['flux_tot_value'], sorted_data_none['flux_tot_error'], sorted_data_none['emin'], sorted_data_none['emax'] )}
-                        datasets_snr = {f"snr_3": (sorted_data_snr3['geometric_mean'], sorted_data_snr3['flux_tot_value'], sorted_data_snr3['flux_tot_error'], sorted_data_snr3['emin'], sorted_data_snr3['emax']),
-                                        f"snr_5": (sorted_data_snr5['geometric_mean'], sorted_data_snr5['flux_tot_value'], sorted_data_snr5['flux_tot_error'], sorted_data_snr5['emin'], sorted_data_snr5['emax']),
+                        '''f"snr_3": (sorted_data_snr3['geometric_mean'], sorted_data_snr3['flux_tot_value'], sorted_data_snr3['flux_tot_error'], sorted_data_snr3['emin'], sorted_data_snr3['emax']),'''
+                        datasets_snr = {f"snr_5": (sorted_data_snr5['geometric_mean'], sorted_data_snr5['flux_tot_value'], sorted_data_snr5['flux_tot_error'], sorted_data_snr5['emin'], sorted_data_snr5['emax']),
                                         f"snr_10": (sorted_data_snr10['geometric_mean'], sorted_data_snr10['flux_tot_value'], sorted_data_snr10['flux_tot_error'], sorted_data_snr10['emin'], sorted_data_snr10['emax'])}
                         datasets_lin = {f"week": (sorted_data_lin_week['geometric_mean'], sorted_data_lin_week['flux_tot_value'], sorted_data_lin_week['flux_tot_error'], sorted_data_lin_week['emin'], sorted_data_lin_week['emax']),
                                         f"month": (sorted_data_lin_month['geometric_mean'], sorted_data_lin_month['flux_tot_value'], sorted_data_lin_month['flux_tot_error'], sorted_data_lin_month['emin'], sorted_data_lin_month['emax'])}
@@ -286,4 +284,3 @@ with PdfPages('./fit_results/NEW_spectral_points_wCat.pdf') as pdf:
                         pdf.savefig(fig)
                         plt.close(fig)
 
-'''
