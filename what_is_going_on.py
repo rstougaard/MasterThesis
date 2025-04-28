@@ -734,9 +734,9 @@ with open("snr_new0_no_sys_error.pkl", "rb") as file:
 
 no_filtering_sources = list(all_results_none.keys())
 
-plot_individual_delta_chi2_heatmap_with_pdf(all_results_none_sys, no_filtering_sources_sys, all_results_none, "sys", filtering_methods="No_Filtering", pdf_filename="NEW_indv_heatmaps_no_filter_logpar_sys_error.pdf")
-plot_individual_delta_chi2_heatmap_with_pdf(all_results_lin_sys, no_filtering_sources_sys, all_results_lin, "sys", filtering_methods="week", pdf_filename="NEW_indv_heatmaps_week_logpar_sys_error.pdf")
-plot_individual_delta_chi2_heatmap_with_pdf(all_results_lin_sys, no_filtering_sources_sys, all_results_lin, "sys", filtering_methods="month", pdf_filename="NEW_indv_heatmaps_month_logpar_sys_error.pdf")
+#plot_individual_delta_chi2_heatmap_with_pdf(all_results_none_sys, no_filtering_sources_sys, all_results_none, "sys", filtering_methods="No_Filtering", pdf_filename="NEW_indv_heatmaps_no_filter_logpar_sys_error.pdf")
+##plot_individual_delta_chi2_heatmap_with_pdf(all_results_lin_sys, no_filtering_sources_sys, all_results_lin, "sys", filtering_methods="week", pdf_filename="NEW_indv_heatmaps_week_logpar_sys_error.pdf")
+#plot_individual_delta_chi2_heatmap_with_pdf(all_results_lin_sys, no_filtering_sources_sys, all_results_lin, "sys", filtering_methods="month", pdf_filename="NEW_indv_heatmaps_month_logpar_sys_error.pdf")
 
 #plot_individual_delta_chi2_heatmap_with_pdf(all_results_snr_sys, no_filtering_sources_sys, None, "sys", filtering_methods="snr_3", pdf_filename="NEW_indv_heatmaps_snr3_logpar_sys_error.pdf")
 #plot_individual_delta_chi2_heatmap_with_pdf(all_results_snr_sys, no_filtering_sources_sys, all_results_snr, "sys", filtering_methods="snr_5", pdf_filename="NEW_indv_heatmaps_snr5_logpar_sys_error.pdf")
@@ -777,7 +777,7 @@ def plot_delta_chi2_heatmap_nosys_base(
         "week": ["4FGL J0317.8-4414"],
         "month": ["4FGL J0132.7-0804","4FGL J0317.8-4414", "4FGL J1242.9+7315"],
         "snr_5": ["4FGL J0132.7-0804", "4FGL J0317.8-4414", "4FGL J0912.5+1556", "4FGL J1516.8+2918"],
-        "snr_10": ["4FGL J0132.7-0804"]
+        "snr_10": ["4FGL J0132.7-0804", "4FGL J1213.0+5129"]
     }
 
     # Remove specified sources
@@ -995,7 +995,7 @@ no_filtering_grid_sys_month = compute_mean_delta_chi2_grid(
 ##plot_mean_delta_chi2_heatmap_sys_base(all_results_lin, all_results_lin_sys, list(all_results_lin.keys()), "base_sys_", no_filtering_grid=no_filtering_grid_sys,no_filtering_grid_other=None, remove_source_label=["4FGL J1242.9+7315", "4FGL J0912.5+1556", "4FGL J1516.8+2918"])
 #plot_mean_delta_chi2_heatmap_nosys_base(all_results_lin, all_results_lin_sys, list(all_results_lin.keys()), "base_nosys_", no_filtering_grid=[no_filtering_grid_week, no_filtering_grid_month] , no_filtering_grid_other=[no_filtering_grid_sys_week, no_filtering_grid_sys_month], remove_source_label=["4FGL J0317.8-4414", ["4FGL J0317.8-4414", "4FGL J1242.9+7315"]])
 
-plot_mean_delta_chi2_heatmap_nosys_base(all_results_snr, all_results_snr_sys, list(all_results_snr.keys()), "base_nosys_", no_filtering_grid=None, no_filtering_grid_other=None,remove_source_label=True)
+plot_delta_chi2_heatmap_nosys_base(all_results_snr, all_results_snr_sys, list(all_results_snr.keys()), "base_nosys_", no_filtering_grid=None, no_filtering_grid_other=None,remove_source_label=True)
 # summed heatmaps for snr
 no_filtering_grid_sys = compute_mean_delta_chi2_grid(
     all_results=all_results_none_sys,
@@ -1098,7 +1098,7 @@ def compute_and_plot_contours(
         alphas = {'No_Filtering':1.0, 'week':0.75, 'month':0.75}
     elif output_prefix == "SNR":
         filters = ['No_Filtering', 'snr_5', 'snr_10']
-        colors = {'No_Filtering':'black', 'snr_5':'blue', 'snr_10':'gold'}
+        colors = {'No_Filtering':'black', 'snr_5':'blue', 'snr_10':'darkorange'}
         alphas = {'No_Filtering':1.0, 'snr_5':0.75, 'snr_10':0.75}
 
     # Loop over mode: nosys and withsys
@@ -1182,7 +1182,7 @@ compute_and_plot_contours(all_results_none,
                         g_masked,
                         p0_masked,
                         ec_masked,
-                        remove_sources=["4FGL J0132.7-0804", "4FGL J0317.8-4414", "4FGL J0912.5+1556", "4FGL J1516.8+2918"],
+                        remove_sources=["4FGL J0132.7-0804", "4FGL J0317.8-4414", "4FGL J0912.5+1556", "4FGL J1213.0+5129", "4FGL J1516.8+2918"],
                         output_prefix="SNR",
                         threshold=1.0
                     )
