@@ -499,7 +499,7 @@ def plot_mean_delta_chi2_heatmap_nosys_base(all_results,
         cbar.set_label(r'$\sum \Delta \chi^2$')
         plt.xlabel(r'$m_a$ [neV]')
         plt.ylabel(r'$g_{a\gamma}$ [GeV$^{-1}$]')
-        #plt.title(f'Summed $\Delta \chi^2$ Heatmap for {filter_label}', fontsize=15)
+        '''#plt.title(f'Summed $\Delta \chi^2$ Heatmap for {filter_label}', fontsize=15)
         if filter_label == "No_Filtering":
             plt.title(f'No filtering')
         elif filter_label == "week":
@@ -511,7 +511,7 @@ def plot_mean_delta_chi2_heatmap_nosys_base(all_results,
         elif filter_label == "snr_5":
             plt.title(f'SNR=5 filter')
         elif filter_label == "snr_10":
-            plt.title(f'SNR=10 filter')
+            plt.title(f'SNR=10 filter')'''
         plt.xscale('log')
         plt.yscale('log')
         #plt.xticks(fontsize=15)
@@ -746,12 +746,12 @@ no_filtering_sources = list(all_results_none.keys())
 
 
 
-#plot_individual_delta_chi2_heatmap_with_pdf(all_results_none, no_filtering_sources, all_results_none_sys, "nosys", filtering_methods="No_Filtering", pdf_filename="NEW_indv_heatmaps_no_filter_logpar_no_sys_error.pdf")
-#plot_individual_delta_chi2_heatmap_with_pdf(all_results_lin, no_filtering_sources, all_results_lin_sys, "nosys", filtering_methods="week", pdf_filename="NEW_indv_heatmaps_week_logpar_no_sys_error.pdf")
-#plot_individual_delta_chi2_heatmap_with_pdf(all_results_lin, no_filtering_sources, all_results_lin_sys, "nosys", filtering_methods="month", pdf_filename="NEW_indv_heatmaps_month_logpar_no_sys_error.pdf")
+plot_individual_delta_chi2_heatmap_with_pdf(all_results_none, no_filtering_sources, all_results_none_sys, "nosys", filtering_methods="No_Filtering", pdf_filename="NEW_indv_heatmaps_no_filter_logpar_no_sys_error.pdf")
+plot_individual_delta_chi2_heatmap_with_pdf(all_results_lin, no_filtering_sources, all_results_lin_sys, "nosys", filtering_methods="week", pdf_filename="NEW_indv_heatmaps_week_logpar_no_sys_error.pdf")
+plot_individual_delta_chi2_heatmap_with_pdf(all_results_lin, no_filtering_sources, all_results_lin_sys, "nosys", filtering_methods="month", pdf_filename="NEW_indv_heatmaps_month_logpar_no_sys_error.pdf")
 #plot_individual_delta_chi2_heatmap_with_pdf(all_results_snr, no_filtering_sources, all_results_snr_sys, "nosys", filtering_methods="snr_3", pdf_filename="NEW_indv_heatmaps_snr3_logpar_no_sys_error.pdf")
-#plot_individual_delta_chi2_heatmap_with_pdf(all_results_snr, no_filtering_sources, all_results_snr_sys, "nosys", filtering_methods="snr_5", pdf_filename="NEW_indv_heatmaps_snr5_logpar_no_sys_error.pdf")
-#plot_individual_delta_chi2_heatmap_with_pdf(all_results_snr, no_filtering_sources, all_results_snr_sys, "nosys", filtering_methods="snr_10", pdf_filename="NEW_indv_heatmaps_snr10_logpar_no_sys_error.pdf")
+plot_individual_delta_chi2_heatmap_with_pdf(all_results_snr, no_filtering_sources, all_results_snr_sys, "nosys", filtering_methods="snr_5", pdf_filename="NEW_indv_heatmaps_snr5_logpar_no_sys_error.pdf")
+plot_individual_delta_chi2_heatmap_with_pdf(all_results_snr, no_filtering_sources, all_results_snr_sys, "nosys", filtering_methods="snr_10", pdf_filename="NEW_indv_heatmaps_snr10_logpar_no_sys_error.pdf")
 
 print('Plotting summed chi-squared heatmap!') # e.g. ["No_Filtering"] or sometimes multiple sources
 
