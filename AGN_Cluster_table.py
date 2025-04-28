@@ -13,7 +13,7 @@ FERMI_CAT_FiTS = './test/gll_psc_v35.fit'
 
 #choose mass and coupling
 ma = 1e-9
-ga = 2.2e-12
+ga =  4.924e-12 #2.2
 def maketable_best_fit_indv(AGN_list, ma, ga, OUTPUT_TEX= f"{tex_path}source_redshifts.tex"):
     #if no filter:
     #source | average significance | chi_base | chi_ALP | delta_chi |
@@ -91,6 +91,7 @@ def maketable_best_fit_all_deltaChi(
     AGN_list,
     none_pickle,
     lin_pickle,
+    snr_pickle,
     fermi_fits,
     target_m=None,
     target_g=None,
@@ -102,6 +103,8 @@ def maketable_best_fit_all_deltaChi(
         all_none = pickle.load(f)
     with open(lin_pickle, "rb")  as f:
         all_lin  = pickle.load(f)
+    with open(snr_pickle, "rb")  as f:
+        all_snr  = pickle.load(f)
 
     # --- load Fermi catalog & make Source→Signif_Avg lookup ---
     with fits.open(fermi_fits) as hdul:
@@ -125,13 +128,19 @@ def maketable_best_fit_all_deltaChi(
                                         target_m, target_g, target_d)
             month   = _find_match_delta(all_lin  .get(src, {}).get("month", []),
                                         target_m, target_g, target_d)
+            snr5   = _find_match_delta(all_snr  .get(src, {}).get("snr_5", []),
+                                        target_m, target_g, target_d)
+            snr10   = _find_match_delta(all_snr  .get(src, {}).get("snr_10", []),
+                                        target_m, target_g, target_d)
 
             rows.append({
                 "Source":           src,
                 "Signif_Avg":       avg_sig,
                 "Δχ² (no filter)":  d_none,
                 "Δχ² (week)":       week,
-                "Δχ² (month)":      month
+                "Δχ² (month)":      month,
+                "Δχ² (snr5)":       snr5,
+                "Δχ² (snr10)":      snr10
             })
 
     df = pd.DataFrame(rows)
@@ -145,25 +154,25 @@ def maketable_best_fit_all_deltaChi(
 
     # --- emit LaTeX longtable ---
     with open(output_tex, "w") as out:
-        out.write(r"""\begin{longtable}{l r r r r}
+        out.write(r"""\begin{longtable}{l r r r r r r}
 \caption{Best‐fit $\Delta\chi^2$ for each filter\label{tab:best_fit_deltaChi}}\\
 \toprule
-Source & Signif.\ Avg.\ & \multicolumn{3}{c}{$\Delta\chi^2$} \\
+Source & Signif.\ Avg.\ & \multicolumn{5}{c}{$\Delta\chi^2$} \\
 \cmidrule(lr){3-5}
-       &                & No filter & Week & Month \\
+       &                & No filter & Week & Month & SNR 5 & SNR 10\\
 \midrule
 \endfirsthead
 
-\multicolumn{5}{c}% 
+\multicolumn{7}{c}% 
 {{\tablename\ \thetable{} -- continued}} \\
 \toprule
-Source & Signif.\ Avg.\ & \multicolumn{3}{c}{$\Delta\chi^2$} \\
+Source & Signif.\ Avg.\ & \multicolumn{5}{c}{$\Delta\chi^2$} \\
 \cmidrule(lr){3-5}
-       &                & No filter & Week & Month \\
+  &                & No filter & Week & Month & SNR 5 & SNR 10\\
 \midrule
 \endhead
 
-\midrule \multicolumn{5}{r}{{Continued on next page}} \\
+\midrule \multicolumn{7}{r}{{Continued on next page}} \\
 \endfoot
 
 \bottomrule
@@ -173,7 +182,7 @@ Source & Signif.\ Avg.\ & \multicolumn{3}{c}{$\Delta\chi^2$} \\
             df.to_latex(
                 index=False,
                 float_format="%.2f",
-                column_format="lrrrr",
+                column_format="lrrrrrr",
                 header=False
             )
         )
@@ -188,6 +197,7 @@ if __name__ == "__main__":
         AGN_list=SOURCE_LIST,
         none_pickle="none_new0_sys_error.pkl",
         lin_pickle="lin_new0_sys_error.pkl",
+        snr_pickle="snr_new0_sys_error.pkl",
         fermi_fits=FERMI_CAT_FiTS,
         target_m=ma,      # your desired m
         target_g=ga,      # your desired g
