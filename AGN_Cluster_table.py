@@ -195,9 +195,9 @@ Source & Signif.\ Avg.\ & \multicolumn{5}{c}{$\Delta\chi^2$} \\
 if __name__ == "__main__":
     df = maketable_best_fit_all_deltaChi(
         AGN_list=SOURCE_LIST,
-        none_pickle="none_new0_sys_error.pkl",
-        lin_pickle="lin_new0_sys_error.pkl",
-        snr_pickle="snr_new0_sys_error.pkl",
+        none_pickle="none_new0_nosys_error.pkl",
+        lin_pickle="lin_new0_nosys_error.pkl",
+        snr_pickle="snr_new0_nosys_error.pkl",
         fermi_fits=FERMI_CAT_FiTS,
         target_m=ma,      # your desired m
         target_g=ga,      # your desired g
