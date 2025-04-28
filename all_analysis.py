@@ -1381,7 +1381,7 @@ def delete_fits_and_xml_files(source_name_cleaned, method):
 ##################################################################################
 
 filename = f'{general_path_for_slurm}/Source_ra_dec_specin.txt'
-snrratios = [10] #5, 3
+snrratios = [10, 5]
 time_intervals = ["week","month"]
 
 def process_line(line):
@@ -1447,7 +1447,7 @@ def process_line(line):
         print(source_name)
         run_binned_likelihood(vars_snr, snrratios=snrratios, free_params="None")
         print(f'Likelihood for SNR binned data done for {source_name}!')
-        delete_fits_and_xml_files(source_name_cleaned, method = "SNR")
+        #delete_fits_and_xml_files(source_name_cleaned, method = "SNR")
             
     else:
         print(f'Likelihood for SNR binneddata done for {source_name}!')
