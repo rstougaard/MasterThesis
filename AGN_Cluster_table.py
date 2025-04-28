@@ -8,7 +8,7 @@ tex_path = "./tex_files/"
 # ──────────────────────────────────────────────────────────────────────────
 # CONFIGURATION
 # ──────────────────────────────────────────────────────────────────────────
-SOURCE_LIST    = "sources_for_fittables.txt"
+SOURCE_LIST    = "sources_for_heatmaps.txt"
 FERMI_CAT_FiTS = './test/gll_psc_v35.fit'
 
 #choose mass and coupling
@@ -98,7 +98,13 @@ def maketable_best_fit_all_deltaChi(
     target_d=-1.072,
     output_tex="all_fits.tex"
 ):
-    # --- load your two pickles ---
+    import shlex
+    import numpy as np
+    import pandas as pd
+    import pickle
+    from astropy.io import fits
+
+    # --- load your three pickles ---
     with open(none_pickle, "rb") as f:
         all_none = pickle.load(f)
     with open(lin_pickle, "rb")  as f:
@@ -111,6 +117,15 @@ def maketable_best_fit_all_deltaChi(
         data = hdul[1].data
         sig_lookup = dict(zip(data["Source_Name"], data["Signif_Avg"]))
 
+    # --- define which AGNs to blank per column ---
+    flags = {
+        "Δχ² (no filter)": ["4FGL J0317.8-4414"],   # fill your list
+        "Δχ² (week)":       ["4FGL J0317.8-4414"],
+        "Δχ² (month)":      ["4FGL J0132.7-0804","4FGL J0317.8-4414", "4FGL J1242.9+7315"],                           # empty = nobody flagged
+        "Δχ² (snr5)":       ["4FGL J0132.7-0804", "4FGL J0317.8-4414", "4FGL J0912.5+1556", "4FGL J1516.8+2918"],
+        "Δχ² (snr10)":      ["4FGL J0132.7-0804", "4FGL J1213.0+5129"]
+    }
+    
     # --- build rows for DataFrame ---
     rows = []
     with open(AGN_list, "r") as f:
@@ -122,16 +137,30 @@ def maketable_best_fit_all_deltaChi(
             avg_sig = sig_lookup.get(src, np.nan)
 
             # get Δχ² for each filter
-            d_none  = _find_match_delta(all_none .get(src, {}).get("No_Filtering", []),
+            d_none  = _find_match_delta(all_none.get(src, {}).get("No_Filtering", []),
                                         target_m, target_g, target_d)
-            week    = _find_match_delta(all_lin  .get(src, {}).get("week", []),
+            if src in flags["Δχ² (no filter)"]:
+                d_none = np.nan
+
+            week    = _find_match_delta(all_lin.get(src, {}).get("week", []),
                                         target_m, target_g, target_d)
-            month   = _find_match_delta(all_lin  .get(src, {}).get("month", []),
+            if src in flags["Δχ² (week)"]:
+                week = np.nan
+
+            month   = _find_match_delta(all_lin.get(src, {}).get("month", []),
                                         target_m, target_g, target_d)
-            snr5   = _find_match_delta(all_snr  .get(src, {}).get("snr_5", []),
+            if src in flags["Δχ² (month)"]:
+                month = np.nan
+
+            snr5    = _find_match_delta(all_snr.get(src, {}).get("snr_5", []),
                                         target_m, target_g, target_d)
-            snr10   = _find_match_delta(all_snr  .get(src, {}).get("snr_10", []),
+            if src in flags["Δχ² (snr5)"]:
+                snr5 = np.nan
+
+            snr10   = _find_match_delta(all_snr.get(src, {}).get("snr_10", []),
                                         target_m, target_g, target_d)
+            if src in flags["Δχ² (snr10)"]:
+                snr10 = np.nan
 
             rows.append({
                 "Source":           src,
@@ -152,23 +181,23 @@ def maketable_best_fit_all_deltaChi(
     }
     df = pd.concat([df, pd.DataFrame([total])], ignore_index=True)
 
-    # --- emit LaTeX longtable ---
+    # --- emit LaTeX longtable (NaNs will be rendered as blanks) ---
     with open(output_tex, "w") as out:
         out.write(r"""\begin{longtable}{l r r r r r r}
 \caption{Best‐fit $\Delta\chi^2$ for each filter\label{tab:best_fit_deltaChi}}\\
 \toprule
 Source & Signif.\ Avg.\ & \multicolumn{5}{c}{$\Delta\chi^2$} \\
-\cmidrule(lr){3-5}
+\cmidrule(lr){3-7}
        &                & No filter & Week & Month & SNR 5 & SNR 10\\
 \midrule
 \endfirsthead
 
-\multicolumn{7}{c}% 
+\multicolumn{7}{c}%
 {{\tablename\ \thetable{} -- continued}} \\
 \toprule
 Source & Signif.\ Avg.\ & \multicolumn{5}{c}{$\Delta\chi^2$} \\
-\cmidrule(lr){3-5}
-  &                & No filter & Week & Month & SNR 5 & SNR 10\\
+\cmidrule(lr){3-7}
+       &                & No filter & Week & Month & SNR 5 & SNR 10\\
 \midrule
 \endhead
 
@@ -182,6 +211,7 @@ Source & Signif.\ Avg.\ & \multicolumn{5}{c}{$\Delta\chi^2$} \\
             df.to_latex(
                 index=False,
                 float_format="%.2f",
+                na_rep="",
                 column_format="lrrrrrr",
                 header=False
             )
