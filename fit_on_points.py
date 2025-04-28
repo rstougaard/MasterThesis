@@ -268,6 +268,6 @@ def simple_plot_fit(dataset_dict, fit_results_dict, source, filter_label, png='n
     return fig
 
 if __name__ == '__main__':
-    fig = simple_plot_fit(datasets, all_results_none, source_name, filter_label= "No_Filtering",png='none', target_m=1e-9, target_g=2.2e-12)
-    fig = simple_plot_fit(datasets_lin, all_results_lin, source_name, filter_label= "week",png='week', target_m=1e-9, target_g=2.2e-12)
-    fig = simple_plot_fit(datasets_lin, all_results_lin, source_name, filter_label= "month",png='month', target_m=1e-9, target_g=2.2e-12)
+    fig = simple_plot_fit(datasets, all_results_none, source_name, filter_label= "No_Filtering",png='none', target_m=0.9e-9, target_g= 1e-12)
+    fig = simple_plot_fit(datasets_lin, all_results_lin, source_name, filter_label= "week",png='week', target_m=0.9e-9, target_g= 1e-12)
+    fig = simple_plot_fit(datasets_lin, all_results_lin, source_name, filter_label= "month",png='month', target_m=0.9e-9, target_g= 1e-12)
