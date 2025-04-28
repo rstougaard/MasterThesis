@@ -12,8 +12,8 @@ SOURCE_LIST    = "sources_for_fittables.txt"
 FERMI_CAT_FiTS = './test/gll_psc_v35.fit'
 
 #choose mass and coupling
-ma = 1e-9
-ga =  4.924e-12 #2.2
+ma = 0.9e-9
+ga =  1e-12 #2.2
 def maketable_best_fit_indv(AGN_list, ma, ga, OUTPUT_TEX= f"{tex_path}source_redshifts.tex"):
     #if no filter:
     #source | average significance | chi_base | chi_ALP | delta_chi |
