@@ -205,8 +205,8 @@ with PdfPages('./fit_results/NEW_spectral_points.pdf') as pdf:
                                         f"month": (sorted_data_lin_month['geometric_mean'], sorted_data_lin_month['flux_tot_value'], sorted_data_lin_month['flux_tot_error'], sorted_data_lin_month['emin'], sorted_data_lin_month['emax'])}
                         #print(source_name)
                        
-                        #fig = simple_plot(datasets, datasets_snr, colors_snr, datasets_lin, colors_lin, source_name, with_cat=False)
-                        fig = simple_plot(datasets, None, None, None, None, source_name, with_cat=False)
+                        fig = simple_plot(datasets, datasets_snr, colors_snr, datasets_lin, colors_lin, source_name, with_cat=False)
+                        #fig = simple_plot(datasets, None, None, None, None, source_name, with_cat=False)
                         pdf.savefig(fig)
                         plt.close(fig)
 
