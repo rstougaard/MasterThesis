@@ -29,8 +29,8 @@ with open('Source_ra_dec_specin.txt', 'r') as file:
         )
         row = {'source': source_name}
         for col, (method, item) in methods.items():
-            lc_file    = os.path.join(general_path_for_slurm, source_clean, method, f'lc_{item}.fits')
-            flare_txt  = os.path.join(general_path_for_slurm, source_clean, method, f'flare_intervals_{item}.txt')
+            lc_file   = os.path.join(general_path_for_slurm, source_clean, method, f'lc_{item}.fits')
+            flare_txt = os.path.join(general_path_for_slurm, source_clean, method, f'flare_intervals_{item}.txt')
             if os.path.isfile(lc_file) and os.path.isfile(flare_txt):
                 with fits.open(lc_file) as fb:
                     total_lc = np.sum(fb[1].data['TIMEDEL'])
@@ -49,9 +49,12 @@ df = df[['source', 'week', 'month', 'snr3', 'snr5', 'snr10']]
 
 # Compute averages for each numeric column
 avg = df[['week', 'month', 'snr3', 'snr5', 'snr10']].mean(skipna=True)
-# Append an 'Average' row
+# Build a one-row DataFrame for the averages
 avg_row = {'source': 'Average', **avg.to_dict()}
-df = df.append(avg_row, ignore_index=True)
+avg_df = pd.DataFrame([avg_row])
+
+# Concatenate the average row to the bottom
+df = pd.concat([df, avg_df], ignore_index=True)
 
 # Generate LaTeX table
 latex_table = df.to_latex(
