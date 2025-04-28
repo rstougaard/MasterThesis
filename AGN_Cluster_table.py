@@ -13,7 +13,7 @@ FERMI_CAT_FiTS = './test/gll_psc_v35.fit'
 
 #choose mass and coupling
 ma = 0.9e-9
-ga =  1e-12 #2.2
+ga =  1.1e-12 #2.2
 def maketable_best_fit_indv(AGN_list, ma, ga, OUTPUT_TEX= f"{tex_path}source_redshifts.tex"):
     #if no filter:
     #source | average significance | chi_base | chi_ALP | delta_chi |
