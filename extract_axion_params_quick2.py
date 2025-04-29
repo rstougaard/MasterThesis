@@ -348,11 +348,11 @@ with open('sources_for_heatmaps.txt', 'r') as file:
 
         sorted_indices = np.argsort(bin_data['emin'])
         sorted_data_none = bin_data[sorted_indices]
-        '''
+        
         snr3 = bin_data_snr[bin_data_snr['loop_item'] == '3']
         sorted_indices_snr3 = np.argsort(snr3['emin'])
         sorted_data_snr3 = snr3[sorted_indices_snr3]
-        '''
+        
         snr5 = bin_data_snr[bin_data_snr['loop_item'] == '5']
         sorted_indices_snr5 = np.argsort(snr5['emin'])
         sorted_data_snr5 = snr5[sorted_indices_snr5]
@@ -381,16 +381,15 @@ with open('sources_for_heatmaps.txt', 'r') as file:
                 sorted_data_none['emax']
             )
         }
-        '''
-        "snr_3": (
+        
+        datasets_snr = {
+            "snr_3": (
                 sorted_data_snr3['geometric_mean'],
                 sorted_data_snr3['flux_tot_value'],
                 sorted_data_snr3['flux_tot_error'],
                 sorted_data_snr3['emin'],
                 sorted_data_snr3['emax']
             ),
-        '''
-        datasets_snr = {
             "snr_5": (
                 sorted_data_snr5['geometric_mean'],
                 sorted_data_snr5['flux_tot_value'],
