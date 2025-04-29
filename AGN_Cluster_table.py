@@ -490,7 +490,7 @@ if __name__ == "__main__":
     maketable_TS_per_bin( 
     SOURCE_LIST,
     "./fit_results",
-    output_prefix=None)
+    output_prefix="Table")
 
 #here is change
 
