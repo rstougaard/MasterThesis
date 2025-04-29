@@ -544,23 +544,127 @@ Source & TotSignif & $\Delta$Signif \\
 
     return True
 
+def maketable_TS_comparison(
+    agn_list_file,
+    fits_dir,
+    output_tex="TS_comparison.tex"
+):
+    """
+    Reads each source’s NONE, LIN (week/month), and SNR (3/5/10) FITS,
+    computes the total significance (sqrt of sum TS over 7 bins) for NONE,
+    then the delta TotSignif for each filter, and emits one LaTeX longtable
+    with columns:
+      Source | TotSignif_NONE | ΔWeek | ΔMonth | ΔSNR3 | ΔSNR5 | ΔSNR10
+    """
+    import shlex, os
+    import numpy as np
+    import pandas as pd
+    from astropy.io import fits
+
+    # helper to read exactly 7 TS values from a FITS file
+    def read_TS(fpath, loop_filter=None):
+        with fits.open(fpath) as hdul:
+            data = hdul[1].data
+        if loop_filter is not None:
+            data = data[data["loop_item"] == loop_filter]
+        order = np.argsort(data["emin"])
+        ts_vals = data["TS"][order]
+        # pad or truncate to exactly 7 bins
+        if len(ts_vals) >= 7:
+            return ts_vals[:7]
+        else:
+            return np.pad(ts_vals, (0,7-len(ts_vals)), constant_values=np.nan)
+
+    # read source list
+    sources = []
+    with open(agn_list_file, "r") as f:
+        for line in f:
+            parts = shlex.split(line.strip())
+            if parts:
+                sources.append(parts[0])
+
+    # define filters
+    filters = {
+        "ΔWeek":  ("week",  "_LIN"),
+        "ΔMonth": ("month", "_LIN"),
+        "ΔSNR3":  ("3",     "_SNR"),
+        "ΔSNR5":  ("5",     "_SNR"),
+        "ΔSNR10": ("10",    "_SNR"),
+    }
+
+    # build rows
+    rows = []
+    for src in sources:
+        clean = (src.replace(" ", "")
+                        .replace(".", "dot")
+                        .replace("+", "plus")
+                        .replace("-", "minus")
+                        .replace('"', ""))
+        # NONE case
+        fn_none = os.path.join(fits_dir, f"{clean}_fit_data_NONE.fits")
+        ts_none = read_TS(fn_none, loop_filter=None)
+        tot_none = np.sqrt(np.nansum(ts_none))
+
+        row = {"Source": src, "TotSignif_NONE": tot_none}
+
+        # each filter delta
+        for col, (loop_item, suffix) in filters.items():
+            fn_filt = os.path.join(fits_dir, f"{clean}_fit_data{suffix}.fits")
+            ts_filt = read_TS(fn_filt, loop_filter=loop_item)
+            tot_filt = np.sqrt(np.nansum(ts_filt))
+            row[col] = tot_filt - tot_none
+
+        rows.append(row)
+
+    # create DataFrame
+    df = pd.DataFrame(rows)
+
+    # write LaTeX
+    col_fmt = "l r " + " ".join("r" for _ in filters)
+    headers = ["Source", "TotSignif\\_NONE"] + list(filters.keys())
+
+    with open(output_tex, "w") as out:
+        out.write(r"""\begin{longtable}{%s}
+\caption{Total‐significance change per source for each filter relative to no filter\label{tab:TS_comparison}}\\
+\toprule
+%s \\
+\midrule
+\endfirsthead
+
+\multicolumn{%d}{c}{{\tablename\ \thetable{} -- continued}} \\
+\toprule
+%s \\
+\midrule
+\endhead
+
+\midrule \multicolumn{%d}{r}{{Continued on next page}} \\
+\endfoot
+
+\bottomrule
+\endlastfoot
+""" % (
+            col_fmt,
+            " & ".join(headers),
+            len(headers),
+            " & ".join(headers),
+            len(headers),
+        ))
+        out.write(
+            df.to_latex(
+                index=False,
+                columns=headers,
+                float_format="%.2f",
+                na_rep="",
+                header=False,
+                column_format=col_fmt
+            )
+        )
+        out.write("\n\\end{longtable}\n")
+
+    return df
 
 
-def compare_avg_TS(dfs):
-    """
-    Given the dict of TS-per-bin DataFrames (with 'avg_TS'),
-    computes for each filtering dataset the difference vs NONE.
-    Returns a DataFrame with columns: Source, avg_TS_NONE, avg_TS_DS, delta_avg_TS.
-    """
-    none = dfs.get('NONE').set_index('Source')
-    comparisons = {}
-    for ds, df in dfs.items():
-        if ds=='NONE': continue
-        tmp = df.set_index('Source')[['avg_TS']].rename(columns={'avg_TS':f'avg_TS_{ds}'})
-        comp = none[['avg_TS']].rename(columns={'avg_TS':'avg_TS_NONE'}).join(tmp)
-        comp[f'delta_avg_TS_{ds}'] = comp[f'avg_TS_{ds}'] - comp['avg_TS_NONE']
-        comparisons[ds] = comp.reset_index()
-    return comparisons
+
 
 # Example usage:
 if __name__ == "__main__":
@@ -595,5 +699,8 @@ if __name__ == "__main__":
     "./fit_results",
     output_prefix="Table")
 
-#here is change
-
+    df_comp = maketable_TS_comparison(
+    agn_list_file="Source_ra_dec_specin.txt",
+    fits_dir="./fit_results",
+    output_tex="all_sources_TS_comparison.tex")
+    print(df_comp.head())
