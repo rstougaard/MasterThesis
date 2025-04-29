@@ -171,9 +171,9 @@ with PdfPages('./fit_results/NEW_spectral_points.pdf') as pdf:
                         sorted_data_none = bin_data[sorted_indices]  # Reorder the data using sorted indices
                         #print(sorted_data_none)
                         
-                        '''snr3 = bin_data_snr[bin_data_snr['loop_item'] == '3']
+                        snr3 = bin_data_snr[bin_data_snr['loop_item'] == '3']
                         sorted_indices_snr3 = np.argsort(snr3['emin'])  # Get sorted indices
-                        sorted_data_snr3 = snr3[sorted_indices_snr3]'''
+                        sorted_data_snr3 = snr3[sorted_indices_snr3]
                         #print(sorted_data_snr3)
 
                         snr5 = bin_data_snr[bin_data_snr['loop_item'] == '5']
@@ -198,8 +198,9 @@ with PdfPages('./fit_results/NEW_spectral_points.pdf') as pdf:
                         
                                                
                         datasets = {f"No_Filtering": (sorted_data_none['geometric_mean'], sorted_data_none['flux_tot_value'], sorted_data_none['flux_tot_error'], sorted_data_none['emin'], sorted_data_none['emax'] )}
-                        '''f"snr_3": (sorted_data_snr3['geometric_mean'], sorted_data_snr3['flux_tot_value'], sorted_data_snr3['flux_tot_error'], sorted_data_snr3['emin'], sorted_data_snr3['emax']),'''
-                        datasets_snr = {f"snr_5": (sorted_data_snr5['geometric_mean'], sorted_data_snr5['flux_tot_value'], sorted_data_snr5['flux_tot_error'], sorted_data_snr5['emin'], sorted_data_snr5['emax']),
+                        
+                        datasets_snr = {f"snr_3": (sorted_data_snr3['geometric_mean'], sorted_data_snr3['flux_tot_value'], sorted_data_snr3['flux_tot_error'], sorted_data_snr3['emin'], sorted_data_snr3['emax']),
+                                        f"snr_5": (sorted_data_snr5['geometric_mean'], sorted_data_snr5['flux_tot_value'], sorted_data_snr5['flux_tot_error'], sorted_data_snr5['emin'], sorted_data_snr5['emax']),
                                         f"snr_10": (sorted_data_snr10['geometric_mean'], sorted_data_snr10['flux_tot_value'], sorted_data_snr10['flux_tot_error'], sorted_data_snr10['emin'], sorted_data_snr10['emax'])}
                         datasets_lin = {f"week": (sorted_data_lin_week['geometric_mean'], sorted_data_lin_week['flux_tot_value'], sorted_data_lin_week['flux_tot_error'], sorted_data_lin_week['emin'], sorted_data_lin_week['emax']),
                                         f"month": (sorted_data_lin_month['geometric_mean'], sorted_data_lin_month['flux_tot_value'], sorted_data_lin_month['flux_tot_error'], sorted_data_lin_month['emin'], sorted_data_lin_month['emax'])}
@@ -246,9 +247,9 @@ with PdfPages('./fit_results/NEW_spectral_points_wCat.pdf') as pdf:
                         sorted_data_none = bin_data[sorted_indices]  # Reorder the data using sorted indices
                         #print(sorted_data_none)
 
-                        '''snr3 = bin_data_snr[bin_data_snr['loop_item'] == '3']
+                        snr3 = bin_data_snr[bin_data_snr['loop_item'] == '3']
                         sorted_indices_snr3 = np.argsort(snr3['emin'])  # Get sorted indices
-                        sorted_data_snr3 = snr3[sorted_indices_snr3]'''
+                        sorted_data_snr3 = snr3[sorted_indices_snr3]
                         #print(sorted_data_snr3)
 
                         snr5 = bin_data_snr[bin_data_snr['loop_item'] == '5']
@@ -273,8 +274,9 @@ with PdfPages('./fit_results/NEW_spectral_points_wCat.pdf') as pdf:
                         
                                                   
                         datasets = {f"No_Filtering": (sorted_data_none['geometric_mean'], sorted_data_none['flux_tot_value'], sorted_data_none['flux_tot_error'], sorted_data_none['emin'], sorted_data_none['emax'] )}
-                        '''f"snr_3": (sorted_data_snr3['geometric_mean'], sorted_data_snr3['flux_tot_value'], sorted_data_snr3['flux_tot_error'], sorted_data_snr3['emin'], sorted_data_snr3['emax']),'''
-                        datasets_snr = {f"snr_5": (sorted_data_snr5['geometric_mean'], sorted_data_snr5['flux_tot_value'], sorted_data_snr5['flux_tot_error'], sorted_data_snr5['emin'], sorted_data_snr5['emax']),
+                        
+                        datasets_snr = {f"snr_3": (sorted_data_snr3['geometric_mean'], sorted_data_snr3['flux_tot_value'], sorted_data_snr3['flux_tot_error'], sorted_data_snr3['emin'], sorted_data_snr3['emax']),
+                                        f"snr_5": (sorted_data_snr5['geometric_mean'], sorted_data_snr5['flux_tot_value'], sorted_data_snr5['flux_tot_error'], sorted_data_snr5['emin'], sorted_data_snr5['emax']),
                                         f"snr_10": (sorted_data_snr10['geometric_mean'], sorted_data_snr10['flux_tot_value'], sorted_data_snr10['flux_tot_error'], sorted_data_snr10['emin'], sorted_data_snr10['emax'])}
                         datasets_lin = {f"week": (sorted_data_lin_week['geometric_mean'], sorted_data_lin_week['flux_tot_value'], sorted_data_lin_week['flux_tot_error'], sorted_data_lin_week['emin'], sorted_data_lin_week['emax']),
                                         f"month": (sorted_data_lin_month['geometric_mean'], sorted_data_lin_month['flux_tot_value'], sorted_data_lin_month['flux_tot_error'], sorted_data_lin_month['emin'], sorted_data_lin_month['emax'])}
