@@ -910,7 +910,7 @@ def plot_delta_chi2_heatmap_nosys_base(
             "snr_10": "SNR=10 filter"
         }
         #plt.title(title_map.get(filter_label, filter_label))
-        if filter_label == "No_filtering":
+        if filter_label == "No_Filtering":
             data = np.load('fermi0_0_contours_ebl_6.2_scan12_jointfit.npz')
             plt.errorbar(10**data['x'][data['y'] < 1e-11]/ 1e-9, 1.*10**data['y'][data['y'] < 1e-11], fmt='w:')
             plt.errorbar(10**data['x1'][data['y1'] < 1e-11]/ 1e-9, 1.*10**data['y1'][data['y1'] < 1e-11], fmt='w:')
