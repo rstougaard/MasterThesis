@@ -550,10 +550,7 @@ def maketable_TS_comparison(
     output_tex="TS_comparison.tex"
 ):
     """
-    Reads each source’s NONE, LIN (week/month), and SNR (3/5/10) FITS,
-    computes the total significance (sqrt of sum TS over 7 bins) for NONE,
-    then the delta TotSignif for each filter, and emits one LaTeX longtable
-    with columns:
+    Builds one LaTeX longtable with columns:
       Source | TotSignif_NONE | ΔWeek | ΔMonth | ΔSNR3 | ΔSNR5 | ΔSNR10
     """
     import shlex, os
@@ -569,11 +566,11 @@ def maketable_TS_comparison(
             data = data[data["loop_item"] == loop_filter]
         order = np.argsort(data["emin"])
         ts_vals = data["TS"][order]
-        # pad or truncate to exactly 7 bins
+        # pad or truncate to 7
         if len(ts_vals) >= 7:
             return ts_vals[:7]
         else:
-            return np.pad(ts_vals, (0,7-len(ts_vals)), constant_values=np.nan)
+            return np.pad(ts_vals, (0, 7-len(ts_vals)), constant_values=np.nan)
 
     # read source list
     sources = []
@@ -592,22 +589,23 @@ def maketable_TS_comparison(
         "ΔSNR10": ("10",    "_SNR"),
     }
 
-    # build rows
+    # build data rows
     rows = []
     for src in sources:
         clean = (src.replace(" ", "")
-                        .replace(".", "dot")
-                        .replace("+", "plus")
-                        .replace("-", "minus")
-                        .replace('"', ""))
-        # NONE case
+                   .replace(".", "dot")
+                   .replace("+", "plus")
+                   .replace("-", "minus")
+                   .replace('"', ""))
+        # total significance for NONE
         fn_none = os.path.join(fits_dir, f"{clean}_fit_data_NONE.fits")
         ts_none = read_TS(fn_none, loop_filter=None)
         tot_none = np.sqrt(np.nansum(ts_none))
 
-        row = {"Source": src, "TotSignif_NONE": tot_none}
+        row = {"Source": src,
+               "TotSignif_NONE": tot_none}
 
-        # each filter delta
+        # each filter: compute delta vs NONE
         for col, (loop_item, suffix) in filters.items():
             fn_filt = os.path.join(fits_dir, f"{clean}_fit_data{suffix}.fits")
             ts_filt = read_TS(fn_filt, loop_filter=loop_item)
@@ -616,16 +614,16 @@ def maketable_TS_comparison(
 
         rows.append(row)
 
-    # create DataFrame
     df = pd.DataFrame(rows)
 
-    # write LaTeX
+    # prepare LaTeX table
+    # 1 'l' + 1 'r' + one 'r' per filter
     col_fmt = "l r " + " ".join("r" for _ in filters)
     headers = ["Source", "TotSignif\\_NONE"] + list(filters.keys())
 
     with open(output_tex, "w") as out:
         out.write(r"""\begin{longtable}{%s}
-\caption{Total‐significance change per source for each filter relative to no filter\label{tab:TS_comparison}}\\
+\caption{Total significance for no‐filter and change under each filter\label{tab:TS_comparison}}\\
 \toprule
 %s \\
 \midrule
@@ -662,6 +660,7 @@ def maketable_TS_comparison(
         out.write("\n\\end{longtable}\n")
 
     return df
+
 
 
 
