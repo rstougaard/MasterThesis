@@ -1134,15 +1134,15 @@ def compute_and_plot_contours(
             if fl == 'No_Filtering':
                 linestyles = ['dashdot', 'solid']  # [-6.2, +6.2]
             elif fl == 'week':
-                linestyles = ['(0, (1, 1))', 'dashed']
+                linestyles = [(0, (1, 1)), 'dashed']
             elif fl == 'month':
                 linestyles = ['dotted', 'dashdot']
             elif fl == 'snr_3':
-                linestyles = ['(0, (1, 1))', 'dashed']
+                linestyles = [(0, (1, 1)), 'dashed']
             elif fl == 'snr_5':
-                linestyles = ['dotted', '(0, (5,1 5))']
+                linestyles = ['dotted',(0, (5,5))]
             elif fl == 'snr_10':
-                linestyles = ['(0, (1, 5))', '(0, (5,1 10))']
+                linestyles = [(0, (1, 5)), (0, (5,10))]
             else:
                 linestyles = ['dashed', 'solid']
 
