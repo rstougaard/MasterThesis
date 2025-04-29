@@ -156,7 +156,7 @@ def maketable_best_fit_all_deltaChi(
             snr3    = _find_match_delta(all_snr.get(src, {}).get("snr_3", []),
                                         target_m, target_g, target_d)
             if src in flags["Δχ² (snr3)"]:
-                snr5 = np.nan
+                snr3 = np.nan
 
             snr5    = _find_match_delta(all_snr.get(src, {}).get("snr_5", []),
                                         target_m, target_g, target_d)
@@ -509,7 +509,7 @@ if __name__ == "__main__":
     print(de)
 
     maketable_TS_per_bin( 
-    SOURCE_LIST,
+    "Source_ra_dec_specin.txt",
     "./fit_results",
     output_prefix="Table")
 
