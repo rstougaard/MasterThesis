@@ -275,7 +275,7 @@ def _extract_chi(results, target_m=None, target_g=None, target_d=-1.072):
     delta_chi = best["fit_result"]["DeltaChi2"]
     return (chi_base, dof_base, chi_alp, dof_alp, delta_chi)
 
-def maketable_best_fit_all_deltaChi(
+def maketable_best_fit_all_Chi(
     AGN_list,
     none_pickle,
     lin_pickle,
@@ -402,7 +402,21 @@ if __name__ == "__main__":
         target_g=ga,      # your desired g
         # if you omit target_m/target_g it will use target_d below:
         # target_d=-1.072,
-        output_tex="all_fits.tex"
+        #output_tex="all_fits.tex"
     )
     print(df)
+    de = maketable_best_fit_all_Chi(
+    AGN_list=SOURCE_LIST,
+    none_pickle="none_new0_no_sys_error.pkl",
+    in_pickle="lin_new0_no_sys_error.pkl",
+    snr_pickle="snr_new0_no_sys_error.pkl",
+    fermi_fits=FERMI_CAT_FiTS,
+    target_m=None,
+    target_g=None,
+    target_d=-1.072,
+    output_prefix="all_fits"
+    )
+    print(de)
+
+#here is change
 
