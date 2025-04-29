@@ -558,7 +558,7 @@ def maketable_TS_comparison(
     import pandas as pd
     from astropy.io import fits
 
-    # helper to read exactly 7 TS values from a FITS file
+    # helper: read exactly 7 TS values from a FITS file, optionally filtering by loop_item
     def read_TS(fpath, loop_filter=None):
         with fits.open(fpath) as hdul:
             data = hdul[1].data
@@ -566,13 +566,12 @@ def maketable_TS_comparison(
             data = data[data["loop_item"] == loop_filter]
         order = np.argsort(data["emin"])
         ts_vals = data["TS"][order]
-        # pad or truncate to 7
+        # pad or truncate to exactly 7 bins
         if len(ts_vals) >= 7:
             return ts_vals[:7]
-        else:
-            return np.pad(ts_vals, (0, 7-len(ts_vals)), constant_values=np.nan)
+        return np.pad(ts_vals, (0, 7 - len(ts_vals)), constant_values=np.nan)
 
-    # read source list
+    # read our source list
     sources = []
     with open(agn_list_file, "r") as f:
         for line in f:
@@ -580,7 +579,7 @@ def maketable_TS_comparison(
             if parts:
                 sources.append(parts[0])
 
-    # define filters
+    # define our filters: name → (loop_item, filename‐suffix)
     filters = {
         "ΔWeek":  ("week",  "_LIN"),
         "ΔMonth": ("month", "_LIN"),
@@ -589,26 +588,30 @@ def maketable_TS_comparison(
         "ΔSNR10": ("10",    "_SNR"),
     }
 
-    # build data rows
+    # build a row per source
     rows = []
     for src in sources:
+        # sanitize to match your file naming convention
         clean = (src.replace(" ", "")
                    .replace(".", "dot")
                    .replace("+", "plus")
                    .replace("-", "minus")
                    .replace('"', ""))
-        # total significance for NONE
-        fn_none = os.path.join(fits_dir, f"{clean}_fit_data_NONE.fits")
-        ts_none = read_TS(fn_none, loop_filter=None)
+
+        # 1) compute no‐filter total significance
+        f_none  = os.path.join(fits_dir, f"{clean}_fit_data_NONE.fits")
+        ts_none = read_TS(f_none, loop_filter=None)
         tot_none = np.sqrt(np.nansum(ts_none))
 
-        row = {"Source": src,
-               "TotSignif_NONE": tot_none}
+        row = {
+            "Source":             src,
+            "TotSignif_NONE":     tot_none
+        }
 
-        # each filter: compute delta vs NONE
+        # 2) for each filter, compute Δ = TotSignif_filter − TotSignif_NONE
         for col, (loop_item, suffix) in filters.items():
-            fn_filt = os.path.join(fits_dir, f"{clean}_fit_data{suffix}.fits")
-            ts_filt = read_TS(fn_filt, loop_filter=loop_item)
+            f_filt   = os.path.join(fits_dir, f"{clean}_fit_data{suffix}.fits")
+            ts_filt  = read_TS(f_filt, loop_filter=loop_item)
             tot_filt = np.sqrt(np.nansum(ts_filt))
             row[col] = tot_filt - tot_none
 
@@ -616,14 +619,14 @@ def maketable_TS_comparison(
 
     df = pd.DataFrame(rows)
 
-    # prepare LaTeX table
-    # 1 'l' + 1 'r' + one 'r' per filter
-    col_fmt = "l r " + " ".join("r" for _ in filters)
+    # prepare LaTeX longtable
+    # 1 'l' + 6 'r' columns
+    col_fmt = "l " + "r " * (1 + len(filters))
     headers = ["Source", "TotSignif\\_NONE"] + list(filters.keys())
 
     with open(output_tex, "w") as out:
         out.write(r"""\begin{longtable}{%s}
-\caption{Total significance for no‐filter and change under each filter\label{tab:TS_comparison}}\\
+\caption{Total significance (no‐filter) and change under each filter\label{tab:TS_comparison}}\\
 \toprule
 %s \\
 \midrule
@@ -641,7 +644,7 @@ def maketable_TS_comparison(
 \bottomrule
 \endlastfoot
 """ % (
-            col_fmt,
+            col_fmt.strip(),
             " & ".join(headers),
             len(headers),
             " & ".join(headers),
@@ -654,7 +657,7 @@ def maketable_TS_comparison(
                 float_format="%.2f",
                 na_rep="",
                 header=False,
-                column_format=col_fmt
+                column_format=col_fmt.strip()
             )
         )
         out.write("\n\\end{longtable}\n")
