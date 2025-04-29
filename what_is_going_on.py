@@ -912,12 +912,12 @@ def plot_delta_chi2_heatmap_nosys_base(
         #plt.title(title_map.get(filter_label, filter_label))
         if filter_label == "No_Filtering":
             data = np.load('fermi0_0_contours_ebl_6.2_scan12_jointfit.npz')
-            plt.errorbar(10**data['x'][data['y'] < 1e-11]/ 1e-9, 1.*10**data['y'][data['y'] < 1e-11], fmt='w:')
-            plt.errorbar(10**data['x1'][data['y1'] < 1e-11]/ 1e-9, 1.*10**data['y1'][data['y1'] < 1e-11], fmt='w:')
+            plt.errorbar(10**data['x'][data['y'] < 1e-11]/ 1e-9, 1.*10**data['y'][data['y'] < 1e-11], fmt='k:')
+            plt.errorbar(10**data['x1'][data['y1'] < 1e-11]/ 1e-9, 1.*10**data['y1'][data['y1'] < 1e-11], fmt='k:')
             
             data = np.load('fermi3_10_contours_06032025.npz')
             print(10**data['x1']/ 1e-9, 10**data['y1'])
-            plt.errorbar(10**data['x1']/ 1e-9, 10**data['y1'], fmt='w-')#, zorder=-10)
+            plt.errorbar(10**data['x1']/ 1e-9, 10**data['y1'], fmt='k-')#, zorder=-10)
         # Log scales and ticks
         plt.xscale('log')
         plt.yscale('log')
