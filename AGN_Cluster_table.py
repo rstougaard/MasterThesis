@@ -396,7 +396,8 @@ def maketable_TS_per_bin(
     output_prefix=None
 ):
     """
-    Builds LaTeX tables of TS per bin for datasets NONE, LIN_week, LIN_month, SNR_3, SNR_5, SNR_10.
+    Builds LaTeX tables of TS per bin for datasets NONE, LIN_week, LIN_month, SNR_3, SNR_5, SNR_10,
+    and adds an average-TS column.
     Returns dict of DataFrames.
     """
     import shlex, numpy as np, pandas as pd
@@ -426,38 +427,58 @@ def maketable_TS_per_bin(
                 sel=data if filters[ds] is None else data[np.array([filters[ds](row) for row in data])]
                 sd=sel[np.argsort(sel['emin'])]
                 ts=list(sd['TS'])[:7]
-                ts+= [np.nan]*(7-len(ts))
-                row={'Source':src,**{f'bin{i+1}':ts[i] for i in range(7)}}
+                ts+=[np.nan]*(7-len(ts))
+                avg_ts=np.nanmean(ts)
+                row={'Source':src,**{f'bin{i+1}':ts[i] for i in range(7)},'avg_TS':avg_ts}
                 tables[ds].append(row)
                 hdul.close()
     dfs={}
     for ds,rows in tables.items():
         df=pd.DataFrame(rows)
         if output_prefix:
+            # Save CSV
             csv=f"{output_prefix}_{ds}_TS_per_bin.csv"; df.to_csv(csv,index=False)
+            # Write LaTeX
             tex=f"{output_prefix}_{ds}_TS_per_bin.tex"
             with open(tex,'w') as out:
-                out.write(r"""\begin{longtable}{l r r r r r r r}
+                out.write(r"""\begin{longtable}{l r r r r r r r r}
 \caption{TS per bin for dataset: %s\label{tab:ts_%s}}\\
 \toprule
-Source & Bin1 & Bin2 & Bin3 & Bin4 & Bin5 & Bin6 & Bin7 \\
+Source & Bin1 & Bin2 & Bin3 & Bin4 & Bin5 & Bin6 & Bin7 & Av\_TS\\
 \midrule
 \endfirsthead
-\multicolumn{8}{c}%%
+\multicolumn{9}{c}%%
 {{\tablename\ \thetable{} -- continued}} \\
 \toprule
-Source & Bin1 & Bin2 & Bin3 & Bin4 & Bin5 & Bin6 & Bin7 \\
+Source & Bin1 & Bin2 & Bin3 & Bin4 & Bin5 & Bin6 & Bin7 & Av\_TS\\
 \midrule
 \endhead
-\midrule \multicolumn{8}{r}{{Continued on next page}} \\
+\midrule \multicolumn{9}{r}{{Continued on next page}} \\
 \endfoot
 \bottomrule
 \endlastfoot
 """ % (ds,ds))
-                out.write(df.to_latex(index=False,float_format="%.2f",na_rep="",column_format='lrrrrrrr'))
+                out.write(df.to_latex(index=False,float_format="%.2f",na_rep="",column_format='lrrrrrrr r'))
                 out.write("\n\\end{longtable}\n")
         dfs[ds]=df
     return dfs
+
+
+def compare_avg_TS(dfs):
+    """
+    Given the dict of TS-per-bin DataFrames (with 'avg_TS'),
+    computes for each filtering dataset the difference vs NONE.
+    Returns a DataFrame with columns: Source, avg_TS_NONE, avg_TS_DS, delta_avg_TS.
+    """
+    none = dfs.get('NONE').set_index('Source')
+    comparisons = {}
+    for ds, df in dfs.items():
+        if ds=='NONE': continue
+        tmp = df.set_index('Source')[['avg_TS']].rename(columns={'avg_TS':f'avg_TS_{ds}'})
+        comp = none[['avg_TS']].rename(columns={'avg_TS':'avg_TS_NONE'}).join(tmp)
+        comp[f'delta_avg_TS_{ds}'] = comp[f'avg_TS_{ds}'] - comp['avg_TS_NONE']
+        comparisons[ds] = comp.reset_index()
+    return comparisons
 
 # Example usage:
 if __name__ == "__main__":
