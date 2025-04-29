@@ -408,7 +408,7 @@ if __name__ == "__main__":
     de = maketable_best_fit_all_Chi(
     AGN_list=SOURCE_LIST,
     none_pickle="none_new0_no_sys_error.pkl",
-    in_pickle="lin_new0_no_sys_error.pkl",
+    lin_pickle="lin_new0_no_sys_error.pkl",
     snr_pickle="snr_new0_no_sys_error.pkl",
     fermi_fits=FERMI_CAT_FiTS,
     target_m=None,
