@@ -376,7 +376,7 @@ Source & Base $\chi^2$ (dof) & Axion $\chi^2$ (dof) & $\Delta\chi^2$ \\
 
 \bottomrule
 \endlastfoot
-""" % (label, label)
+""" % (label, label))
             out.write(
                 df.to_latex(
                     index=False,
