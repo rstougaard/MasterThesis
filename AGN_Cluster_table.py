@@ -390,6 +390,75 @@ Source & Base $\chi^2$ (dof) & Axion $\chi^2$ (dof) & $\Delta\chi^2$ \\
         print(f"Wrote table for {label} to {out_tex}")
     return True
 
+def maketable_TS_per_bin(
+    agn_list_file,
+    fits_dir,
+    output_prefix=None
+):
+    """
+    Builds LaTeX tables of TS per bin for datasets NONE, LIN_week, LIN_month, SNR_3, SNR_5, SNR_10.
+    Returns dict of DataFrames.
+    """
+    import shlex, numpy as np, pandas as pd
+    from astropy.io import fits
+    datasets={
+        'NONE':'_fit_data_NONE.fits',
+        'LIN_week':'_fit_data_LIN.fits',
+        'LIN_month':'_fit_data_LIN.fits',
+        'SNR_3':'_fit_data_SNR.fits',
+        'SNR_5':'_fit_data_SNR.fits',
+        'SNR_10':'_fit_data_SNR.fits'
+    }
+    filters={'NONE':None,'LIN_week':lambda r:r['loop_item']=='week','LIN_month':lambda r:r['loop_item']=='month',
+             'SNR_3':lambda r:r['loop_item']=='3','SNR_5':lambda r:r['loop_item']=='5','SNR_10':lambda r:r['loop_item']=='10'}
+    tables={ds:[] for ds in datasets}
+    with open(agn_list_file) as f:
+        for line in f:
+            parts=shlex.split(line.strip())
+            if not parts: continue
+            src=parts[0]
+            fname=src.replace(' ','').replace('+','plus').replace('-','minus').replace('.','dot').replace('"','')
+            for ds,suf in datasets.items():
+                path=f"{fits_dir}/{fname}{suf}"
+                try: hdul=fits.open(path)
+                except FileNotFoundError: continue
+                data=hdul[1].data
+                sel=data if filters[ds] is None else data[np.array([filters[ds](row) for row in data])]
+                sd=sel[np.argsort(sel['emin'])]
+                ts=list(sd['TS'])[:7]
+                ts+= [np.nan]*(7-len(ts))
+                row={'Source':src,**{f'bin{i+1}':ts[i] for i in range(7)}}
+                tables[ds].append(row)
+                hdul.close()
+    dfs={}
+    for ds,rows in tables.items():
+        df=pd.DataFrame(rows)
+        if output_prefix:
+            csv=f"{output_prefix}_{ds}_TS_per_bin.csv"; df.to_csv(csv,index=False)
+            tex=f"{output_prefix}_{ds}_TS_per_bin.tex"
+            with open(tex,'w') as out:
+                out.write(r"""\begin{longtable}{l r r r r r r r}
+\caption{TS per bin for dataset: %s\label{tab:ts_%s}}\\
+\toprule
+Source & Bin1 & Bin2 & Bin3 & Bin4 & Bin5 & Bin6 & Bin7 \\
+\midrule
+\endfirsthead
+\multicolumn{8}{c}%%
+{{\tablename\ \thetable{} -- continued}} \\
+\toprule
+Source & Bin1 & Bin2 & Bin3 & Bin4 & Bin5 & Bin6 & Bin7 \\
+\midrule
+\endhead
+\midrule \multicolumn{8}{r}{{Continued on next page}} \\
+\endfoot
+\bottomrule
+\endlastfoot
+""" % (ds,ds))
+                out.write(df.to_latex(index=False,float_format="%.2f",na_rep="",column_format='lrrrrrrr'))
+                out.write("\n\\end{longtable}\n")
+        dfs[ds]=df
+    return dfs
+
 # Example usage:
 if __name__ == "__main__":
     df = maketable_best_fit_all_deltaChi(
@@ -417,6 +486,11 @@ if __name__ == "__main__":
     output_prefix="all_fits"
     )
     print(de)
+
+    maketable_TS_per_bin( 
+    SOURCE_LIST,
+    "./fit_results",
+    output_prefix=None)
 
 #here is change
 
