@@ -583,8 +583,8 @@ if __name__ == "__main__":
     lin_pickle="lin_new0_no_sys_error.pkl",
     snr_pickle="snr_new0_no_sys_error.pkl",
     fermi_fits=FERMI_CAT_FiTS,
-    target_m=None,
-    target_g=None,
+    target_m=ma,
+    target_g=ga,
     target_d=-1.072,
     output_prefix="all_fits"
     )
