@@ -122,7 +122,7 @@ def maketable_best_fit_all_deltaChi(
         "Δχ² (no filter)": ["4FGL J0317.8-4414"],   # fill your list
         "Δχ² (week)":       ["4FGL J0317.8-4414"],
         "Δχ² (month)":      ["4FGL J0132.7-0804","4FGL J0317.8-4414", "4FGL J1242.9+7315"],                           # empty = nobody flagged
-        "Δχ² (snr3)":       [],
+        "Δχ² (snr3)":       ["4FGL J0317.8-4414", "4FGL J1516.8+2918"],
         "Δχ² (snr5)":       ["4FGL J0132.7-0804", "4FGL J0317.8-4414", "4FGL J0912.5+1556", "4FGL J1516.8+2918"],
         "Δχ² (snr10)":      ["4FGL J0132.7-0804", "4FGL J0317.8-4414","4FGL J1213.0+5129"]
     }
@@ -317,7 +317,7 @@ def maketable_best_fit_all_deltaChi(
         "No_Filtering": ["4FGL J0317.8-4414"],
         "week":         ["4FGL J0317.8-4414"],
         "month":        ["4FGL J0132.7-0804","4FGL J0317.8-4414","4FGL J1242.9+7315"],
-        "snr_3":        [],
+        "snr_3":        ["4FGL J0317.8-4414", "4FGL J1516.8+2918"],
         "snr_5":        ["4FGL J0132.7-0804","4FGL J0317.8-4414","4FGL J0912.5+1556","4FGL J1516.8+2918"],
         "snr_10":       ["4FGL J0132.7-0804","4FGL J0317.8-4414","4FGL J1213.0+5129"]
     }
