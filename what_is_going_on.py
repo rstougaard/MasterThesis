@@ -738,7 +738,7 @@ no_filtering_sources = list(all_results_none.keys())
 ##plot_individual_delta_chi2_heatmap_with_pdf(all_results_lin_sys, no_filtering_sources_sys, all_results_lin, "sys", filtering_methods="week", pdf_filename="NEW_indv_heatmaps_week_logpar_sys_error.pdf")
 #plot_individual_delta_chi2_heatmap_with_pdf(all_results_lin_sys, no_filtering_sources_sys, all_results_lin, "sys", filtering_methods="month", pdf_filename="NEW_indv_heatmaps_month_logpar_sys_error.pdf")
 
-#plot_individual_delta_chi2_heatmap_with_pdf(all_results_snr_sys, no_filtering_sources_sys, all_results_snr, "sys", filtering_methods="snr_3", pdf_filename="NEW_indv_heatmaps_snr3_logpar_sys_error.pdf")
+plot_individual_delta_chi2_heatmap_with_pdf(all_results_snr_sys, no_filtering_sources_sys, all_results_snr, "sys", filtering_methods="snr_3", pdf_filename="NEW_indv_heatmaps_snr3_logpar_sys_error.pdf")
 #plot_individual_delta_chi2_heatmap_with_pdf(all_results_snr_sys, no_filtering_sources_sys, all_results_snr, "sys", filtering_methods="snr_5", pdf_filename="NEW_indv_heatmaps_snr5_logpar_sys_error.pdf")
 #plot_individual_delta_chi2_heatmap_with_pdf(all_results_snr_sys, no_filtering_sources_sys, all_results_snr, "sys", filtering_methods="snr_10", pdf_filename="NEW_indv_heatmaps_snr10_logpar_sys_error.pdf")
 
@@ -749,7 +749,7 @@ no_filtering_sources = list(all_results_none.keys())
 #plot_individual_delta_chi2_heatmap_with_pdf(all_results_none, no_filtering_sources, all_results_none_sys, "nosys", filtering_methods="No_Filtering", pdf_filename="NEW_indv_heatmaps_no_filter_logpar_no_sys_error.pdf")
 #plot_individual_delta_chi2_heatmap_with_pdf(all_results_lin, no_filtering_sources, all_results_lin_sys, "nosys", filtering_methods="week", pdf_filename="NEW_indv_heatmaps_week_logpar_no_sys_error.pdf")
 #plot_individual_delta_chi2_heatmap_with_pdf(all_results_lin, no_filtering_sources, all_results_lin_sys, "nosys", filtering_methods="month", pdf_filename="NEW_indv_heatmaps_month_logpar_no_sys_error.pdf")
-#plot_individual_delta_chi2_heatmap_with_pdf(all_results_snr, no_filtering_sources, all_results_snr_sys, "nosys", filtering_methods="snr_3", pdf_filename="NEW_indv_heatmaps_snr3_logpar_no_sys_error.pdf")
+plot_individual_delta_chi2_heatmap_with_pdf(all_results_snr, no_filtering_sources, all_results_snr_sys, "nosys", filtering_methods="snr_3", pdf_filename="NEW_indv_heatmaps_snr3_logpar_no_sys_error.pdf")
 #plot_individual_delta_chi2_heatmap_with_pdf(all_results_snr, no_filtering_sources, all_results_snr_sys, "nosys", filtering_methods="snr_5", pdf_filename="NEW_indv_heatmaps_snr5_logpar_no_sys_error.pdf")
 #plot_individual_delta_chi2_heatmap_with_pdf(all_results_snr, no_filtering_sources, all_results_snr_sys, "nosys", filtering_methods="snr_10", pdf_filename="NEW_indv_heatmaps_snr10_logpar_no_sys_error.pdf")
 
@@ -910,14 +910,14 @@ def plot_delta_chi2_heatmap_nosys_base(
             "snr_10": "SNR=10 filter"
         }
         #plt.title(title_map.get(filter_label, filter_label))
-        if filter_label == "No_Filtering":
+        '''if filter_label == "No_Filtering":
             data = np.load('fermi0_0_contours_ebl_6.2_scan12_jointfit.npz')
             plt.errorbar(10**data['x'][data['y'] < 1e-11]/ 1e-9, 1.*10**data['y'][data['y'] < 1e-11], fmt='k:')
             plt.errorbar(10**data['x1'][data['y1'] < 1e-11]/ 1e-9, 1.*10**data['y1'][data['y1'] < 1e-11], fmt='k:')
             
             data = np.load('fermi3_10_contours_06032025.npz')
             print(10**data['x1']/ 1e-9, 10**data['y1'])
-            plt.errorbar(10**data['x1']/ 1e-9, 10**data['y1'], fmt='k-')#, zorder=-10)
+            plt.errorbar(10**data['x1']/ 1e-9, 10**data['y1'], fmt='k-')#, zorder=-10)'''
         # Log scales and ticks
         plt.xscale('log')
         plt.yscale('log')
@@ -929,7 +929,7 @@ def plot_delta_chi2_heatmap_nosys_base(
 
         # Save figure
         plt.tight_layout()
-        plt.savefig(f'{outdir}/COMP_{png_naming}_{filter_label}_ma_ga.png', dpi=300)
+        plt.savefig(f'{outdir}/{png_naming}_{filter_label}_ma_ga.png', dpi=300)
         plt.close()
 
         print(f"Finished plotting for filter: {filter_label}")
@@ -954,7 +954,7 @@ no_filtering_grid = compute_mean_delta_chi2_grid(
 
 )
 '''
-plot_delta_chi2_heatmap_nosys_base(all_results_none, all_results_none_sys, list(all_results_none.keys()), "base_nosys_", remove_source_label=["4FGL J0317.8-4414"])
+#plot_delta_chi2_heatmap_nosys_base(all_results_none, all_results_none_sys, list(all_results_none.keys()), "base_nosys_", remove_source_label=["4FGL J0317.8-4414"])
 
 
 # Summed heatmaps for no filter
