@@ -390,78 +390,160 @@ Source & Base $\chi^2$ (dof) & Axion $\chi^2$ (dof) & $\Delta\chi^2$ \\
         print(f"Wrote table for {label} to {out_tex}")
     return True
 
-def maketable_TS_per_bin(
+def maketable_TS_total(
     agn_list_file,
     fits_dir,
-    output_prefix=None
+    output_prefix="all_sources"
 ):
     """
-    Builds LaTeX tables of TS per bin for datasets NONE, LIN_week, LIN_month, SNR_3, SNR_5, SNR_10,
-    and adds an average-TS column.
-    Returns dict of DataFrames.
+    For each source in agn_list_file, read its NONE, LIN (week/month),
+    and SNR (3/5/10) fit‐data FITS files, compute the total significance
+    per source (sqrt of sum of TS over 7 bins), and write out LaTeX tables:
+      - one for NONE (no filter) with columns Source, TotSignif
+      - one for each filter with columns Source, TotSignif, ΔSignif vs NONE
     """
-    import shlex, numpy as np, pandas as pd
+    import shlex
+    import numpy as np
+    import pandas as pd
     from astropy.io import fits
-    datasets={
-        'NONE':'_fit_data_NONE.fits',
-        'LIN_week':'_fit_data_LIN.fits',
-        'LIN_month':'_fit_data_LIN.fits',
-        'SNR_3':'_fit_data_SNR.fits',
-        'SNR_5':'_fit_data_SNR.fits',
-        'SNR_10':'_fit_data_SNR.fits'
-    }
-    filters={'NONE':None,'LIN_week':lambda r:r['loop_item']=='week','LIN_month':lambda r:r['loop_item']=='month',
-             'SNR_3':lambda r:r['loop_item']=='3','SNR_5':lambda r:r['loop_item']=='5','SNR_10':lambda r:r['loop_item']=='10'}
-    tables={ds:[] for ds in datasets}
-    with open(agn_list_file) as f:
+    import os
+
+    # helper: read exactly 7 TS values from a FITS table
+    def read_TS(fpath, loop_filter=None):
+        with fits.open(fpath) as hdul:
+            data = hdul[1].data
+            if loop_filter is not None:
+                data = data[data["loop_item"] == loop_filter]
+            # sort by emin
+            order = np.argsort(data["emin"])
+            ts_vals = data["TS"][order]
+            # ensure exactly 7 bins
+            if len(ts_vals) >= 7:
+                ts_vals = ts_vals[:7]
+            else:
+                ts_vals = np.pad(ts_vals, (0, 7 - len(ts_vals)), constant_values=np.nan)
+        return ts_vals
+
+    # read source list
+    sources = []
+    with open(agn_list_file, "r") as f:
         for line in f:
-            parts=shlex.split(line.strip())
-            if not parts: continue
-            src=parts[0]
-            fname=src.replace(' ','').replace('+','plus').replace('-','minus').replace('.','dot').replace('"','')
-            for ds,suf in datasets.items():
-                path=f"{fits_dir}/{fname}{suf}"
-                try: hdul=fits.open(path)
-                except FileNotFoundError: continue
-                data=hdul[1].data
-                sel=data if filters[ds] is None else data[np.array([filters[ds](row) for row in data])]
-                sd=sel[np.argsort(sel['emin'])]
-                ts=list(sd['TS'])[:7]
-                ts+=[np.nan]*(7-len(ts))
-                avg_ts=np.nanmean(ts)
-                row={'Source':src,**{f'bin{i+1}':ts[i] for i in range(7)},'sqrt_avg_TS':np.sqrt(avg_ts)}
-                tables[ds].append(row)
-                hdul.close()
-    dfs={}
-    for ds,rows in tables.items():
-        df=pd.DataFrame(rows)
-        if output_prefix:
-            # Save CSV
-            csv=f"{output_prefix}_{ds}_TS_per_bin.csv"; df.to_csv(csv,index=False)
-            # Write LaTeX
-            tex=f"{output_prefix}_{ds}_TS_per_bin.tex"
-            with open(tex,'w') as out:
-                out.write(r"""\begin{longtable}{l r r r r r r r r}
-\caption{TS per bin for dataset: %s\label{tab:ts_%s}}\\
+            parts = shlex.split(line.strip())
+            if parts:
+                sources.append(parts[0])
+
+    # build a DataFrame for NONE
+    rows_none = []
+    for src in sources:
+        clean = (src.replace(" ", "")
+                    .replace(".", "dot")
+                    .replace("+", "plus")
+                    .replace("-", "minus")
+                    .replace('"', ""))
+        f_none = os.path.join(fits_dir, f"{clean}_fit_data_NONE.fits")
+        ts = read_TS(f_none, loop_filter=None)
+        tot_signif = np.sqrt(np.nansum(ts))
+        rows_none.append({"Source": src, "Tot_Signif": tot_signif})
+    df_none = pd.DataFrame(rows_none)
+
+    # write LaTeX for NONE
+    with open(f"{output_prefix}_NONE_TS_total.tex", "w") as out:
+        out.write(r"""\begin{longtable}{l r}
+\caption{Total significance per source (No filter)\label{tab:TS_NONE}}\\
 \toprule
-Source & Bin1 & Bin2 & Bin3 & Bin4 & Bin5 & Bin6 & Bin7 & Av\_TS\\
+Source & TotSignif \\
 \midrule
 \endfirsthead
-\multicolumn{9}{c}%%
-{{\tablename\ \thetable{} -- continued}} \\
+
+\multicolumn{2}{c}{{\tablename\ \thetable{} -- continued}} \\
 \toprule
-Source & Bin1 & Bin2 & Bin3 & Bin4 & Bin5 & Bin6 & Bin7 & Av\_TS\\
+Source & TotSignif \\
 \midrule
 \endhead
-\midrule \multicolumn{9}{r}{{Continued on next page}} \\
+
+\midrule \multicolumn{2}{r}{{Continued on next page}} \\
 \endfoot
+
 \bottomrule
 \endlastfoot
-""" % (ds,ds))
-                out.write(df.to_latex(index=False,float_format="%.2f",na_rep="",column_format='lrrrrrrr r'))
-                out.write("\n\\end{longtable}\n")
-        dfs[ds]=df
-    return dfs
+""")
+        out.write(
+            df_none.to_latex(
+                index=False,
+                columns=["Source", "Tot_Signif"],
+                float_format="%.2f",
+                na_rep="",
+                header=False,
+                column_format="l r"
+            )
+        )
+        out.write("\n\\end{longtable}\n")
+
+    # define filters and their loop_item labels
+    filters = {
+        "LIN_week":   ("week",   "_LIN"),
+        "LIN_month":  ("month",  "_LIN"),
+        "SNR_3":      ("3",      "_SNR"),
+        "SNR_5":      ("5",      "_SNR"),
+        "SNR_10":     ("10",     "_SNR")
+    }
+
+    # process each filter
+    for label, (loop_item, suffix) in filters.items():
+        rows = []
+        for src, row_none in zip(sources, rows_none):
+            clean = (src.replace(" ", "")
+                        .replace(".", "dot")
+                        .replace("+", "plus")
+                        .replace("-", "minus")
+                        .replace('"', ""))
+            fpath = os.path.join(fits_dir, f"{clean}_fit_data{suffix}.fits")
+            ts = read_TS(fpath, loop_filter=loop_item)
+            tot_signif = np.sqrt(np.nansum(ts))
+            delta = tot_signif - row_none["Tot_Signif"]
+            rows.append({
+                "Source": src,
+                "Tot_Signif": tot_signif,
+                "Delta_Signif": delta
+            })
+        df = pd.DataFrame(rows)
+
+        # write LaTeX for this filter
+        out_tex = f"{output_prefix}_{label}_TS_total.tex"
+        with open(out_tex, "w") as out:
+            out.write(r"""\begin{longtable}{l r r}
+\caption{Total significance per source (%s) and difference from No filter\label{tab:TS_%s}}\\
+\toprule
+Source & TotSignif & $\Delta$Signif \\
+\midrule
+\endfirsthead
+
+\multicolumn{3}{c}{{\tablename\ \thetable{} -- continued}} \\
+\toprule
+Source & TotSignif & $\Delta$Signif \\
+\midrule
+\endhead
+
+\midrule \multicolumn{3}{r}{{Continued on next page}} \\
+\endfoot
+
+\bottomrule
+\endlastfoot
+""" % (label, label))
+            out.write(
+                df.to_latex(
+                    index=False,
+                    columns=["Source", "Tot_Signif", "Delta_Signif"],
+                    float_format="%.2f",
+                    na_rep="",
+                    header=False,
+                    column_format="l r r"
+                )
+            )
+            out.write("\n\\end{longtable}\n")
+
+    return True
+
 
 
 def compare_avg_TS(dfs):
@@ -508,7 +590,7 @@ if __name__ == "__main__":
     )
     print(de)
 
-    maketable_TS_per_bin( 
+    maketable_TS_total( 
     "Source_ra_dec_specin.txt",
     "./fit_results",
     output_prefix="Table")
