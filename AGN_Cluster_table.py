@@ -429,7 +429,7 @@ def maketable_TS_per_bin(
                 ts=list(sd['TS'])[:7]
                 ts+=[np.nan]*(7-len(ts))
                 avg_ts=np.nanmean(ts)
-                row={'Source':src,**{f'bin{i+1}':np.sqrt(ts[i]) for i in range(7)},'avg_TS':np.sqrt(avg_ts)}
+                row={'Source':src,**{f'bin{i+1}':ts[i] for i in range(7)},'sqrt_avg_TS':np.sqrt(avg_ts)}
                 tables[ds].append(row)
                 hdul.close()
     dfs={}
