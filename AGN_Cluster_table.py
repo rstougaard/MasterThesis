@@ -796,7 +796,115 @@ def make_TS_per_bin_tables(
             out.write("\n\\end{longtable}\n")
 
         print(f"Wrote {tex_path}")
+def maketable_TS_total_comparison(
+    agn_list_file: str,
+    fits_dir: str,
+    output_tex: str = "TS_total_comparison.tex"
+) -> pd.DataFrame:
+    """
+    For each source in `agn_list_file`, reads the NONE, LIN (week/month),
+    and SNR (3/5/10) FITS under `fits_dir`, computes the total significance
+    TotSignif = sqrt(sum_i TS_i) for NONE, and then ΔTotSignif for each filter.
+    Emits a single LaTeX longtable with columns:
+      Source | TotSignif_NONE | ΔWeek | ΔMonth | ΔSNR3 | ΔSNR5 | ΔSNR10
+    Returns the DataFrame.
+    """
+    def clean_name(src: str) -> str:
+        return (src.replace(" ", "")
+                   .replace(".", "dot")
+                   .replace("+", "plus")
+                   .replace("-", "minus")
+                   .replace('"', ""))
 
+    def read_total_signif(clean: str, loop_filter: str = None, suffix: str = "_NONE") -> float:
+        fpath = os.path.join(fits_dir, f"{clean}_fit_data{suffix}.fits")
+        with fits.open(fpath) as hdul:
+            data = hdul[1].data
+        if loop_filter is not None:
+            data = data[data["loop_item"] == loop_filter]
+        order = np.argsort(data["emin"])
+        ts_vals = data["TS"][order]
+        ts7 = ts_vals[:7] if len(ts_vals) >= 7 else np.pad(ts_vals, (0,7-len(ts_vals)), constant_values=0.0)
+        return np.sqrt(np.nansum(ts7))
+
+    # read source list
+    sources = []
+    with open(agn_list_file, "r") as f:
+        for line in f:
+            parts = shlex.split(line.strip())
+            if parts:
+                sources.append(parts[0])
+
+    # define datasets
+    datasets = {
+        "NONE":    (None,   "_NONE"),
+        "ΔWeek":   ("week", "_LIN"),
+        "ΔMonth":  ("month","_LIN"),
+        "ΔSNR3":   ("3",    "_SNR"),
+        "ΔSNR5":   ("5",    "_SNR"),
+        "ΔSNR10":  ("10",   "_SNR"),
+    }
+
+    # build rows
+    rows = []
+    for src in sources:
+        clean = clean_name(src)
+        tot_none = read_total_signif(clean, *datasets["NONE"])
+        row = {"Source": src, "TotSignif_NONE": tot_none}
+        for label, (loop, suff) in datasets.items():
+            if label == "NONE":
+                continue
+            tot_filt = read_total_signif(clean, loop, suff)
+            row[label] = tot_filt - tot_none
+        rows.append(row)
+
+    df = pd.DataFrame(rows, columns=[
+        "Source", "TotSignif_NONE",
+        "ΔWeek", "ΔMonth", "ΔSNR3", "ΔSNR5", "ΔSNR10"
+    ])
+
+    # write LaTeX
+    col_fmt = "l r " + " ".join("r" for _ in range(len(datasets)-1))
+    headers = ["Source", "TotSignif\\_NONE", r"$\Delta$Week",
+               r"$\Delta$Month", r"$\Delta$SNR3", r"$\Delta$SNR5", r"$\Delta$SNR10"]
+
+    with open(output_tex, "w") as out:
+        out.write(r"""\begin{longtable}{%s}
+\caption{Total significance (no‐filter) and change under each filter\label{tab:TS_total_comparison}}\\
+\toprule
+%s \\
+\midrule
+\endfirsthead
+
+\multicolumn{%d}{c}{{\tablename\ \thetable{} -- continued}} \\
+\toprule
+%s \\
+\midrule
+\endhead
+
+\midrule \multicolumn{%d}{r}{{Continued on next page}} \\
+\endfoot
+
+\bottomrule
+\endlastfoot
+""" % (
+            col_fmt,
+            " & ".join(headers),
+            len(headers),
+            " & ".join(headers),
+            len(headers),
+        ))
+        out.write(df.to_latex(
+            index=False,
+            columns=headers,
+            float_format="%.2f",
+            na_rep="",
+            header=False,
+            column_format=col_fmt
+        ))
+        out.write("\n\\end{longtable}\n")
+
+    return df
 
 # Example usage:
 if __name__ == "__main__":
@@ -835,10 +943,15 @@ if __name__ == "__main__":
     agn_list_file="Source_ra_dec_specin.txt",
     fits_dir="./fit_results",
     output_tex="all_sources_TS_comparison.tex")
-    print(df_comp.head())'''
+    print(df_comp.head())
 
     make_TS_per_bin_tables(
     agn_list_file="Source_ra_dec_specin.txt",
     fits_dir="./fit_results",
     output_dir=None
-    )       
+    ) '''
+    df = maketable_TS_total_comparison(
+     agn_list_file="Source_ra_dec_specin.txt",
+     fits_dir="./fit_results",
+     output_tex="all_sources_TS_total_comparison.tex"
+     )      
