@@ -857,6 +857,7 @@ def maketable_TS_total_comparison(
             tot_filt = read_total_signif(clean, loop, suff)
             row[label] = tot_filt - tot_none
         rows.append(row)
+        print(row)
 
     df = pd.DataFrame(rows, columns=[
         "Source", "TotSignif_NONE",
