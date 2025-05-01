@@ -1102,12 +1102,12 @@ def compute_and_plot_contours(
     # Plot settings
     if output_prefix == "LIN":
         filters = ['No_Filtering', 'week', 'month']
-        colors = {'No_Filtering':'tab:gray', 'week':'olivedrab', 'month':'darkred'}
-        alphas = {'No_Filtering':1.0, 'week':0.75, 'month':0.75}
+        colors = {'No_Filtering':'black', 'week':'olivedrab', 'month':'darkred'}
+        alphas = {'No_Filtering':0.9, 'week':0.75, 'month':0.75}
     elif output_prefix == "SNR":
         filters = ['No_Filtering', 'snr_3','snr_5', 'snr_10']
-        colors = {'No_Filtering':'tab:gray', "snr_3":"tab:green", 'snr_5':'b', 'snr_10':'tab:orange'}
-        alphas = {'No_Filtering':1.0, 'snr_3':0.75, 'snr_5':0.75, 'snr_10':0.75}
+        colors = {'No_Filtering':'black', "snr_3":"tab:green", 'snr_5':'b', 'snr_10':'tab:orange'}
+        alphas = {'No_Filtering':0.9, 'snr_3':0.75, 'snr_5':0.75, 'snr_10':0.75}
 
     # Loop over mode: nosys and withsys
     for mode_label, (res_none_dict, res_lin_dict) in {
