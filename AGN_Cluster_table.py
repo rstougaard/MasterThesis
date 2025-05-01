@@ -866,38 +866,41 @@ def maketable_TS_total_comparison(
 
     # write LaTeX
     col_fmt = "l r " + " ".join("r" for _ in range(len(datasets)-1))
-    header_row = ["Source", "TotSignif\\_NONE", r"$\Delta$Week",
+    headers = ["Source", "TotSignif\\_NONE", r"$\Delta$Week",
                r"$\Delta$Month", r"$\Delta$SNR3", r"$\Delta$SNR5", r"$\Delta$SNR10"]
+    ncols = len(headers)                   # this is 7
+    header_row = " & ".join(headers) + r" \\"
 
     with open(output_tex, "w") as out:
-        out.write(r"""\begin{longtable}{%s}
-\caption{Total significance (no‐filter) and change under each filter\label{tab:TS_total_comparison}}\\
-\toprule
-%s \\
-\midrule
-\endfirsthead
+        out.write(f"""\\begin{{longtable}}{{{col_fmt}}}
+\\caption{{Total significance (no‐filter) and change under each filter\\label{{tab:TS_total_comparison}}}}\\\\
+\\toprule
+{header_row}
+\\midrule
+\\endfirsthead
 
-\multicolumn{%d}{c}{{\tablename\ \thetable{} -- continued}} \\
-\toprule
-%s \\
-\midrule
-\endhead
+\\multicolumn{{{ncols}}}{{c}}{{{{\\tablename\\ \\thetable{{}} -- continued}}}} \\\\
+\\toprule
+{header_row}
+\\midrule
+\\endhead
 
-\midrule \multicolumn{%d}{r}{{Continued on next page}} \\
-\endfoot
+\\midrule \\multicolumn{{{ncols}}}{{r}}{{Continued on next page}} \\\\
+\\endfoot
 
-\bottomrule
-\endlastfoot
-""" % (col_fmt, header_row, header_row))
-        
-        out.write(df.to_latex(
-            index=False,
-            columns=["Source","TotSignif_NONE","ΔWeek","ΔMonth","ΔSNR3","ΔSNR5","ΔSNR10"],
-            float_format="%.2f",
-            na_rep="",
-            header=False,
-            column_format=col_fmt
-        ))
+\\bottomrule
+\\endlastfoot
+""")
+        out.write(
+            df.to_latex(
+                index=False,
+                columns=headers,
+                float_format="%.2f",
+                na_rep="",
+                header=False,
+                column_format=col_fmt
+            )
+        )
         out.write("\n\\end{longtable}\n")
 
     return df
