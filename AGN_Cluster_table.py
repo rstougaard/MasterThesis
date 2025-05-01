@@ -866,7 +866,7 @@ def maketable_TS_total_comparison(
 
     # write LaTeX
     col_fmt = "l r " + " ".join("r" for _ in range(len(datasets)-1))
-    headers = ["Source", "TotSignif\\_NONE", r"$\Delta$Week",
+    header_row = ["Source", "TotSignif\\_NONE", r"$\Delta$Week",
                r"$\Delta$Month", r"$\Delta$SNR3", r"$\Delta$SNR5", r"$\Delta$SNR10"]
 
     with open(output_tex, "w") as out:
@@ -888,16 +888,11 @@ def maketable_TS_total_comparison(
 
 \bottomrule
 \endlastfoot
-""" % (
-            col_fmt,
-            " & ".join(headers),
-            len(headers),
-            " & ".join(headers),
-            len(headers),
-        ))
+""" % (col_fmt, header_row, header_row))
+        
         out.write(df.to_latex(
             index=False,
-            columns=headers,
+            columns=[["Source","TotSignif_NONE","ΔWeek","ΔMonth","ΔSNR3","ΔSNR5","ΔSNR10"]],
             float_format="%.2f",
             na_rep="",
             header=False,
