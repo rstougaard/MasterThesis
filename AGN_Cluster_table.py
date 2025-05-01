@@ -3,6 +3,7 @@ import shlex
 import numpy as np
 import pandas as pd
 from astropy.io import fits
+import os
 import pickle
 tex_path = "./tex_files/"
 # ──────────────────────────────────────────────────────────────────────────
@@ -664,13 +665,71 @@ def maketable_TS_comparison(
 
     return df
 
+def extract_TS_per_bin(
+    agn_list_file: str,
+    fits_dir: str,
+    loop_filter: str = None,
+    suffix: str = "_NONE"
+) -> pd.DataFrame:
+    """
+    Reads each source in `agn_list_file`, opens the corresponding
+    FITS file in `fits_dir` named
+      <cleaned_source>_fit_data<suffix>.fits
+    optionally filters by `loop_item == loop_filter`, sorts by `emin`,
+    and returns a DataFrame with columns:
+      Source, Bin1, Bin2, ..., Bin7, TotSignif
+    where TotSignif = sqrt(sum_i TS_i).
+    TS values are padded with NaN if fewer than 7 bins.
+    """
+    def clean_name(src: str) -> str:
+        return (src.replace(" ", "")
+                   .replace(".", "dot")
+                   .replace("+", "plus")
+                   .replace("-", "minus")
+                   .replace('"', ""))
 
+    def read_TS(fpath: str) -> np.ndarray:
+        with fits.open(fpath) as hdul:
+            data = hdul[1].data
+        if loop_filter is not None:
+            data = data[data["loop_item"] == loop_filter]
+        order = np.argsort(data["emin"])
+        ts_vals = data["TS"][order]
+        if len(ts_vals) >= 7:
+            return ts_vals[:7]
+        return np.pad(ts_vals, (0, 7 - len(ts_vals)), constant_values=np.nan)
+
+    # read source list
+    sources = []
+    with open(agn_list_file, "r") as f:
+        for line in f:
+            parts = shlex.split(line.strip())
+            if parts:
+                sources.append(parts[0])
+
+    # build DataFrame rows
+    rows = []
+    for src in sources:
+        cname = clean_name(src)
+        fpath = os.path.join(fits_dir, f"{cname}_fit_data{suffix}.fits")
+        ts = read_TS(fpath)
+        row = {"Source": src}
+        for i, val in enumerate(ts, start=1):
+            row[f"Bin{i}"] = val
+        # compute total significance = sqrt(sum TS_i)
+        total_TS = np.nansum(ts)
+        row["TotSignif"] = np.sqrt(total_TS) if total_TS >= 0 else np.nan
+        rows.append(row)
+
+    cols = ["Source"] + [f"Bin{i}" for i in range(1, 8)] + ["TotSignif"]
+    df = pd.DataFrame(rows, columns=cols)
+    return df
 
 
 
 # Example usage:
 if __name__ == "__main__":
-    df = maketable_best_fit_all_deltaChi(
+    '''df = maketable_best_fit_all_deltaChi(
         AGN_list=SOURCE_LIST,
         none_pickle="none_new0_no_sys_error.pkl",
         lin_pickle="lin_new0_no_sys_error.pkl",
@@ -705,4 +764,11 @@ if __name__ == "__main__":
     agn_list_file="Source_ra_dec_specin.txt",
     fits_dir="./fit_results",
     output_tex="all_sources_TS_comparison.tex")
-    print(df_comp.head())
+    print(df_comp.head())'''
+
+    f_none = extract_TS_per_bin("Source_ra_dec_specin.txt", "./fit_results", suffix="_NONE")
+    df_week = extract_TS_per_bin("Source_ra_dec_specin.txt", "./fit_results", loop_filter="week", suffix="_LIN")
+    df_month = extract_TS_per_bin("Source_ra_dec_specin.txt", "./fit_results", loop_filter="month", suffix="_LIN")
+    df_snr3 = extract_TS_per_bin("Source_ra_dec_specin.txt", "./fit_results", loop_filter="3", suffix="_SNR")
+    df_snr5 = extract_TS_per_bin("Source_ra_dec_specin.txt", "./fit_results", loop_filter="5", suffix="_SNR")
+    df_snr10 = extract_TS_per_bin("Source_ra_dec_specin.txt", "./fit_results", loop_filter="10", suffix="_SNR")
