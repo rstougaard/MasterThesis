@@ -892,7 +892,7 @@ def maketable_TS_total_comparison(
         
         out.write(df.to_latex(
             index=False,
-            columns=[["Source","TotSignif_NONE","ΔWeek","ΔMonth","ΔSNR3","ΔSNR5","ΔSNR10"]],
+            columns=["Source","TotSignif_NONE","ΔWeek","ΔMonth","ΔSNR3","ΔSNR5","ΔSNR10"],
             float_format="%.2f",
             na_rep="",
             header=False,
