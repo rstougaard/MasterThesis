@@ -1021,6 +1021,125 @@ def maketable_sum_signif_per_bin(
 
     return df_sum
 
+def maketable_sum_signif_per_bin_with_deltas(
+    agn_list_file: str,
+    fits_dir: str,
+    output_tex: str = "sum_signif_per_bin_with_deltas.tex"
+) -> pd.DataFrame:
+    """
+    Computes per-bin summed significance across sources for each dataset suffix,
+    then adds delta‐rows giving (suffix – NONE) per bin. Emits a LaTeX longtable
+    with rows: NONE, LIN_week, LIN_month, SNR_3, SNR_5, SNR_10,
+    followed by ΔLIN_week, ΔLIN_month, ΔSNR_3, ΔSNR_5, ΔSNR_10.
+    Columns are Dataset, Bin1…Bin7.
+    """
+    
+    # helper to clean names and read 7 TS bins
+    def clean_name(src):
+        return (src.replace(" ", "")
+                   .replace(".", "dot")
+                   .replace("+", "plus")
+                   .replace("-", "minus")
+                   .replace('"', ""))
+    def read_TS(fpath, loop_filter=None):
+        with fits.open(fpath) as hdul:
+            data = hdul[1].data
+        if loop_filter is not None:
+            data = data[data["loop_item"] == loop_filter]
+        order = np.argsort(data["emin"])
+        ts = data["TS"][order]
+        if len(ts) >= 7:
+            return ts[:7]
+        return np.pad(ts, (0,7-len(ts)), constant_values=np.nan)
+
+    # read sources
+    sources = []
+    with open(agn_list_file) as f:
+        for line in f:
+            parts = shlex.split(line)
+            if parts:
+                sources.append(parts[0])
+
+    # define configs
+    configs = [
+        ("NONE",      None,   "_NONE"),
+        ("LIN_week",  "week", "_LIN"),
+        ("LIN_month", "month","_LIN"),
+        ("SNR_3",     "3",    "_SNR"),
+        ("SNR_5",     "5",    "_SNR"),
+        ("SNR_10",    "10",   "_SNR"),
+    ]
+
+    # compute summed significance per bin
+    summary = []
+    for name, loop_item, suffix in configs:
+        all_sig = []
+        for src in sources:
+            cn = clean_name(src)
+            fpath = os.path.join(fits_dir, f"{cn}_fit_data{suffix}.fits")
+            ts = read_TS(fpath, loop_filter=loop_item)
+            sig = np.sqrt(np.clip(ts, 0, None))
+            all_sig.append(sig)
+        all_sig = np.vstack(all_sig)  # shape (n_src, 7)
+        sum_sig = np.nansum(all_sig, axis=0)
+        row = {"Dataset": name}
+        for i, v in enumerate(sum_sig, start=1):
+            row[f"Bin{i}"] = v
+        summary.append(row)
+
+    # build DataFrame
+    df = pd.DataFrame(summary)
+    df.set_index("Dataset", inplace=True)
+
+    # compute delta rows
+    base = df.loc["NONE"]
+    for name in df.index.drop("NONE"):
+        delta = df.loc[name] - base
+        df.loc[f"Δ{name}"] = delta
+
+    # reset index for output
+    df = df.reset_index()
+
+    # LaTeX output
+    cols = ["Dataset"] + [f"Bin{i}" for i in range(1,8)]
+    col_fmt = "l " + " ".join("r" for _ in cols[1:])
+    header = " & ".join(cols) + r" \\"
+    ncols = len(cols)
+
+    with open(output_tex, "w") as out:
+        out.write(f"""\\begin{{longtable}}{{{col_fmt}}}
+\\caption{{Summed significance per bin and deltas vs NONE\\label{{tab:sum_sig_deltas}}}}\\\\
+\\toprule
+{header}
+\\midrule
+\\endfirsthead
+
+\\multicolumn{{{ncols}}}{{c}}{{{{\\tablename\\ \\thetable{{}} -- continued}}}} \\\\
+\\toprule
+{header}
+\\midrule
+\\endhead
+
+\\midrule \\multicolumn{{{ncols}}}{{r}}{{Continued on next page}} \\\\
+\\endfoot
+
+\\bottomrule
+\\endlastfoot
+""")
+        out.write(
+            df.to_latex(
+                index=False,
+                columns=cols,
+                float_format="%.2f",
+                na_rep="",
+                header=False,
+                column_format=col_fmt
+            )
+        )
+        out.write("\n\\end{longtable}\n")
+
+    return df
+
 # Example usage:
 if __name__ == "__main__":
     '''df = maketable_best_fit_all_deltaChi(
@@ -1070,9 +1189,13 @@ if __name__ == "__main__":
      fits_dir="./fit_results",
      output_tex="all_sources_TS_total_comparison.tex"
      ) 
-     '''
+     
     df_summary = maketable_sum_signif_per_bin(
     agn_list_file="Source_ra_dec_specin.txt",
     fits_dir="./fit_results",
     output_tex="sum_signif_per_bin.tex"
-)     
+)     '''
+
+    maketable_sum_signif_per_bin_with_deltas(agn_list_file="Source_ra_dec_specin.txt",
+    fits_dir="./fit_results",
+    output_tex = "sum_signif_per_bin_with_deltas.tex")
