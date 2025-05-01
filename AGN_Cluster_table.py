@@ -725,6 +725,77 @@ def extract_TS_per_bin(
     df = pd.DataFrame(rows, columns=cols)
     return df
 
+def make_TS_per_bin_tables(
+    agn_list_file: str,
+    fits_dir: str,
+    output_dir: str = "."
+):
+    # mapping: (table_name, loop_filter, suffix)
+    configs = [
+        ("NONE",      None,     "_NONE"),
+        ("LIN_week",  "week",   "_LIN"),
+        ("LIN_month", "month",  "_LIN"),
+        ("SNR_3",     "3",      "_SNR"),
+        ("SNR_5",     "5",      "_SNR"),
+        ("SNR_10",    "10",     "_SNR"),
+    ]
+
+    for name, loop_item, suffix in configs:
+        # 1) extract
+        df = extract_TS_per_bin(
+            agn_list_file,
+            fits_dir,
+            loop_filter=loop_item,
+            suffix=suffix
+        )
+
+        # 2) write LaTeX
+        cols = ["Source"] + [f"Bin{i}" for i in range(1,8)] + ["TotSignif"]
+        col_fmt = "l " + " ".join("r" for _ in cols[1:])
+        header = " & ".join(cols).replace("_", "\\_") + r" \\"
+
+        tex_path = f"TS_per_bin_{name}.tex"
+        with open(tex_path, "w") as out:
+            out.write(r"""\begin{longtable}{%s}
+\caption{TS per bin and total significance for %s\label{tab:TS_%s}}\\
+\toprule
+%s
+\midrule
+\endfirsthead
+
+\multicolumn{%d}{c}{{\tablename\ \thetable{} -- continued}} \\
+\toprule
+%s
+\midrule
+\endhead
+
+\midrule \multicolumn{%d}{r}{{Continued on next page}} \\
+\endfoot
+
+\bottomrule
+\endlastfoot
+""" % (
+                col_fmt,
+                name.replace("_", " "),
+                name,
+                header,
+                len(cols),
+                header,
+                len(cols),
+            ))
+            out.write(
+                df.to_latex(
+                    index=False,
+                    columns=cols,
+                    float_format="%.2f",
+                    na_rep="",
+                    header=False,
+                    column_format=col_fmt
+                )
+            )
+            out.write("\n\\end{longtable}\n")
+
+        print(f"Wrote {tex_path}")
 
 
 # Example usage:
@@ -766,9 +837,8 @@ if __name__ == "__main__":
     output_tex="all_sources_TS_comparison.tex")
     print(df_comp.head())'''
 
-    f_none = extract_TS_per_bin("Source_ra_dec_specin.txt", "./fit_results", suffix="_NONE")
-    df_week = extract_TS_per_bin("Source_ra_dec_specin.txt", "./fit_results", loop_filter="week", suffix="_LIN")
-    df_month = extract_TS_per_bin("Source_ra_dec_specin.txt", "./fit_results", loop_filter="month", suffix="_LIN")
-    df_snr3 = extract_TS_per_bin("Source_ra_dec_specin.txt", "./fit_results", loop_filter="3", suffix="_SNR")
-    df_snr5 = extract_TS_per_bin("Source_ra_dec_specin.txt", "./fit_results", loop_filter="5", suffix="_SNR")
-    df_snr10 = extract_TS_per_bin("Source_ra_dec_specin.txt", "./fit_results", loop_filter="10", suffix="_SNR")
+    make_TS_per_bin_tables(
+    agn_list_file="Source_ra_dec_specin.txt",
+    fits_dir="./fit_results",
+    output_dir=None
+    )       
