@@ -905,6 +905,122 @@ def maketable_TS_total_comparison(
 
     return df
 
+def maketable_sum_signif_per_bin(
+    agn_list_file: str,
+    fits_dir: str,
+    output_tex: str = "sum_signif_per_bin.tex"
+) -> pd.DataFrame:
+    """
+    For each dataset suffix (NONE, LIN_week, LIN_month, SNR_3, SNR_5, SNR_10),
+    reads the TS‐per‐bin for all sources, computes per‐bin significance = sqrt(TS),
+    sums that significance across sources, and writes a LaTeX table whose rows
+    are the suffixes and whose columns are Bin1…Bin7 summed significance.
+    Returns the summary DataFrame.
+    """
+    # helper to clean source names
+    def clean_name(src: str) -> str:
+        return (src.replace(" ", "")
+                   .replace(".", "dot")
+                   .replace("+", "plus")
+                   .replace("-", "minus")
+                   .replace('"', ""))
+
+    # helper to read exactly 7 TS values
+    def read_TS(fpath: str, loop_filter: str = None) -> np.ndarray:
+        with fits.open(fpath) as hdul:
+            data = hdul[1].data
+        if loop_filter is not None:
+            data = data[data["loop_item"] == loop_filter]
+        order = np.argsort(data["emin"])
+        ts_vals = data["TS"][order]
+        if len(ts_vals) >= 7:
+            return ts_vals[:7]
+        else:
+            return np.pad(ts_vals, (0,7-len(ts_vals)), constant_values=np.nan)
+
+    # read source list
+    sources = []
+    with open(agn_list_file, "r") as f:
+        for line in f:
+            parts = shlex.split(line.strip())
+            if parts:
+                sources.append(parts[0])
+
+    # define suffixes and filters
+    configs = [
+        ("NONE",      None,   "_NONE"),
+        ("LIN_week",  "week", "_LIN"),
+        ("LIN_month", "month","_LIN"),
+        ("SNR_3",     "3",    "_SNR"),
+        ("SNR_5",     "5",    "_SNR"),
+        ("SNR_10",    "10",   "_SNR"),
+    ]
+
+    # build summary rows
+    summary = []
+    for name, loop_item, suffix in configs:
+        # collect TS for all sources, shape (n_sources, 7)
+        all_ts = []
+        for src in sources:
+            cn = clean_name(src)
+            fpath = os.path.join(fits_dir, f"{cn}_fit_data{suffix}.fits")
+            ts7 = read_TS(fpath, loop_filter=loop_item)
+            all_ts.append(ts7)
+        all_ts = np.vstack(all_ts)  # shape (n_sources,7)
+
+        # compute significance per bin and sum across sources
+        # significance = sqrt(TS), but ignore nan or negative TS
+        sig = np.sqrt(np.clip(all_ts, 0, None))
+        sum_sig = np.nansum(sig, axis=0)  # length 7
+
+        # build row
+        row = {"Dataset": name}
+        for i, v in enumerate(sum_sig, start=1):
+            row[f"Bin{i}"] = v
+        summary.append(row)
+
+    df_sum = pd.DataFrame(summary, columns=["Dataset"] + [f"Bin{i}" for i in range(1,8)])
+
+    # write LaTeX
+    cols = ["Dataset"] + [f"Bin{i}" for i in range(1,8)]
+    col_fmt = "l " + " ".join("r" for _ in cols[1:])
+    header = " & ".join(cols) + r" \\"
+
+    ncols = len(cols)
+    with open(output_tex, "w") as out:
+        out.write(f"""\\begin{{longtable}}{{{col_fmt}}}
+\\caption{{Summed significance per bin across sources\\label{{tab:sum_signif_per_bin}}}}\\\\
+\\toprule
+{header}
+\\midrule
+\\endfirsthead
+
+\\multicolumn{{{ncols}}}{{c}}{{{{\\tablename\\ \\thetable{{}} -- continued}}}} \\\\
+\\toprule
+{header}
+\\midrule
+\\endhead
+
+\\midrule \\multicolumn{{{ncols}}}{{r}}{{Continued on next page}} \\\\
+\\endfoot
+
+\\bottomrule
+\\endlastfoot
+""")
+        out.write(
+            df_sum.to_latex(
+                index=False,
+                columns=cols,
+                float_format="%.2f",
+                na_rep="",
+                header=False,
+                column_format=col_fmt
+            )
+        )
+        out.write("\n\\end{longtable}\n")
+
+    return df_sum
+
 # Example usage:
 if __name__ == "__main__":
     '''df = maketable_best_fit_all_deltaChi(
@@ -948,9 +1064,15 @@ if __name__ == "__main__":
     agn_list_file="Source_ra_dec_specin.txt",
     fits_dir="./fit_results",
     output_dir=None
-    ) '''
+    ) 
     df = maketable_TS_total_comparison(
      agn_list_file="Source_ra_dec_specin.txt",
      fits_dir="./fit_results",
      output_tex="all_sources_TS_total_comparison.tex"
-     )      
+     ) 
+     '''
+    df_summary = maketable_sum_signif_per_bin(
+    agn_list_file="Source_ra_dec_specin.txt",
+    fits_dir="./fit_results",
+    output_tex="sum_signif_per_bin.tex"
+)     
