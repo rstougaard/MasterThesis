@@ -10,7 +10,7 @@ from astropy.io import fits
 from naima.models import EblAbsorptionModel
 from scipy.optimize import curve_fit
 import astropy.units as u
-plt.rcParams["text.usetex"]      = True
+plt.rcParams["text.usetex"]      = False
 plt.rcParams["font.family"]      = "serif"
 plt.rcParams["font.serif"]       = ["Computer Modern Roman"]
 plt.rcParams["mathtext.fontset"] = "cm"
