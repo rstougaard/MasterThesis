@@ -18,88 +18,66 @@ def logpar_base(x, Norm, alpha_, beta_, z):
 
 def plot_all_logpar(datasets, datasets_lin, dataset_snr, source,
                     png='logpar_all_filters.png'):
-    # 1) get z
+    """
+    Single figure with two panels:
+      Top:    fitted log-parabola curves for No filtering, Week, Month
+      Bottom: fitted log-parabola curves for No filtering, SNR=3,5,10
+
+    Legend shows each curve's photon index α.
+    """
+    # --- 1) load redshift ---
     with fits.open('table-4LAC-DR3-h.fits') as f:
         tbl = f[1].data
         z = tbl['Redshift'][tbl['Source_Name'] == source][0]
 
-    # 2) model for curve_fit
+    # --- 2) curve_fit wrapper ---
     def model_lp(x, K, alpha, beta):
         return logpar_base(x, K, alpha, beta, z)
 
-    # 3) map our labels to the tuples inside your dicts
-    data_map = {
-        'No filtering': datasets['No_Filtering'],
-        'Week':          datasets_lin['week'],
-        'Month':         datasets_lin['month'],
-        'SNR=3':         dataset_snr['snr_3'],
-        'SNR=5':         dataset_snr['snr_5'],
-        'SNR=10':        dataset_snr['snr_10'],
+    # --- 3) prepare groups ---
+    groups = {
+        'top': [
+            ('No filter',    datasets['No_Filtering']),
+            ('Week',         datasets_lin['week']),
+            ('Month',        datasets_lin['month']),
+        ],
+        'bot': [
+            ('No filter',    datasets['No_Filtering']),
+            ('SNR=3',        datasets_snr['snr_3']),
+            ('SNR=5',        datasets_snr['snr_5']),
+            ('SNR=10',       datasets_snr['snr_10']),
+        ]
     }
 
-    top_labels = ['No filtering', 'Week', 'Month']
-    bot_labels = ['No filtering', 'SNR=3', 'SNR=5', 'SNR=10']
+    # --- 4) make figure ---
+    fig, (ax_top, ax_bot) = plt.subplots(2,1, figsize=(8,10), sharex=True)
+    for ax, key in [(ax_top, 'top'), (ax_bot, 'bot')]:
+        for label, data in groups[key]:
+            x, y, yerr, emin, emax = map(np.array, data)
+            mask = (y!=0) & (np.abs(y)>=1e-13)
+            xm, ym, em = x[mask], y[mask], yerr[mask]
 
-    # 4) build figure
-    fig, axes = plt.subplots(
-        2, 4, figsize=(20, 10),
-        gridspec_kw={'height_ratios': [3, 1]},
-        sharex='col'
-    )
+            # fit
+            p0 = [np.median(ym), 2.0, 0.1]
+            popt, _ = curve_fit(model_lp, xm, ym, p0=p0, sigma=em)
+            K_fit, alpha_fit, beta_fit = popt
 
-    # 5) top row: data + fit
-    for i, lab in enumerate(top_labels):
-        ax = axes[0, i]
-        x, y, yerr, emin, emax = map(np.array, data_map[lab])
-        mask = (y != 0) & (np.abs(y) >= 1e-13)
-        xm, ym, em = x[mask], y[mask], yerr[mask]
+            # compute curve
+            xgrid = np.logspace(np.log10(xm.min()), np.log10(xm.max()), 300)
+            ygrid = model_lp(xgrid, *popt)
 
-        p0 = [np.median(ym), 2.0, 0.1]
-        popt, _ = curve_fit(model_lp, xm, ym, p0=p0, sigma=em)
-        xgrid = np.logspace(np.log10(xm.min()), np.log10(xm.max()), 300)
-        yfit  = model_lp(xgrid, *popt)
+            # plot
+            ax.plot(xgrid, ygrid,
+                    lw=2,
+                    label=f"{label} (α={alpha_fit:.2f})")
 
-        ax.plot(xgrid, yfit, lw=2, label='log-parabola fit')
-        ax.errorbar(
-            xm, ym,
-            xerr=[xm - emin[mask], emax[mask] - xm],
-            yerr=em, fmt='o', ms=4, capsize=2,
-            label=lab
-        )
-        ax.set_xscale('log')
         ax.set_yscale('log')
+        ax.set_xscale('log')
         ax.set_ylabel(r'$E^2\,\mathrm{d}N/\mathrm{d}E$')
         ax.grid(True, which='both', ls='--')
-        ax.legend(fontsize='small')
-        if i < len(top_labels) - 1:
-            ax.set_xticklabels([])
-        else:
-            ax.set_xlabel('Energy [MeV]')
+        ax.legend(frameon=True, fontsize='small')
 
-    axes[0, 3].axis('off')  # blank unused slot
-
-    # 6) bottom row: residuals
-    for i, lab in enumerate(bot_labels):
-        ax = axes[1, i]
-        x, y, yerr, emin, emax = map(np.array, data_map[lab])
-        mask = (y != 0) & (np.abs(y) >= 1e-13)
-        xm, ym, em = x[mask], y[mask], yerr[mask]
-
-        p0 = [np.median(ym), 2.0, 0.1]
-        popt, _ = curve_fit(model_lp, xm, ym, p0=p0, sigma=em)
-        resid = (ym - model_lp(xm, *popt)) / em
-
-        ax.errorbar(xm, resid, fmt='o', ms=4, capsize=2)
-        for lvl, style in zip([0,1,-1], ['-','--','--']):
-            ax.axhline(lvl, ls=style)
-        ax.set_xscale('log')
-        ax.set_ylim(-3, 3)
-        ax.set_ylabel('Residuals')
-        ax.grid(ls='--')
-        if i < len(bot_labels) - 1:
-            ax.set_xticklabels([])
-        else:
-            ax.set_xlabel('Energy [MeV]')
+    ax_bot.set_xlabel('Energy [MeV]')
 
     plt.tight_layout()
     fig.savefig(f'./fit_results/{png}', dpi=300)
