@@ -10,7 +10,30 @@ from astropy.io import fits
 from naima.models import EblAbsorptionModel
 from scipy.optimize import curve_fit
 import astropy.units as u
-
+plt.rcParams["text.usetex"]      = True
+plt.rcParams["font.family"]      = "serif"
+plt.rcParams["font.serif"]       = ["Computer Modern Roman"]
+plt.rcParams["mathtext.fontset"] = "cm"
+plt.rcParams.update({
+    "font.size":        16,
+    "legend.fontsize":  16,
+    "axes.titlesize":   24,
+    "axes.labelsize":   24,
+    "xtick.labelsize":  22,
+    "ytick.labelsize":  22,
+    "xtick.direction":  "in",
+    "ytick.direction":  "in",
+    "xtick.top":        True,
+    "ytick.right":      True,
+    "xtick.major.size": 8,
+    "ytick.major.size": 8,
+    "xtick.minor.size": 5,
+    "ytick.minor.size": 5,
+    "xtick.major.width": 1.2,
+    "ytick.major.width": 1.2,
+    "xtick.minor.width": 0.8,
+    "ytick.minor.width": 0.8,
+})
 def logpar_base(x, Norm, alpha_, beta_, z):
     E_b = 1000  # MeV
     ebl = EblAbsorptionModel(z).transmission(x * u.MeV)
@@ -73,7 +96,7 @@ def plot_all_logpar(datasets, datasets_lin, dataset_snr, source,
 
         ax.set_yscale('log')
         ax.set_xscale('log')
-        ax.set_ylabel(r'$E^2\,\mathrm{d}N/\mathrm{d}E$')
+        ax.set_ylabel(r'E$^2$dN/dE [ erg/cm²/s ]')
         ax.grid(True, which='both', ls='--')
         ax.legend(frameon=True, fontsize='small')
 
@@ -111,7 +134,7 @@ def print_fitted_alphas(datasets, datasets_lin, dataset_snr, source):
         p0 = [np.median(ym), 2.0, 0.1]
         popt, _ = curve_fit(model_lp, xm, ym, p0=p0, sigma=em)
         _, alpha_fit, _ = popt
-        print(f"  {lab:12s}: α = {alpha_fit:.3f}")
+        print(f"  {lab:12s}: α = {alpha_fit:.4f}")
 
 
 # ————— Prepare data points —————
