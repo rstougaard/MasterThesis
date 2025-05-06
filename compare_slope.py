@@ -84,7 +84,7 @@ def plot_all_logpar(datasets, datasets_lin, dataset_snr, source,
         ax.set_xscale('log')
         ax.set_ylabel(r'E$^2$dN/dE [ erg/cm²/s ]')
         ax.grid(True, which='both', ls='--')
-        ax.legend(frameon=True, fontsize='small', loc = "lower right")
+        ax.legend(frameon=True, fontsize='small', loc = "lower left")
 
     ax_bot.set_xlabel('Energy [MeV]')
 
