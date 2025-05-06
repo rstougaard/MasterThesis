@@ -124,7 +124,7 @@ def print_fitted_alphas(datasets, datasets_lin, dataset_snr, source):
 
 
 # ————— Prepare data points —————
-source_name = "4FGL J0319.8+4130"
+source_name = "4FGL J2321.9+2734"#"4FGL J0319.8+4130"
 cleaned = (source_name.replace(" ", "").replace(".", "dot")
                         .replace("+", "plus").replace("-", "minus").replace('"',''))
 f_bin = fits.open(f'./fit_results/{cleaned}_fit_data_NONE.fits')
@@ -181,7 +181,7 @@ datasets,
 datasets_lin,
 datasets_snr,
 source=source_name,
-png='NGC1275_logpar_compare.png'
+png='J2321_logpar_compare.png'
 )
 
 print_fitted_alphas(datasets, datasets_lin, datasets_snr, source=source_name)
