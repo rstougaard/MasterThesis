@@ -836,9 +836,16 @@ def plot_delta_chi2_heatmap_nosys_base(
                 linestyles=['solid', 'solid'],
                 linewidths=2
             )
+            cs_nosys_fortxt = plt.contour(
+                x, y, mean_delta_chi2_grid,
+                levels=[6.2],  # <- only this level
+                colors=['cyan'],
+                linestyles=['solid'],
+                linewidths=2
+            )
             verts = []
-            if cs_nosys.levels[0] == 6.2:
-                for path in cs_nosys.collections[0].get_paths():
+            if cs_nosys_fortxt.levels[0] == 6.2:
+                for path in cs_nosys_fortxt.collections[0].get_paths():
                     verts.append(path.vertices)
             all_verts_nosys = np.vstack(verts) if verts else np.empty((0, 2))
             if all_verts_nosys.size > 0:
@@ -857,9 +864,16 @@ def plot_delta_chi2_heatmap_nosys_base(
                 linestyles=['dashed', 'dashed'],
                 linewidths=2
             )
+            cs_withsys_fortxt = plt.contour(
+                x, y, systematic_grid,
+                levels=[6.2],  # <- only this level
+                colors=['green'],
+                linestyles=['dashed'],
+                linewidths=2
+            )
             verts = []
-            if cs_withsys.levels[0] == 6.2:
-                for path in cs_withsys.collections[0].get_paths():
+            if cs_withsys_fortxt.levels[0] == 6.2:
+                for path in cs_withsys_fortxt.collections[0].get_paths():
                     verts.append(path.vertices)
             all_verts_withsys = np.vstack(verts) if verts else np.empty((0, 2))
             if all_verts_withsys.size > 0:
