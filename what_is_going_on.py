@@ -836,7 +836,7 @@ def plot_delta_chi2_heatmap_nosys_base(
                 linestyles=['solid', 'solid'],
                 linewidths=2
             )
-            ''' verts = []
+            verts = []
             for i in range(len(cs_nosys.levels)):
                 for path in cs_nosys.collections[i].get_paths():
                     verts.append(path.vertices)
@@ -845,7 +845,7 @@ def plot_delta_chi2_heatmap_nosys_base(
                 os.path.join(outdir, f"{filter_label}_nosys.txt"),
                 all_verts_nosys,
                 header="x [neV]    y [GeV^-1]"
-            )'''
+            )
 
         # With systematics
         if systematic_grid is not None:
@@ -856,7 +856,7 @@ def plot_delta_chi2_heatmap_nosys_base(
                 linestyles=['dashed', 'dashed'],
                 linewidths=2
             )
-            '''verts = []
+            verts = []
             for i in range(len(cs_withsys.levels)):
                 for path in cs_withsys.collections[i].get_paths():
                     verts.append(path.vertices)
@@ -865,7 +865,7 @@ def plot_delta_chi2_heatmap_nosys_base(
                 os.path.join(outdir, f"{filter_label}_withsys.txt"),
                 all_verts_withsys,
                 header="x [neV]    y [GeV^-1]"
-            )'''
+            )
 
         # Plot heatmap
         plt.figure(figsize=(10, 6))
@@ -955,7 +955,7 @@ no_filtering_grid = compute_mean_delta_chi2_grid(
 
 )
 '''
-#plot_delta_chi2_heatmap_nosys_base(all_results_none, all_results_none_sys, list(all_results_none.keys()), "base_nosys_", remove_source_label=["4FGL J0317.8-4414"])
+plot_delta_chi2_heatmap_nosys_base(all_results_none, all_results_none_sys, list(all_results_none.keys()), "base_nosys_", remove_source_label=["4FGL J0317.8-4414"])
 
 
 # Summed heatmaps for no filter
@@ -1168,7 +1168,7 @@ def compute_and_plot_contours(
         plt.close(fig)
 
 outdir = path_to_save_heatmap_m_g
-compute_and_plot_contours(all_results_none,
+'''compute_and_plot_contours(all_results_none,
                         all_results_none_sys,
                         all_results_lin,
                         all_results_lin_sys,
@@ -1195,4 +1195,4 @@ compute_and_plot_contours(all_results_none,
                         remove_sources=["4FGL J0132.7-0804", "4FGL J0317.8-4414", "4FGL J0912.5+1556", "4FGL J1213.0+5129", "4FGL J1516.8+2918"],
                         output_prefix="SNR",
                         threshold=1.0
-                    )
+                    )'''
