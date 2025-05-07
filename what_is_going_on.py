@@ -837,15 +837,16 @@ def plot_delta_chi2_heatmap_nosys_base(
                 linewidths=2
             )
             verts = []
-            for i in range(len(cs_nosys.levels)):
-                for path in cs_nosys.collections[i].get_paths():
+            if cs_nosys.levels[0] == 6.2:
+                for path in cs_nosys.collections[0].get_paths():
                     verts.append(path.vertices)
             all_verts_nosys = np.vstack(verts) if verts else np.empty((0, 2))
-            np.savetxt(
-                os.path.join(outdir, f"{filter_label}_nosys.txt"),
-                all_verts_nosys,
-                header="x [neV]    y [GeV^-1]"
-            )
+            if all_verts_nosys.size > 0:
+                np.savetxt(
+                    os.path.join(outdir, f"{filter_label}_nosys.txt"),
+                    all_verts_nosys,
+                    header="x [neV]    y [GeV^-1]"
+                )
 
         # With systematics
         if systematic_grid is not None:
@@ -857,15 +858,16 @@ def plot_delta_chi2_heatmap_nosys_base(
                 linewidths=2
             )
             verts = []
-            for i in range(len(cs_withsys.levels)):
-                for path in cs_withsys.collections[i].get_paths():
+            if cs_withsys.levels[0] == 6.2:
+                for path in cs_withsys.collections[0].get_paths():
                     verts.append(path.vertices)
             all_verts_withsys = np.vstack(verts) if verts else np.empty((0, 2))
-            np.savetxt(
-                os.path.join(outdir, f"{filter_label}_withsys.txt"),
-                all_verts_withsys,
-                header="x [neV]    y [GeV^-1]"
-            )
+            if all_verts_withsys.size > 0:
+                np.savetxt(
+                    os.path.join(outdir, f"{filter_label}_withsys.txt"),
+                    all_verts_withsys,
+                    header="x [neV]    y [GeV^-1]"
+                )
 
         # Plot heatmap
         plt.figure(figsize=(10, 6))
