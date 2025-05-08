@@ -93,8 +93,8 @@ def plot_all_logpar(datasets, datasets_lin, dataset_snr, source,
     plt.close(fig)
     return fig
 
-def print_fitted_alphas(datasets, datasets_lin, dataset_snr, source):
-    # load z
+def print_fitted_params(datasets, datasets_lin, dataset_snr, source):
+    # load redshift
     with fits.open('table-4LAC-DR3-h.fits') as f:
         tbl = f[1].data
         z = tbl['Redshift'][tbl['Source_Name'] == source][0]
@@ -111,20 +111,26 @@ def print_fitted_alphas(datasets, datasets_lin, dataset_snr, source):
         ('SNR=10',        dataset_snr['snr_10']),
     ]
 
-    print("Fitted α values:")
+    print("Fitted parameters (K, α, β):")
     for lab, data in labels:
         x, y, yerr, emin, emax = map(np.array, data)
         mask = (y != 0) & (np.abs(y) >= 1e-13)
         xm, ym, em = x[mask], y[mask], yerr[mask]
 
+        # initial guesses: K ~ median(y), alpha ~ 2.0, beta ~ 0.1
         p0 = [np.median(ym), 2.0, 0.1]
-        popt, _ = curve_fit(model_lp, xm, ym, p0=p0, sigma=em)
-        _, alpha_fit, _ = popt
-        print(f"  {lab:12s}: α = {alpha_fit:.4f}")
+        popt, pcov = curve_fit(model_lp, xm, ym, p0=p0, sigma=em)
+        K_fit, alpha_fit, beta_fit = popt
+        # optional: parameter uncertainties
+        perr = np.sqrt(np.diag(pcov))
+        K_err, alpha_err, beta_err = perr
 
+        print(f"  {lab:12s}: K = {K_fit:.4e} ± {K_err:.4e}, "
+              f"α = {alpha_fit:.4f} ± {alpha_err:.4f}, "
+              f"β = {beta_fit:.4f} ± {beta_err:.4f}")
 
 # ————— Prepare data points —————
-source_name = "4FGL J0038.2-2459"#"4FGL J2321.9+2734"#"4FGL J0319.8+4130"
+source_name = "4FGL J0319.8+4130"#"4FGL J0038.2-2459"#"4FGL J2321.9+2734"#
 cleaned = (source_name.replace(" ", "").replace(".", "dot")
                         .replace("+", "plus").replace("-", "minus").replace('"',''))
 f_bin = fits.open(f'./fit_results/{cleaned}_fit_data_NONE.fits')
@@ -175,7 +181,7 @@ datasets_snr = {f"snr_3": (sorted_data_snr3['geometric_mean'], sorted_data_snr3[
 
 datasets_lin = {f"week": (sorted_data_lin_week['geometric_mean'], sorted_data_lin_week['flux_tot_value'], sorted_data_lin_week['flux_tot_error'], sorted_data_lin_week['emin'], sorted_data_lin_week['emax']),
             f"month": (sorted_data_lin_month['geometric_mean'], sorted_data_lin_month['flux_tot_value'], sorted_data_lin_month['flux_tot_error'], sorted_data_lin_month['emin'], sorted_data_lin_month['emax'])}
-
+'''
 fig = plot_all_logpar(
 datasets,
 datasets_lin,
@@ -183,5 +189,5 @@ datasets_snr,
 source=source_name,
 png='J0038_logpar_compare.png'
 )
-
-print_fitted_alphas(datasets, datasets_lin, datasets_snr, source=source_name)
+'''
+print_fitted_params(datasets, datasets_lin, datasets_snr, source=source_name)
