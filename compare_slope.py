@@ -187,7 +187,7 @@ datasets,
 datasets_lin,
 datasets_snr,
 source=source_name,
-png='J0038_logpar_compare.png'
+png='J2321_logpar_compare.png'
 )
 '''
 print(source_name)
