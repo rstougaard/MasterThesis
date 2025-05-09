@@ -59,7 +59,7 @@ def plot_all_logpar(datasets, datasets_lin, dataset_snr, source,
     }
 
     # --- 4) make figure ---
-    fig, (ax_top, ax_bot) = plt.subplots(1,2, figsize=(8,20), sharex=True)
+    fig, (ax_top, ax_bot) = plt.subplots(1,2, figsize=(20,8), sharex=True)
     for ax, key in [(ax_top, 'top'), (ax_bot, 'bot')]:
         for label, data in groups[key]:
             x, y, yerr, emin, emax = map(np.array, data)
