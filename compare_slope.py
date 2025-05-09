@@ -59,7 +59,7 @@ def plot_all_logpar(datasets, datasets_lin, dataset_snr, source,
     }
 
     # --- 4) make figure ---
-    fig, (ax_top, ax_bot) = plt.subplots(2,1, figsize=(8,10), sharex=True)
+    fig, (ax_top, ax_bot) = plt.subplots(1,2, figsize=(8,20), sharex=True)
     for ax, key in [(ax_top, 'top'), (ax_bot, 'bot')]:
         for label, data in groups[key]:
             x, y, yerr, emin, emax = map(np.array, data)
@@ -181,7 +181,7 @@ datasets_snr = {f"snr_3": (sorted_data_snr3['geometric_mean'], sorted_data_snr3[
 
 datasets_lin = {f"week": (sorted_data_lin_week['geometric_mean'], sorted_data_lin_week['flux_tot_value'], sorted_data_lin_week['flux_tot_error'], sorted_data_lin_week['emin'], sorted_data_lin_week['emax']),
             f"month": (sorted_data_lin_month['geometric_mean'], sorted_data_lin_month['flux_tot_value'], sorted_data_lin_month['flux_tot_error'], sorted_data_lin_month['emin'], sorted_data_lin_month['emax'])}
-'''
+
 fig = plot_all_logpar(
 datasets,
 datasets_lin,
@@ -192,3 +192,4 @@ png='J0038_logpar_compare.png'
 '''
 print(source_name)
 print_fitted_params(datasets, datasets_lin, datasets_snr, source=source_name)
+'''
