@@ -130,7 +130,7 @@ def print_fitted_params(datasets, datasets_lin, dataset_snr, source):
               f"β = {beta_fit:.4f} ± {beta_err:.4f}")
 
 # ————— Prepare data points —————
-source_name = "4FGL J2321.9+2734"#"4FGL J0319.8+4130"#"4FGL J0038.2-2459"#
+source_name = "4FGL J0319.8+4130" #"4FGL J2321.9+2734"##"4FGL J0038.2-2459"#
 cleaned = (source_name.replace(" ", "").replace(".", "dot")
                         .replace("+", "plus").replace("-", "minus").replace('"',''))
 f_bin = fits.open(f'./fit_results/{cleaned}_fit_data_NONE.fits')
@@ -187,7 +187,7 @@ datasets,
 datasets_lin,
 datasets_snr,
 source=source_name,
-png='J2321_logpar_compare.png'
+png='NGC1275_logpar_compare.png'
 )
 '''
 print(source_name)
