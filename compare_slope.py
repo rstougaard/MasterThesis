@@ -25,14 +25,14 @@ def logpar_base(x, Norm, alpha_, beta_, z):
     ebl = EblAbsorptionModel(z).transmission(x * u.MeV)
     return Norm * (x/E_b)**(-(alpha_ + beta_*np.log(x/E_b))) * ebl
 
-def plot_all_logpar(datasets, datasets_lin, dataset_snr, source,
+def plot_all_logpar(datasets, datasets_lin, datasets_snr, source,
                     png='logpar_all_filters.png'):
     """
     Single figure with two panels:
       Top:    fitted log-parabola curves for No filtering, Week, Month
       Bottom: fitted log-parabola curves for No filtering, SNR=3,5,10
 
-    Legend shows each curve's photon index α.
+    Legend shows each curve's photon index α and fitting errors.
     """
     # --- 1) load redshift ---
     with fits.open('table-4LAC-DR3-h.fits') as f:
@@ -63,31 +63,41 @@ def plot_all_logpar(datasets, datasets_lin, dataset_snr, source,
     for ax, key in [(ax_top, 'top'), (ax_bot, 'bot')]:
         for label, data in groups[key]:
             x, y, yerr, emin, emax = map(np.array, data)
-            mask = (y!=0) & (np.abs(y)>=1e-13)
+            mask = (y != 0) & (np.abs(y) >= 1e-13)
             xm, ym, em = x[mask], y[mask], yerr[mask]
 
-            # fit
+            # fit with covariance
             p0 = [np.median(ym), 2.0, 0.1]
-            popt, _ = curve_fit(model_lp, xm, ym, p0=p0, sigma=em)
+            popt, pcov = curve_fit(model_lp, xm, ym, p0=p0, sigma=em)
+            perr = np.sqrt(np.diag(pcov))
             K_fit, alpha_fit, beta_fit = popt
+            sigma_K, sigma_alpha, sigma_beta = perr
+
+            # print errors
+            print(f"{label} fit results:")
+            print(f"  K = {K_fit:.3e} ± {sigma_K:.3e}")
+            print(f"  alpha = {alpha_fit:.3f} ± {sigma_alpha:.3f}")
+            print(f"  beta  = {beta_fit:.3f} ± {sigma_beta:.3f}\n")
 
             # compute curve
             xgrid = np.logspace(np.log10(xm.min()), np.log10(xm.max()), 300)
             ygrid = model_lp(xgrid, *popt)
 
             # plot
-            ax.plot(xgrid, ygrid,
-                    lw=2,
-                    label=f"{label} (α={alpha_fit:.3f})")
+            ax.plot(
+                xgrid, ygrid,
+                lw=2,
+                label=(f"{label}: N={K_fit:.2e}±{sigma_K:.2e}\n"
+                       f"α={alpha_fit:.3f}±{sigma_alpha:.3f}\n"
+                       f"β={beta_fit:.3f}±{sigma_beta:.3f}"))
 
         ax.set_yscale('log')
         ax.set_xscale('log')
         ax.set_xlabel('Energy [MeV]')
         ax.grid(True, which='both', ls='--')
-        ax.legend(frameon=True, fontsize='small', loc = "lower left")
+        ax.legend(frameon=True, fontsize='small', loc='lower left')
 
     ax_top.set_ylabel(r'E$^2$dN/dE [ erg/cm²/s ]')
-    
 
     plt.tight_layout()
     fig.savefig(f'./fit_results/{png}', dpi=300)
