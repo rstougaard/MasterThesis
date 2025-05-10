@@ -13,12 +13,12 @@ import astropy.units as u
 plt.rcParams.update({
     'font.family': 'serif',
     'mathtext.fontset': 'cm',
-    'font.size': 18,
+    'font.size': 20,
     'axes.titlesize': 20,
     'axes.labelsize': 20,
-    'xtick.labelsize': 16,
-    'ytick.labelsize': 16,
-    'legend.fontsize': 16
+    'xtick.labelsize': 18,
+    'ytick.labelsize': 18,
+    'legend.fontsize': 20
 })
 def logpar_base(x, Norm, alpha_, beta_, z):
     E_b = 1000  # MeV
@@ -59,7 +59,7 @@ def plot_all_logpar(datasets, datasets_lin, dataset_snr, source,
     }
 
     # --- 4) make figure ---
-    fig, (ax_top, ax_bot) = plt.subplots(1,2, figsize=(20,8), sharex=True)
+    fig, (ax_top, ax_bot) = plt.subplots(1,2, figsize=(20,8), sharey=True)
     for ax, key in [(ax_top, 'top'), (ax_bot, 'bot')]:
         for label, data in groups[key]:
             x, y, yerr, emin, emax = map(np.array, data)
@@ -82,11 +82,12 @@ def plot_all_logpar(datasets, datasets_lin, dataset_snr, source,
 
         ax.set_yscale('log')
         ax.set_xscale('log')
-        ax.set_ylabel(r'E$^2$dN/dE [ erg/cm²/s ]')
+        ax.set_xlabel('Energy [MeV]')
         ax.grid(True, which='both', ls='--')
         ax.legend(frameon=True, fontsize='small', loc = "lower left")
 
-    ax_bot.set_xlabel('Energy [MeV]')
+    ax_top.set_ylabel(r'E$^2$dN/dE [ erg/cm²/s ]')
+    
 
     plt.tight_layout()
     fig.savefig(f'./fit_results/{png}', dpi=300)
