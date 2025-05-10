@@ -136,7 +136,8 @@ def print_fitted_params(datasets, datasets_lin, dataset_snr, source):
         perr = np.sqrt(np.diag(pcov))
         K_err, alpha_err, beta_err = perr
 
-        print(f"  {lab:12s}: K = {K_fit:.4e} ± {K_err:.4e}, "
+        print(f"  {lab:12s}:,"
+              f"K = {K_fit:.4e} ± {K_err:.4e}, "
               f"α = {alpha_fit:.4f} ± {alpha_err:.4f}, "
               f"β = {beta_fit:.4f} ± {beta_err:.4f}")
 
