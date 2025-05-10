@@ -87,7 +87,8 @@ def plot_all_logpar(datasets, datasets_lin, datasets_snr, source,
             ax.plot(
                 xgrid, ygrid,
                 lw=2,
-                label=(f"{label}: N={K_fit:.2e}±{sigma_K:.2e}\n"
+                label=(f"{label}:\n" 
+                       f"N={K_fit:.2e}±{sigma_K:.2e}\n"
                        f"α={alpha_fit:.3f}±{sigma_alpha:.3f}\n"
                        f"β={beta_fit:.3f}±{sigma_beta:.3f}"))
 
