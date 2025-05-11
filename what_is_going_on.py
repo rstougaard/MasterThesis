@@ -936,6 +936,7 @@ def plot_delta_chi2_heatmap_nosys_base(
             print(10**data['x1']/ 1e-9, 10**data['y1'])
             plt.errorbar(10**data['x1']/ 1e-9, 10**data['y1'], fmt='k-')#, zorder=-10)'''
         # Log scales and ticks
+        plt.axhspan(3.5e-12, ax.get_ylim()[1], color='grey', alpha=0.3, zorder=0)
         plt.xscale('log')
         plt.yscale('log')
         ax = plt.gca()
