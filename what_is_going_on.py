@@ -940,7 +940,7 @@ def plot_delta_chi2_heatmap_nosys_base(
         plt.xscale('log')
         plt.yscale('log')
         ax = plt.gca()
-        plt.axhspan(3.5e-12, ax.get_ylim()[1], color='grey', alpha=0.3, zorder=10)
+        plt.axhspan(3.5e-12, ax.get_ylim()[1], color='grey', alpha=0.6, zorder=10)
         plt.tick_params(axis='both', which='both', color='white', labelcolor='black', direction='in', top=True, right=True)
         plt.xlim(0.3, 9)
         ax.set_xticks([1, 9])
